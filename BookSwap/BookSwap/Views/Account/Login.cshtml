@@ -1,0 +1,29 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Вход";
+}
+
+<div class="auth-wrap">
+    <div class="auth-card">
+        <h1>Вход</h1>
+        <form asp-action="Login" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="ReturnUrl" />
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Email">Email</label>
+                <input asp-for="Email" type="email" class="form-input" />
+            </div>
+            <div class="form-group">
+                <label asp-for="Password">Пароль</label>
+                <input asp-for="Password" type="password" class="form-input" />
+            </div>
+            <label class="checkbox-row">
+                <input asp-for="RememberMe" type="checkbox" />
+                <span>Запомнить меня</span>
+            </label>
+            <button type="submit" class="btn btn-primary w-full">Войти</button>
+        </form>
+        <p class="auth-footer">Нет аккаунта? <a asp-action="Register">Зарегистрироваться</a></p>
+    </div>
+</div>
