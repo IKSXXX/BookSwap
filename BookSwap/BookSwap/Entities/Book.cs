@@ -32,4 +32,6 @@ public class Book : BaseEntity
     public bool IsAvailable { get; set; } = true;
 
     public bool IsHidden { get; set; }
+
+    public ICollection<BookOwner> BookOwners { get; set; } = new List<BookOwner>();
 }
