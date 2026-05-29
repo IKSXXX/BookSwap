@@ -1,0 +1,54 @@
+@model BookCardViewModel
+@{
+    string conditionClass = Model.ConditionLabel switch
+    {
+        "Отличное" => "badge--green",
+        "Хорошее" => "badge--blue",
+        "Удовлетворительное" => "badge--yellow",
+        _ => "badge--secondary"
+    };
+}
+
+<a class="book-card" asp-controller="Book" asp-action="Details" asp-route-id="@Model.Id">
+    <div class="book-card__media">
+        @if (!string.IsNullOrWhiteSpace(Model.CoverImagePath))
+        {
+            <img src="@Model.CoverImagePath" alt="@Model.Title" loading="lazy" />
+        }
+        else
+        {
+            <div class="book-card__placeholder">
+                <svg class="icon"><use href="#i-book" /></svg>
+            </div>
+        }
+        @if (!Model.IsAvailable)
+        {
+            <span class="badge badge--red book-card__badge">Недоступна</span>
+        }
+        else if (!string.IsNullOrWhiteSpace(Model.ConditionLabel))
+        {
+            <span class="badge @conditionClass book-card__badge">@Model.ConditionLabel</span>
+        }
+    </div>
+    <div class="book-card__body">
+        <h3 class="book-card__title">@Model.Title</h3>
+        <p class="book-card__author">@Model.Author</p>
+        <span class="badge badge--secondary">@Model.Genre</span>
+    </div>
+    <div class="book-card__footer">
+        @if (!string.IsNullOrWhiteSpace(Model.Owner.Name))
+        {
+            <span class="book-card__meta">
+                <svg class="icon"><use href="#i-user" /></svg>
+                <span>@Model.Owner.Name</span>
+            </span>
+        }
+        @if (Model.Owner.Rating > 0)
+        {
+            <span class="book-card__meta">
+                <svg class="icon rating-star icon--fill"><use href="#i-star" /></svg>
+                <span>@Model.Owner.Rating.ToString("0.0")</span>
+            </span>
+        }
+    </div>
+</a>

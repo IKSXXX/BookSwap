@@ -1,3 +1,4 @@
+@model List<Book>
 @{
     ViewData["Title"] = "Главная";
 }
@@ -6,5 +7,51 @@
     <div class="container">
         <h1>Обменивайтесь книгами</h1>
         <p>Найдите книгу для чтения или поделитесь своей коллекцией с другими читателями</p>
+        <div class="hero__ctas">
+            <a asp-controller="Book" asp-action="Index" class="btn btn-primary btn-lg">Найти книги</a>
+            <a asp-controller="Account" asp-action="Register" class="btn btn-outline btn-lg">Добавить свои книги</a>
+        </div>
+    </div>
+</section>
+
+<section class="section--gray">
+    <div class="container">
+        <h2 class="text-center mb-4">Как это работает</h2>
+        <div class="steps-grid">
+            <div class="step">
+                <div class="step__icon step__icon--blue">1</div>
+                <h3>Найдите книгу</h3>
+                <p>Просматривайте каталог книг других читателей</p>
+            </div>
+            <div class="step">
+                <div class="step__icon step__icon--green">2</div>
+                <h3>Предложите обмен</h3>
+                <p>Выберите книгу из своей коллекции для обмена</p>
+            </div>
+            <div class="step">
+                <div class="step__icon step__icon--yellow">3</div>
+                <h3>Получите книгу</h3>
+                <p>Договоритесь о встрече и получите книгу</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="container">
+        <h2 class="mb-4">Недавно добавленные</h2>
+        @if (Model.Count > 0)
+        {
+            <div class="book-grid">
+                @foreach (var book in Model)
+                {
+                    <partial name="_BookCard" model="book" />
+                }
+            </div>
+        }
+        else
+        {
+            <p class="text-muted">Пока нет книг.</p>
+        }
     </div>
 </section>
