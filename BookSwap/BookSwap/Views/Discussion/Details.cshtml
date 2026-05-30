@@ -1,0 +1,102 @@
+@model DiscussionDetailsViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="section--gray" style="padding:2rem 0; min-height:calc(100vh - 64px);">
+    <div class="container" style="max-width:800px;">
+        <a asp-controller="Book" asp-action="Details" asp-route-id="@Model.BookId" class="btn btn-ghost btn-sm mb-4">
+            <svg class="icon"><use href="#i-arrow-left"/></svg>
+            Назад к книге
+        </a>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h1 class="mb-1">@Model.Title</h1>
+                <span class="text-muted" style="font-size:.875rem;">Автор: @Model.AuthorName · Книга: @Model.BookTitle</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="discussion-messages" id="discussionMessages" data-discussion-id="@Model.Id">
+                    @if (Model.Messages.Count == 0)
+                    {
+                        <div class="empty-state" style="padding:2rem 1rem;">
+                            <p>Пока нет сообщений.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var m in Model.Messages)
+                        {
+                            <div class="disc-msg">
+                                <div class="disc-msg__avatar">@(string.IsNullOrEmpty(m.UserName) ? "?" : m.UserName.Substring(0, 1).ToUpper())</div>
+                                <div class="disc-msg__body">
+                                    <div class="disc-msg__head">
+                                        <strong>@m.UserName</strong>
+                                        <span class="text-muted" style="font-size:.75rem;">@m.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
+                                    </div>
+                                    <p class="disc-msg__text">@m.Text</p>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <form id="discussionForm" class="chat-compose mt-3">
+                        <input type="text" id="discussionInput" placeholder="Напишите сообщение..." maxlength="2000" autocomplete="off" />
+                        <button type="submit" class="btn btn-primary btn-sm">Отправить</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
+    <script>
+        (async () => {
+            const box = document.getElementById('discussionMessages');
+            const discussionId = parseInt(box.dataset.discussionId);
+            box.scrollTop = box.scrollHeight;
+
+            const conn = new signalR.HubConnectionBuilder().withUrl('/hubs/discussion').withAutomaticReconnect().build();
+
+            conn.on('ReceiveMessage', m => {
+                const empty = box.querySelector('.empty-state');
+                if (empty) empty.remove();
+                const row = document.createElement('div');
+                row.className = 'disc-msg';
+                const initial = m.userName ? m.userName.charAt(0).toUpperCase() : '?';
+                const d = new Date(m.createdAt);
+                const time = d.toLocaleDateString('ru-RU') + ' ' + d.toTimeString().slice(0,5);
+                row.innerHTML = `<div class="disc-msg__avatar">${initial}</div><div class="disc-msg__body"><div class="disc-msg__head"><strong></strong><span class="text-muted" style="font-size:.75rem;">${time}</span></div><p class="disc-msg__text"></p></div>`;
+                row.querySelector('strong').textContent = m.userName;
+                row.querySelector('.disc-msg__text').textContent = m.text;
+                box.appendChild(row);
+                box.scrollTop = box.scrollHeight;
+            });
+
+            try {
+                await conn.start();
+                await conn.invoke('JoinDiscussion', discussionId);
+            } catch (e) { console.error('Discussion connect failed', e); }
+
+            const form = document.getElementById('discussionForm');
+            form?.addEventListener('submit', async e => {
+                e.preventDefault();
+                const input = document.getElementById('discussionInput');
+                const text = input.value.trim();
+                if (!text) return;
+                try {
+                    await conn.invoke('SendMessage', discussionId, text);
+                    input.value = '';
+                } catch (err) { console.error(err); }
+            });
+        })();
+    </script>
+}

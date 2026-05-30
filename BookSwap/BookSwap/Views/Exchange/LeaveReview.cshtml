@@ -1,0 +1,45 @@
+@model ReviewFormViewModel
+@{
+    ViewData["Title"] = "Оставить отзыв";
+}
+
+<div class="section--gray" style="padding:2rem 0; min-height:calc(100vh - 64px);">
+    <div class="container" style="max-width:500px;">
+        <a asp-controller="Exchange" asp-action="Details" asp-route-id="@Model.ExchangeRequestId" class="btn btn-ghost btn-sm mb-4">
+            <svg class="icon"><use href="#i-arrow-left"/></svg>
+            Назад к обмену
+        </a>
+
+        <div class="card">
+            <div class="card-body">
+                <h1 class="mb-4">Отзыв для @Model.ToUserName</h1>
+
+                <form asp-action="LeaveReview" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="ExchangeRequestId" />
+                    <input type="hidden" asp-for="ToUserId" />
+                    <input type="hidden" asp-for="ToUserName" />
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <div class="form-group">
+                        <label asp-for="Rating">Оценка</label>
+                        <select asp-for="Rating" class="form-input">
+                            <option value="5">5 — Отлично</option>
+                            <option value="4">4 — Хорошо</option>
+                            <option value="3">3 — Нормально</option>
+                            <option value="2">2 — Плохо</option>
+                            <option value="1">1 — Ужасно</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Comment">Комментарий</label>
+                        <textarea asp-for="Comment" rows="4" class="form-input" placeholder="Расскажите о своём опыте обмена..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-full">Отправить отзыв</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

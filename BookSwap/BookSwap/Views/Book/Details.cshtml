@@ -124,15 +124,32 @@
             </div>
         </div>
 
-        @if (Model.Similar.Count > 0)
-        {
-            <h2 class="mt-6 mb-4">Похожие книги</h2>
-            <div class="book-grid">
-                @foreach (var b in Model.Similar)
+                @if (Model.Similar.Count > 0)
                 {
-                    <partial name="_BookCard" model="b" />
+                    <h2 class="mt-6 mb-4">Похожие книги</h2>
+                    <div class="book-grid">
+                        @foreach (var b in Model.Similar)
+                        {
+                            <partial name="_BookCard" model="b" />
+                        }
+                    </div>
                 }
+
+                <div class="mt-6">
+                    <h2 class="mb-4">Обсуждения</h2>
+                    <form asp-controller="Discussion" asp-action="Create" method="post" class="mb-4">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="bookId" value="@Model.Id" />
+                        <div style="display:flex;gap:.5rem;">
+                            <input type="text" name="title" class="form-input" placeholder="Начать обсуждение..." maxlength="300" required />
+                            <button type="submit" class="btn btn-outline btn-sm">Создать</button>
+                        </div>
+                    </form>
+                </div>
             </div>
+        </div>
+    </div>
+</div>
         }
     </div>
 </div>

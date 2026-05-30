@@ -81,6 +81,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapHub<ChatHub>("/hubs/chat");
+app.MapHub<DiscussionHub>("/hubs/discussion");
 
 await DbSeeder.SeedAsync(app.Services);
 
