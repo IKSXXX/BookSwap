@@ -1,3 +1,4 @@
+using BookExchange.Web.Data;
 using BookExchange.Web.Entities;
 using BookExchange.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -74,4 +75,13 @@ public class AccountController : Controller
 
     [HttpGet]
     public IActionResult AccessDenied() => View();
+
+    [HttpGet]
+    public async Task<IActionResult> MockLogin()
+    {
+        var admin = await _userManager.FindByEmailAsync(DbSeeder.AdminEmail);
+        if (admin != null)
+            await _signInManager.SignInAsync(admin, isPersistent: true);
+        return RedirectToAction("Index", "Home");
+    }
 }

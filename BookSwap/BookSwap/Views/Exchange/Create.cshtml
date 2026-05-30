@@ -37,39 +37,29 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <h3 class="mb-3">Вы отдаёте</h3>
-                    @if (Model.MyAvailableBooks.Count == 0)
-                    {
-                        <div class="empty-state">
-                            <p>У вас нет доступных книг.</p>
-                            <a asp-controller="Book" asp-action="Create" class="btn btn-outline btn-sm">Добавить книгу</a>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="exchange-pick-list">
-                            <label class="exchange-pick exchange-pick--free">
-                                <input type="radio" name="selectedOfferedBookId" value="" checked />
+                    <div class="exchange-pick-list">
+                        <label class="exchange-pick exchange-pick--free exchange-pick--selected">
+                            <input type="radio" name="selectedOfferedBookId" value="" checked />
+                            <div>
+                                <div class="exchange-pick__title">Безвозмездно</div>
+                                <div class="exchange-pick__author">Ничего не предлагаю взамен</div>
+                            </div>
+                        </label>
+                        @foreach (var b in Model.MyAvailableBooks)
+                        {
+                            <label class="exchange-pick">
+                                <input type="radio" name="selectedOfferedBookId" value="@b.Id" />
+                                @if (!string.IsNullOrEmpty(b.CoverImagePath))
+                                {
+                                    <img src="@b.CoverImagePath" alt="" class="exchange-pick__cover" />
+                                }
                                 <div>
-                                    <div class="exchange-pick__title">Безвозмездно</div>
-                                    <div class="exchange-pick__author">Ничего не предлагаю взамен</div>
+                                    <div class="exchange-pick__title">@b.Title</div>
+                                    <div class="exchange-pick__author">@b.Author</div>
                                 </div>
                             </label>
-                            @foreach (var b in Model.MyAvailableBooks)
-                            {
-                                <label class="exchange-pick">
-                                    <input type="radio" name="selectedOfferedBookId" value="@b.Id" />
-                                    @if (!string.IsNullOrEmpty(b.CoverImagePath))
-                                    {
-                                        <img src="@b.CoverImagePath" alt="" class="exchange-pick__cover" />
-                                    }
-                                    <div>
-                                        <div class="exchange-pick__title">@b.Title</div>
-                                        <div class="exchange-pick__author">@b.Author</div>
-                                    </div>
-                                </label>
-                            }
-                        </div>
-                    }
+                        }
+                    </div>
                 </div>
             </div>
 

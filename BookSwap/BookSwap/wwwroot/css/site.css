@@ -316,6 +316,7 @@ section { padding: 3rem 0; }
 .owner-link { font-weight: 600; color: var(--gray-900); text-decoration: none; }
 .owner-link:hover { color: var(--primary); }
 .owner-rating { display: inline-flex; align-items: center; gap: .25rem; font-size: .8125rem; color: var(--gray-500); margin-left: .5rem; }
+.book-actions { display: flex; gap: .75rem; flex-wrap: wrap; }
 
 @media (max-width: 768px) {
     .book-detail-grid { grid-template-columns: 1fr; }
@@ -349,6 +350,9 @@ section { padding: 3rem 0; }
 .chat-bubble--theirs { background: var(--gray-100); color: var(--gray-900); border-bottom-left-radius: 4px; }
 .chat-text { line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
 .chat-bubble time { display: block; font-size: .6875rem; margin-top: .25rem; opacity: .7; text-align: right; }
+.chat-compose { display: flex; gap: .5rem; margin-top: .75rem; }
+.chat-compose input { flex: 1; padding: .5rem .75rem; border: 1px solid var(--gray-200); border-radius: var(--radius); font-size: .875rem; }
+.chat-compose input:focus { outline: none; border-color: var(--primary); }
 
 @media (max-width: 768px) {
     .exchange-detail-grid { grid-template-columns: 1fr; }

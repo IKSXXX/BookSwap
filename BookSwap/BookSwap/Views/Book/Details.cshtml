@@ -1,6 +1,10 @@
 @model BookDetailsViewModel
+@inject SignInManager<User> SignInManager
+@inject UserManager<User> UserManager
 @{
     ViewData["Title"] = Model.Title;
+    var currentId = UserManager.GetUserId(User);
+    var isOwner = currentId != null && Model.Owners.Any(o => o.Id == currentId);
 }
 
 <div class="section--gray" style="padding:2rem 0; min-height:calc(100vh - 64px);">
@@ -79,6 +83,23 @@
                             }
                         </div>
                     </div>
+                </div>
+
+                <div class="book-actions mt-4">
+                    @if (SignInManager.IsSignedIn(User) && !isOwner && Model.IsAvailable)
+                    {
+                        <a asp-controller="Exchange" asp-action="Create" asp-route-bookId="@Model.Id" class="btn btn-primary">
+                            <svg class="icon"><use href="#i-swap"/></svg>
+                            Предложить обмен
+                        </a>
+                    }
+                    @if (SignInManager.IsSignedIn(User) && isOwner)
+                    {
+                        <a asp-controller="Book" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline">
+                            <svg class="icon"><use href="#i-edit"/></svg>
+                            Редактировать
+                        </a>
+                    }
                 </div>
             </div>
         </div>

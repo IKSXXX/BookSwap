@@ -124,7 +124,7 @@
             <div class="card">
                 <div class="card-body">
                     <h3 class="mb-3">Чат</h3>
-                    <div class="chat-messages" id="chatMessages">
+                    <div class="chat-messages" id="chatMessages" data-exchange-id="@Model.Id" data-current-user="@Model.CurrentUserId">
                         @if (Model.Messages.Count == 0)
                         {
                             <div class="empty-state" style="padding:2rem 1rem;">
@@ -145,8 +145,62 @@
                             }
                         }
                     </div>
+                    @if (Model.Status == ExchangeStatus.Pending || Model.Status == ExchangeStatus.Accepted)
+                    {
+                        <form id="chatForm" class="chat-compose">
+                            <input type="text" id="chatInput" placeholder="Напишите сообщение..." maxlength="1000" autocomplete="off" />
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <svg class="icon"><use href="#i-check"/></svg>
+                            </button>
+                        </form>
+                    }
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
+    <script>
+        (async () => {
+            const box = document.getElementById('chatMessages');
+            const exchangeId = parseInt(box.dataset.exchangeId);
+            const currentUserId = box.dataset.currentUser;
+            box.scrollTop = box.scrollHeight;
+
+            const conn = new signalR.HubConnectionBuilder().withUrl('/hubs/chat').withAutomaticReconnect().build();
+
+            conn.on('ReceiveMessage', m => {
+                const empty = box.querySelector('.empty-state');
+                if (empty) empty.remove();
+                const mine = m.senderId === currentUserId;
+                const row = document.createElement('div');
+                row.className = 'chat-msg' + (mine ? ' chat-msg--mine' : '');
+                const d = new Date(m.sentAt);
+                const time = d.toTimeString().slice(0,5);
+                row.innerHTML = `<div class="chat-bubble ${mine ? 'chat-bubble--mine' : 'chat-bubble--theirs'}"><div class="chat-text"></div><time>${time}</time></div>`;
+                row.querySelector('.chat-text').textContent = m.text;
+                box.appendChild(row);
+                box.scrollTop = box.scrollHeight;
+            });
+
+            try {
+                await conn.start();
+                await conn.invoke('JoinGroup', exchangeId);
+            } catch (e) { console.error('Chat connect failed', e); }
+
+            const form = document.getElementById('chatForm');
+            form?.addEventListener('submit', async e => {
+                e.preventDefault();
+                const input = document.getElementById('chatInput');
+                const text = input.value.trim();
+                if (!text) return;
+                try {
+                    await conn.invoke('SendMessage', exchangeId, text);
+                    input.value = '';
+                } catch (err) { console.error(err); }
+            });
+        })();
+    </script>
+}
