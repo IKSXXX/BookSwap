@@ -1,0 +1,107 @@
+@model BookFormViewModel
+@{
+    var isEdit = Model.Id.HasValue;
+    ViewData["Title"] = isEdit ? "Редактировать книгу" : "Добавить книгу";
+}
+
+<div class="section--gray" style="padding:2rem 0; min-height:calc(100vh - 64px);">
+    <div class="container" style="max-width:720px;">
+        <a asp-controller="Book" asp-action="Index" class="btn btn-ghost btn-sm mb-4">
+            <svg class="icon"><use href="#i-arrow-left"/></svg>
+            К каталогу
+        </a>
+
+        <h1 class="mb-4">@ViewData["Title"]</h1>
+
+        <form asp-action="@(isEdit ? "Edit" : "Create")" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            @if (isEdit) { <input type="hidden" asp-for="Id" /> }
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="mb-3">Основное</h3>
+                    <div class="form-group">
+                        <label asp-for="Title">Название</label>
+                        <input asp-for="Title" class="form-input" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Author">Автор</label>
+                        <input asp-for="Author" class="form-input" />
+                        <span asp-validation-for="Author" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ISBN">ISBN</label>
+                        <input asp-for="ISBN" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Description">Описание</label>
+                        <textarea asp-for="Description" rows="4" class="form-input"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="mb-3">Детали</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="Genre">Жанр</label>
+                            <input asp-for="Genre" class="form-input" list="genresList" />
+                            <datalist id="genresList">
+                                <option>Классика</option><option>Фэнтези</option><option>Детектив</option>
+                                <option>Антиутопия</option><option>Научная фантастика</option><option>Магический реализм</option>
+                                <option>Биография</option><option>Нон-фикшн</option><option>Другое</option>
+                            </datalist>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Condition">Состояние</label>
+                            <select asp-for="Condition" class="form-input">
+                                @foreach (var c in Enum.GetValues<BookCondition>())
+                                {
+                                    <option value="@c">@MappingProfile.ConditionToLabel(c)</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="Year">Год</label>
+                            <input asp-for="Year" type="number" class="form-input" />
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Language">Язык</label>
+                            <input asp-for="Language" class="form-input" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="mb-3">Обложка</h3>
+                    <div class="form-group">
+                        <label asp-for="CoverImage">Файл (jpg/png, до 5 МБ)</label>
+                        <input asp-for="CoverImage" type="file" accept="image/*" class="form-input" />
+                        @if (!string.IsNullOrEmpty(Model.ExistingCoverPath))
+                        {
+                            <div style="margin-top:.75rem;">
+                                <img src="@Model.ExistingCoverPath" alt="" style="height:80px;border-radius:8px;" />
+                                <span class="text-muted" style="margin-left:.5rem;">Текущая обложка</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:.75rem;">
+                <button type="submit" class="btn btn-primary">
+                    <svg class="icon"><use href="#i-check"/></svg>
+                    @(isEdit ? "Сохранить" : "Добавить книгу")
+                </button>
+                <a asp-controller="Book" asp-action="Index" class="btn btn-outline">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>

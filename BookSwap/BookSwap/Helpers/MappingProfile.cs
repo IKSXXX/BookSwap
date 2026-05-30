@@ -14,6 +14,10 @@ public class MappingProfile : Profile
 
         CreateMap<User, OwnerSummaryViewModel>()
             .ForMember(d => d.Name, o => o.MapFrom(s => s.UserName));
+
+        CreateMap<BookFormViewModel, Book>()
+            .ForMember(d => d.Id, o => o.Condition(src => src.Id.HasValue))
+            .ForMember(d => d.CoverImagePath, o => o.Ignore());
     }
 
     public static string ConditionToLabel(BookCondition c) => c switch

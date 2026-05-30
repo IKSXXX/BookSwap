@@ -3,6 +3,7 @@ using BookExchange.Web.Entities;
 using BookExchange.Web.Helpers;
 using BookExchange.Web.Interfaces;
 using BookExchange.Web.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,12 +17,14 @@ public class BookController : Controller
     private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
     private readonly UserManager<User> _userManager;
+    private readonly IWebHostEnvironment _env;
 
-    public BookController(IUnitOfWork uow, IMapper mapper, UserManager<User> um)
+    public BookController(IUnitOfWork uow, IMapper mapper, UserManager<User> um, IWebHostEnvironment env)
     {
         _uow = uow;
         _mapper = mapper;
         _userManager = um;
+        _env = env;
     }
 
     [HttpGet]
@@ -122,5 +125,102 @@ public class BookController : Controller
         };
 
         return View(vm);
+    }
+
+    [Authorize, HttpGet]
+    public IActionResult Create() => View("Form", new BookFormViewModel());
+
+    [Authorize, HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(BookFormViewModel model)
+    {
+        if (!ModelState.IsValid) return View("Form", model);
+
+        var userId = _userManager.GetUserId(User)!;
+        var book = _mapper.Map<Book>(model);
+
+        var path = await ImageHelper.SaveAsync(model.CoverImage, _env, "images/books");
+        if (path != null) book.CoverImagePath = path;
+
+        await _uow.Books.AddAsync(book);
+        await _uow.SaveChangesAsync();
+
+        await _uow.BookOwners.AddAsync(new BookOwner { BookId = book.Id, UserId = userId, IsPrimary = true });
+        await _uow.SaveChangesAsync();
+
+        TempData["Success"] = "Книга добавлена.";
+        return RedirectToAction("Details", "User", new { id = userId });
+    }
+
+    [Authorize, HttpGet]
+    public async Task<IActionResult> Edit(int id)
+    {
+        var userId = _userManager.GetUserId(User)!;
+        var book = await _uow.Books.GetByIdAsync(id);
+        if (book == null) return Forbid();
+
+        var isOwner = await _uow.BookOwners.AnyAsync(bo => bo.BookId == id && bo.UserId == userId);
+        if (!isOwner) return Forbid();
+
+        var vm = new BookFormViewModel
+        {
+            Id = book.Id,
+            Title = book.Title,
+            Author = book.Author,
+            ISBN = book.ISBN,
+            Description = book.Description,
+            Genre = book.Genre,
+            Condition = book.Condition,
+            Year = book.Year,
+            Language = book.Language,
+            ExistingCoverPath = book.CoverImagePath
+        };
+        return View("Form", vm);
+    }
+
+    [Authorize, HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(BookFormViewModel model)
+    {
+        if (!ModelState.IsValid) return View("Form", model);
+
+        var userId = _userManager.GetUserId(User)!;
+        if (model.Id == null) return BadRequest();
+        var book = await _uow.Books.GetByIdAsync(model.Id.Value);
+        if (book == null) return Forbid();
+
+        var isOwner = await _uow.BookOwners.AnyAsync(bo => bo.BookId == model.Id && bo.UserId == userId);
+        if (!isOwner) return Forbid();
+
+        book.Title = model.Title;
+        book.Author = model.Author;
+        book.ISBN = model.ISBN;
+        book.Description = model.Description;
+        book.Genre = model.Genre;
+        book.Condition = model.Condition;
+        book.Year = model.Year;
+        book.Language = model.Language;
+
+        var path = await ImageHelper.SaveAsync(model.CoverImage, _env, "images/books");
+        if (path != null) book.CoverImagePath = path;
+
+        _uow.Books.Update(book);
+        await _uow.SaveChangesAsync();
+
+        TempData["Success"] = "Книга обновлена.";
+        return RedirectToAction("Details", new { id = book.Id });
+    }
+
+    [Authorize, HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var userId = _userManager.GetUserId(User)!;
+        var book = await _uow.Books.GetByIdAsync(id);
+        if (book == null) return Forbid();
+
+        var isOwner = await _uow.BookOwners.AnyAsync(bo => bo.BookId == id && bo.UserId == userId);
+        if (!isOwner) return Forbid();
+
+        _uow.Books.Remove(book);
+        await _uow.SaveChangesAsync();
+        return RedirectToAction("Details", "User", new { id = userId });
     }
 }
