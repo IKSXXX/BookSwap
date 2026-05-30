@@ -42,3 +42,21 @@ public class PaginationInfo
     public bool HasPrev => Page > 1;
     public bool HasNext => Page < TotalPages;
 }
+
+public class BookDetailsViewModel
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Author { get; set; } = string.Empty;
+    public string? ISBN { get; set; }
+    public string? Description { get; set; }
+    public string? CoverImagePath { get; set; }
+    public string Genre { get; set; } = string.Empty;
+    public string ConditionLabel { get; set; } = string.Empty;
+    public int? Year { get; set; }
+    public string? Language { get; set; }
+    public bool IsAvailable { get; set; }
+    public OwnerSummaryViewModel Owner { get; set; } = new();
+    public List<OwnerSummaryViewModel> Owners { get; set; } = new();
+    public List<BookCardViewModel> Similar { get; set; } = new();
+}

@@ -250,6 +250,39 @@ section { padding: 3rem 0; }
 .empty-state h3 { margin-bottom: .5rem; }
 .empty-state p { color: var(--gray-600); margin-bottom: 1rem; }
 
+/* Book detail */
+.book-detail-grid { display: grid; grid-template-columns: 320px 1fr; gap: 2rem; }
+.book-detail-cover img { width: 100%; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+.book-detail-info h1 { font-size: 1.75rem; margin-bottom: .25rem; }
+.book-detail-author { font-size: 1.125rem; color: var(--gray-600); margin-bottom: 1rem; }
+.book-detail-meta { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.book-detail-desc { color: var(--gray-700); line-height: 1.6; margin-bottom: 1.25rem; }
+.book-detail-extra { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; font-size: .875rem; color: var(--gray-600); }
+.book-detail-extra strong { color: var(--gray-800); }
+.mt-4 { margin-top: 1rem; }
+.mt-6 { margin-top: 2rem; }
+.mb-3 { margin-bottom: .75rem; }
+.mb-4 { margin-bottom: 1.5rem; }
+.stack-sm > * + * { margin-top: .5rem; }
+.card-body { padding: 1.25rem; }
+.owner-row { display: flex; align-items: center; gap: .75rem; }
+.owner-avatar-sm {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    color: var(--gray-600);
+    display: grid; place-items: center;
+    font-weight: 600; font-size: .875rem;
+    flex-shrink: 0;
+}
+.owner-link { font-weight: 600; color: var(--gray-900); text-decoration: none; }
+.owner-link:hover { color: var(--primary); }
+.owner-rating { display: inline-flex; align-items: center; gap: .25rem; font-size: .8125rem; color: var(--gray-500); margin-left: .5rem; }
+
+@media (max-width: 768px) {
+    .book-detail-grid { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 768px) {
     .catalog-layout { grid-template-columns: 1fr; }
     .catalog-side { position: static; }

@@ -1,7 +1,9 @@
 using AutoMapper;
 using BookExchange.Web.Entities;
+using BookExchange.Web.Helpers;
 using BookExchange.Web.Interfaces;
 using BookExchange.Web.ViewModels;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,11 +15,13 @@ public class BookController : Controller
 
     private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
+    private readonly UserManager<User> _userManager;
 
-    public BookController(IUnitOfWork uow, IMapper mapper)
+    public BookController(IUnitOfWork uow, IMapper mapper, UserManager<User> um)
     {
         _uow = uow;
         _mapper = mapper;
+        _userManager = um;
     }
 
     [HttpGet]
@@ -80,6 +84,43 @@ public class BookController : Controller
             SelectedConditions = selectedConditions,
             OnlyAvailable = onlyAvailable
         };
+        return View(vm);
+    }
+
+    [HttpGet]
+    [Route("Book/Details/{id:int}")]
+    [Route("book/{id:int}")]
+    public async Task<IActionResult> Details(int id)
+    {
+        var book = await _uow.Books.Query()
+            .Include(b => b.BookOwners).ThenInclude(bo => bo.User)
+            .FirstOrDefaultAsync(b => b.Id == id && !b.IsHidden);
+        if (book == null) return NotFound();
+
+        var similar = await _uow.Books.Query()
+            .Where(b => b.Id != id && !b.IsHidden && (b.Genre == book.Genre || b.Author == book.Author))
+            .Include(b => b.BookOwners).ThenInclude(bo => bo.User)
+            .Take(4)
+            .ToListAsync();
+
+        var vm = new BookDetailsViewModel
+        {
+            Id = book.Id,
+            Title = book.Title,
+            Author = book.Author,
+            ISBN = book.ISBN,
+            Description = book.Description,
+            CoverImagePath = book.CoverImagePath,
+            Genre = book.Genre,
+            ConditionLabel = MappingProfile.ConditionToLabel(book.Condition),
+            Year = book.Year,
+            Language = book.Language,
+            IsAvailable = book.IsAvailable,
+            Owner = _mapper.Map<OwnerSummaryViewModel>(book.PrimaryOwner ?? new User()),
+            Owners = book.BookOwners.Select(bo => _mapper.Map<OwnerSummaryViewModel>(bo.User ?? new User())).ToList(),
+            Similar = similar.Select(_mapper.Map<BookCardViewModel>).ToList()
+        };
+
         return View(vm);
     }
 }

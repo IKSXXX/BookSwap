@@ -1,0 +1,97 @@
+@model BookDetailsViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="section--gray" style="padding:2rem 0; min-height:calc(100vh - 64px);">
+    <div class="container">
+        <a asp-controller="Book" asp-action="Index" class="btn btn-ghost btn-sm mb-4">
+            <svg class="icon"><use href="#i-book"/></svg>
+            Назад к каталогу
+        </a>
+
+        <div class="book-detail-grid">
+            <div class="book-detail-cover">
+                @if (!string.IsNullOrEmpty(Model.CoverImagePath))
+                {
+                    <img src="@Model.CoverImagePath" alt="@Model.Title" />
+                }
+                else
+                {
+                    <div class="book-card__placeholder" style="height:400px;background:var(--gray-100);border-radius:var(--radius-lg);">
+                        <svg class="icon" style="width:3rem;height:3rem;"><use href="#i-book"/></svg>
+                    </div>
+                }
+            </div>
+
+            <div class="book-detail-info">
+                <h1>@Model.Title</h1>
+                <p class="book-detail-author">@Model.Author</p>
+
+                <div class="book-detail-meta">
+                    <span class="badge badge--secondary">@Model.Genre</span>
+                    <span class="badge @(Model.ConditionLabel == "Отличное" ? "badge--green" : Model.ConditionLabel == "Хорошее" ? "badge--blue" : "badge--yellow")">@Model.ConditionLabel</span>
+                    @if (!Model.IsAvailable)
+                    {
+                        <span class="badge badge--red">Недоступна</span>
+                    }
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <p class="book-detail-desc">@Model.Description</p>
+                }
+
+                <div class="book-detail-extra">
+                    @if (Model.Year.HasValue)
+                    {
+                        <span><strong>Год:</strong> @Model.Year</span>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Language))
+                    {
+                        <span><strong>Язык:</strong> @Model.Language</span>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.ISBN))
+                    {
+                        <span><strong>ISBN:</strong> @Model.ISBN</span>
+                    }
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h3 class="mb-3">@(Model.Owners.Count > 1 ? "Владельцы" : "Владелец")</h3>
+                        <div class="stack-sm">
+                            @foreach (var owner in Model.Owners)
+                            {
+                                <div class="owner-row">
+                                    <div class="owner-avatar-sm">@(string.IsNullOrEmpty(owner.Name) ? "?" : owner.Name.Substring(0, 1).ToUpper())</div>
+                                    <div>
+                                        <a asp-controller="User" asp-action="Details" asp-route-id="@owner.Id" class="owner-link">@owner.Name</a>
+                                        @if (owner.Rating > 0)
+                                        {
+                                            <span class="owner-rating">
+                                                <svg class="icon rating-star icon--fill"><use href="#i-star"/></svg>
+                                                @owner.Rating.ToString("0.0")
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.Similar.Count > 0)
+        {
+            <h2 class="mt-6 mb-4">Похожие книги</h2>
+            <div class="book-grid">
+                @foreach (var b in Model.Similar)
+                {
+                    <partial name="_BookCard" model="b" />
+                }
+            </div>
+        }
+    </div>
+</div>

@@ -1,5 +1,6 @@
-using BookExchange.Web.Data;
+using AutoMapper;
 using BookExchange.Web.Interfaces;
+using BookExchange.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,8 +9,13 @@ namespace BookExchange.Web.Controllers;
 public class HomeController : Controller
 {
     private readonly IUnitOfWork _uow;
+    private readonly IMapper _mapper;
 
-    public HomeController(IUnitOfWork uow) => _uow = uow;
+    public HomeController(IUnitOfWork uow, IMapper mapper)
+    {
+        _uow = uow;
+        _mapper = mapper;
+    }
 
     [HttpGet("/")]
     public async Task<IActionResult> Index()
@@ -21,7 +27,8 @@ public class HomeController : Controller
             .Take(6)
             .ToListAsync();
 
-        return View(recent);
+        var vm = recent.Select(_mapper.Map<BookCardViewModel>).ToList();
+        return View(vm);
     }
 
     [HttpGet("/privacy")]
