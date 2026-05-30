@@ -6,83 +6,103 @@ using BookExchange.Web.Repositories;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
 
-builder.Services.AddDbContext<BookExchangeDbContext>(options =>
-    options.UseInMemoryDatabase("BookSwap"));
-
-builder.Services.AddIdentity<User, IdentityRole>(options =>
+try
 {
-    options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequiredLength = 6;
-    options.Password.RequireUppercase = true;
-    options.Password.RequireDigit = true;
-    options.User.RequireUniqueEmail = true;
-    options.SignIn.RequireConfirmedAccount = false;
-})
-.AddEntityFrameworkStores<BookExchangeDbContext>()
-.AddDefaultTokenProviders();
+    Log.Information("Запуск приложения BookSwap");
 
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.LoginPath = "/Account/Login";
-    options.LogoutPath = "/Account/Logout";
-    options.AccessDeniedPath = "/Account/AccessDenied";
-    options.ExpireTimeSpan = TimeSpan.FromDays(30);
-});
+    var builder = WebApplication.CreateBuilder(args);
+    builder.Host.UseSerilog();
 
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddAutoMapper(cfg => { }, typeof(BookExchange.Web.Helpers.MappingProfile).Assembly);
-builder.Services.AddControllersWithViews();
-builder.Services.AddSignalR();
+    builder.Services.AddDbContext<BookExchangeDbContext>(options =>
+        options.UseInMemoryDatabase("BookSwap"));
 
-var app = builder.Build();
-
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
-
-app.UseStaticFiles();
-app.UseRouting();
-app.UseAuthentication();
-
-app.Use(async (ctx, next) =>
-{
-    if (ctx.User.Identity?.IsAuthenticated != true)
+    builder.Services.AddIdentity<User, IdentityRole>(options =>
     {
-        var um = ctx.RequestServices.GetRequiredService<UserManager<User>>();
-        var admin = await um.FindByEmailAsync(DbSeeder.AdminEmail);
-        if (admin != null)
-        {
-            var claims = new List<System.Security.Claims.Claim>
-            {
-                new(System.Security.Claims.ClaimTypes.NameIdentifier, admin.Id),
-                new(System.Security.Claims.ClaimTypes.Name, admin.UserName ?? "admin"),
-                new(System.Security.Claims.ClaimTypes.Email, admin.Email ?? ""),
-            };
-            var roles = await um.GetRolesAsync(admin);
-            foreach (var role in roles)
-                claims.Add(new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, role));
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequiredLength = 6;
+        options.Password.RequireUppercase = true;
+        options.Password.RequireDigit = true;
+        options.User.RequireUniqueEmail = true;
+        options.SignIn.RequireConfirmedAccount = false;
+    })
+    .AddEntityFrameworkStores<BookExchangeDbContext>()
+    .AddDefaultTokenProviders();
 
-            var identity = new System.Security.Claims.ClaimsIdentity(claims, IdentityConstants.ApplicationScheme);
-            await ctx.SignInAsync(IdentityConstants.ApplicationScheme, new System.Security.Claims.ClaimsPrincipal(identity));
-        }
+    builder.Services.ConfigureApplicationCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromDays(30);
+    });
+
+    builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+    builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+    builder.Services.AddAutoMapper(cfg => { }, typeof(BookExchange.Web.Helpers.MappingProfile).Assembly);
+    builder.Services.AddControllersWithViews();
+    builder.Services.AddSignalR();
+
+    var app = builder.Build();
+
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseExceptionHandler("/Home/Error");
+        app.UseHsts();
     }
-    await next();
-});
 
-app.UseAuthorization();
+    app.UseStaticFiles();
+    app.UseRouting();
+    app.UseAuthentication();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
-app.MapHub<ChatHub>("/hubs/chat");
-app.MapHub<DiscussionHub>("/hubs/discussion");
+    app.Use(async (ctx, next) =>
+    {
+        if (ctx.User.Identity?.IsAuthenticated != true)
+        {
+            var um = ctx.RequestServices.GetRequiredService<UserManager<User>>();
+            var admin = await um.FindByEmailAsync(DbSeeder.AdminEmail);
+            if (admin != null)
+            {
+                var claims = new List<System.Security.Claims.Claim>
+                {
+                    new(System.Security.Claims.ClaimTypes.NameIdentifier, admin.Id),
+                    new(System.Security.Claims.ClaimTypes.Name, admin.UserName ?? "admin"),
+                    new(System.Security.Claims.ClaimTypes.Email, admin.Email ?? ""),
+                };
+                var roles = await um.GetRolesAsync(admin);
+                foreach (var role in roles)
+                    claims.Add(new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, role));
 
-await DbSeeder.SeedAsync(app.Services);
+                var identity = new System.Security.Claims.ClaimsIdentity(claims, IdentityConstants.ApplicationScheme);
+                await ctx.SignInAsync(IdentityConstants.ApplicationScheme, new System.Security.Claims.ClaimsPrincipal(identity));
+            }
+        }
+        await next();
+    });
 
-app.Run();
+    app.UseAuthorization();
+
+    app.MapControllerRoute(
+        name: "default",
+        pattern: "{controller=Home}/{action=Index}/{id?}");
+    app.MapHub<ChatHub>("/hubs/chat");
+    app.MapHub<DiscussionHub>("/hubs/discussion");
+
+    await DbSeeder.SeedAsync(app.Services);
+
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Приложение завершилось с ошибкой");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
