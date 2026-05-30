@@ -38,4 +38,7 @@ public class Book : BaseEntity
 
     [NotMapped]
     public User? PrimaryOwner => BookOwners.FirstOrDefault(bo => bo.IsPrimary)?.User ?? BookOwners.FirstOrDefault()?.User;
+
+    [NotMapped]
+    public string PrimaryOwnerId => BookOwners.FirstOrDefault(bo => bo.IsPrimary)?.UserId ?? BookOwners.FirstOrDefault()?.UserId ?? "";
 }

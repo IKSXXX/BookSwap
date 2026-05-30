@@ -1,0 +1,93 @@
+@model CreateExchangeViewModel
+@{
+    ViewData["Title"] = "Создать обмен";
+}
+
+<div class="section--gray" style="padding:2rem 0; min-height:calc(100vh - 64px);">
+    <div class="container" style="max-width:800px;">
+        <a asp-controller="Book" asp-action="Details" asp-route-id="@Model.BookRequestedId" class="btn btn-ghost btn-sm mb-4">
+            <svg class="icon"><use href="#i-arrow-left"/></svg>
+            Назад к книге
+        </a>
+
+        <h1 class="mb-4">Создать обмен</h1>
+
+        <form asp-action="Create" asp-route-bookId="@Model.BookRequestedId" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="mb-3">Вы хотите получить</h3>
+                    @if (Model.BookRequested != null)
+                    {
+                        <div class="exchange-pick exchange-pick--selected">
+                            @if (!string.IsNullOrEmpty(Model.BookRequested.CoverImagePath))
+                            {
+                                <img src="@Model.BookRequested.CoverImagePath" alt="" class="exchange-pick__cover" />
+                            }
+                            <div>
+                                <div class="exchange-pick__title">@Model.BookRequested.Title</div>
+                                <div class="exchange-pick__author">@Model.BookRequested.Author</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="mb-3">Вы отдаёте</h3>
+                    @if (Model.MyAvailableBooks.Count == 0)
+                    {
+                        <div class="empty-state">
+                            <p>У вас нет доступных книг.</p>
+                            <a asp-controller="Book" asp-action="Create" class="btn btn-outline btn-sm">Добавить книгу</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="exchange-pick-list">
+                            <label class="exchange-pick exchange-pick--free">
+                                <input type="radio" name="selectedOfferedBookId" value="" checked />
+                                <div>
+                                    <div class="exchange-pick__title">Безвозмездно</div>
+                                    <div class="exchange-pick__author">Ничего не предлагаю взамен</div>
+                                </div>
+                            </label>
+                            @foreach (var b in Model.MyAvailableBooks)
+                            {
+                                <label class="exchange-pick">
+                                    <input type="radio" name="selectedOfferedBookId" value="@b.Id" />
+                                    @if (!string.IsNullOrEmpty(b.CoverImagePath))
+                                    {
+                                        <img src="@b.CoverImagePath" alt="" class="exchange-pick__cover" />
+                                    }
+                                    <div>
+                                        <div class="exchange-pick__title">@b.Title</div>
+                                        <div class="exchange-pick__author">@b.Author</div>
+                                    </div>
+                                </label>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" @(Model.MyAvailableBooks.Count == 0 ? "disabled" : "")>
+                <svg class="icon"><use href="#i-swap"/></svg>
+                Отправить предложение
+            </button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.exchange-pick input[type="radio"]').forEach(input => {
+            input.addEventListener('change', () => {
+                document.querySelectorAll('.exchange-pick').forEach(el => el.classList.remove('exchange-pick--selected'));
+                input.closest('.exchange-pick').classList.add('exchange-pick--selected');
+            });
+        });
+    </script>
+}

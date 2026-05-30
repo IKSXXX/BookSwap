@@ -1,0 +1,152 @@
+@model ExchangeDetailsViewModel
+@{
+    ViewData["Title"] = $"Обмен #{Model.Id}";
+    var statusBadge = Model.Status switch
+    {
+        ExchangeStatus.Pending => "badge--yellow",
+        ExchangeStatus.Accepted => "badge--blue",
+        ExchangeStatus.Completed => "badge--green",
+        ExchangeStatus.Rejected => "badge--red",
+        ExchangeStatus.Cancelled => "badge--secondary",
+        _ => "badge--secondary"
+    };
+    var other = Model.CurrentUserId == Model.Sender.Id ? Model.Receiver : Model.Sender;
+}
+
+<div class="section--gray" style="padding:2rem 0; min-height:calc(100vh - 64px);">
+    <div class="container" style="max-width:900px;">
+        <a asp-controller="User" asp-action="Details" asp-route-id="@Model.CurrentUserId" class="btn btn-ghost btn-sm mb-4">
+            <svg class="icon"><use href="#i-arrow-left"/></svg>
+            Назад к профилю
+        </a>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="exchange-head">
+                    <div>
+                        <h3 class="mb-1">Обмен с @other.Name</h3>
+                        <span class="text-muted" style="font-size:.875rem;">@Model.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</span>
+                    </div>
+                    <span class="badge @statusBadge">@Model.StatusLabel</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="exchange-detail-grid">
+            <div>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h3 class="mb-3">Детали</h3>
+                        <p class="text-muted mb-2">Вы получаете:</p>
+                        @if (Model.BookRequested != null)
+                        {
+                            <div class="exchange-pick exchange-pick--selected mb-3">
+                                @if (!string.IsNullOrEmpty(Model.BookRequested.CoverImagePath))
+                                {
+                                    <img src="@Model.BookRequested.CoverImagePath" alt="" class="exchange-pick__cover" />
+                                }
+                                <div>
+                                    <div class="exchange-pick__title">@Model.BookRequested.Title</div>
+                                    <div class="exchange-pick__author">@Model.BookRequested.Author</div>
+                                </div>
+                            </div>
+                        }
+                        <p class="text-muted mb-2">Вы отдаёте:</p>
+                        @if (Model.BookOffered != null)
+                        {
+                            <div class="exchange-pick exchange-pick--selected">
+                                @if (!string.IsNullOrEmpty(Model.BookOffered.CoverImagePath))
+                                {
+                                    <img src="@Model.BookOffered.CoverImagePath" alt="" class="exchange-pick__cover" />
+                                }
+                                <div>
+                                    <div class="exchange-pick__title">@Model.BookOffered.Title</div>
+                                    <div class="exchange-pick__author">@Model.BookOffered.Author</div>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="exchange-pick exchange-pick--free">
+                                <div>
+                                    <div class="exchange-pick__title">Безвозмездно</div>
+                                    <div class="exchange-pick__author">Передача в дар</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                @if (Model.CanAccept || Model.CanReject || Model.CanCancel || Model.CanComplete)
+                {
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="mb-3">Действия</h3>
+                            <div class="exchange-actions">
+                                @if (Model.CanAccept)
+                                {
+                                    <form asp-action="Accept" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@Model.Id" />
+                                        <button class="btn btn-primary btn-sm">Принять</button>
+                                    </form>
+                                }
+                                @if (Model.CanReject)
+                                {
+                                    <form asp-action="Reject" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@Model.Id" />
+                                        <button class="btn btn-outline btn-sm" style="color:var(--red-600);border-color:var(--red-600);">Отклонить</button>
+                                    </form>
+                                }
+                                @if (Model.CanCancel)
+                                {
+                                    <form asp-action="Cancel" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@Model.Id" />
+                                        <button class="btn btn-outline btn-sm">Отменить</button>
+                                    </form>
+                                }
+                                @if (Model.CanComplete)
+                                {
+                                    <form asp-action="Complete" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@Model.Id" />
+                                        <button class="btn btn-primary btn-sm">Завершить</button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="mb-3">Чат</h3>
+                    <div class="chat-messages" id="chatMessages">
+                        @if (Model.Messages.Count == 0)
+                        {
+                            <div class="empty-state" style="padding:2rem 1rem;">
+                                <p>Пока нет сообщений.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var m in Model.Messages)
+                            {
+                                var mine = m.SenderId == Model.CurrentUserId;
+                                <div class="chat-msg @(mine ? "chat-msg--mine" : "")">
+                                    <div class="chat-bubble @(mine ? "chat-bubble--mine" : "chat-bubble--theirs")">
+                                        <div class="chat-text">@m.Text</div>
+                                        <time>@m.SentAt.ToLocalTime().ToString("HH:mm")</time>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
