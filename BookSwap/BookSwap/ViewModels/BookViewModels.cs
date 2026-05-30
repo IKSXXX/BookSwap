@@ -60,3 +60,21 @@ public class BookDetailsViewModel
     public List<OwnerSummaryViewModel> Owners { get; set; } = new();
     public List<BookCardViewModel> Similar { get; set; } = new();
 }
+
+public class DiscussionDetailsViewModel
+{
+    public int Id { get; set; }
+    public int BookId { get; set; }
+    public string BookTitle { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string AuthorName { get; set; } = string.Empty;
+    public List<DiscussionMessageViewModel> Messages { get; set; } = new();
+}
+
+public class DiscussionMessageViewModel
+{
+    public string UserName { get; set; } = string.Empty;
+    public string? AvatarPath { get; set; }
+    public string Text { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+}

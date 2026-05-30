@@ -93,6 +93,26 @@
                             Предложить обмен
                         </a>
                     }
+                    @if (SignInManager.IsSignedIn(User) && !isOwner)
+                    {
+                        <form asp-controller="Favorite" asp-action="Toggle" method="post" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="bookId" value="@Model.Id" />
+                            <button type="submit" class="btn btn-outline btn-sm">
+                                <svg class="icon"><use href="#i-heart"/></svg>
+                                В избранное
+                            </button>
+                        </form>
+                        <form asp-controller="Favorite" asp-action="Toggle" method="post" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="bookId" value="@Model.Id" />
+                            <input type="hidden" name="isWishlist" value="true" />
+                            <button type="submit" class="btn btn-outline btn-sm">
+                                <svg class="icon"><use href="#i-bookmark"/></svg>
+                                В вишлист
+                            </button>
+                        </form>
+                    }
                     @if (SignInManager.IsSignedIn(User) && isOwner)
                     {
                         <a asp-controller="Book" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline">

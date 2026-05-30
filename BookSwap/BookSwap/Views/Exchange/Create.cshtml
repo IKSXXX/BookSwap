@@ -63,7 +63,7 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary" @(Model.MyAvailableBooks.Count == 0 ? "disabled" : "")>
+            <button type="submit" class="btn btn-primary">
                 <svg class="icon"><use href="#i-swap"/></svg>
                 Отправить предложение
             </button>
@@ -76,7 +76,7 @@
         document.querySelectorAll('.exchange-pick input[type="radio"]').forEach(input => {
             input.addEventListener('change', () => {
                 document.querySelectorAll('.exchange-pick').forEach(el => el.classList.remove('exchange-pick--selected'));
-                input.closest('.exchange-pick').classList.add('exchange-pick--selected');
+                if (input.checked) input.closest('.exchange-pick').classList.add('exchange-pick--selected');
             });
         });
     </script>

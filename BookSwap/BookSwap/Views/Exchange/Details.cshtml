@@ -115,6 +115,13 @@
                                         <button class="btn btn-primary btn-sm">Завершить</button>
                                     </form>
                                 }
+                                @if (Model.CanLeaveReview)
+                                {
+                                    <a asp-action="LeaveReview" asp-route-id="@Model.Id" class="btn btn-outline btn-sm">
+                                        <svg class="icon"><use href="#i-star"/></svg>
+                                        Оставить отзыв
+                                    </a>
+                                }
                             </div>
                         </div>
                     </div>
