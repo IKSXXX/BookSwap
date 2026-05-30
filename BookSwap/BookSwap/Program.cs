@@ -32,6 +32,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddAutoMapper(cfg => { }, typeof(BookExchange.Web.Helpers.MappingProfile).Assembly);
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
