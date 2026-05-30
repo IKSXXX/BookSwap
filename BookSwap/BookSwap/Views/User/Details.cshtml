@@ -1,0 +1,144 @@
+@model UserProfileViewModel
+@{
+    ViewData["Title"] = Model.UserName;
+}
+
+<div class="section--gray" style="padding:2rem 0; min-height:calc(100vh - 64px);">
+    <div class="container">
+        <div class="profile-card mb-6">
+            <div class="profile-avatar-wrap">
+                <div class="profile-avatar">@(Model.UserName.Substring(0, 1).ToUpper())</div>
+            </div>
+            <div class="profile-info">
+                <h1>@Model.UserName</h1>
+                <div class="profile-meta">
+                    @if (!string.IsNullOrEmpty(Model.Location))
+                    {
+                        <span><svg class="icon"><use href="#i-location"/></svg>@Model.Location</span>
+                    }
+                    <span><svg class="icon rating-star icon--fill"><use href="#i-star"/></svg>@Model.Rating.ToString("0.0")</span>
+                    <span><svg class="icon"><use href="#i-calendar"/></svg>С @Model.RegistrationDate.ToLocalTime().ToString("MMMM yyyy")</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-stats mb-6">
+            <div class="stat-card">
+                <div class="stat-value">@Model.BooksCount</div>
+                <div class="stat-label">книг</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">@Model.Favorites.Count</div>
+                <div class="stat-label">в избранном</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">@Model.ReviewsReceived.Count</div>
+                <div class="stat-label">отзывов</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tabs-list">
+                <button type="button" class="tab-btn active" data-tab="books">
+                    <svg class="icon"><use href="#i-book"/></svg>
+                    Мои книги (@Model.MyBooks.Count)
+                </button>
+                <button type="button" class="tab-btn" data-tab="favorites">
+                    <svg class="icon"><use href="#i-heart"/></svg>
+                    Избранное (@Model.Favorites.Count)
+                </button>
+                <button type="button" class="tab-btn" data-tab="reviews">
+                    <svg class="icon"><use href="#i-star"/></svg>
+                    Отзывы (@Model.ReviewsReceived.Count)
+                </button>
+            </div>
+
+            <div class="tab-content" id="tab-books">
+                @if (Model.MyBooks.Count == 0)
+                {
+                    <div class="empty-state">
+                        <svg class="icon"><use href="#i-book"/></svg>
+                        <p>Нет книг.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="book-grid">
+                        @foreach (var b in Model.MyBooks)
+                        {
+                            <partial name="_BookCard" model="b" />
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="tab-content" id="tab-favorites" hidden>
+                @if (Model.Favorites.Count == 0)
+                {
+                    <div class="empty-state">
+                        <svg class="icon"><use href="#i-heart"/></svg>
+                        <p>Избранное пусто.</p>
+                        @if (Model.IsCurrentUser)
+                        {
+                            <a asp-controller="Book" asp-action="Index" class="btn btn-outline btn-sm">Перейти в каталог</a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="book-grid">
+                        @foreach (var b in Model.Favorites)
+                        {
+                            <partial name="_BookCard" model="b" />
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="tab-content" id="tab-reviews" hidden>
+                @if (Model.ReviewsReceived.Count == 0)
+                {
+                    <div class="empty-state">
+                        <svg class="icon"><use href="#i-star"/></svg>
+                        <p>Нет отзывов.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="reviews-list">
+                        @foreach (var r in Model.ReviewsReceived)
+                        {
+                            <div class="review-item">
+                                <div class="review-head">
+                                    <span class="review-avatar">@(r.FromUserName.Substring(0, 1).ToUpper())</span>
+                                    <span class="review-name">@r.FromUserName</span>
+                                    <span class="review-stars">
+                                        @for (int i = 0; i < 5; i++)
+                                        {
+                                            <svg class="icon @(i < r.Rating ? "icon--fill" : "")"><use href="#i-star"/></svg>
+                                        }
+                                    </span>
+                                </div>
+                                <p class="review-comment">@r.Comment</p>
+                                <div class="review-date">@r.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.hidden = true);
+                btn.classList.add('active');
+                document.getElementById('tab-' + btn.dataset.tab).hidden = false;
+            });
+        });
+    </script>
+}
