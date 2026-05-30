@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BookExchange.Web.Entities;
 
@@ -34,4 +35,7 @@ public class Book : BaseEntity
     public bool IsHidden { get; set; }
 
     public ICollection<BookOwner> BookOwners { get; set; } = new List<BookOwner>();
+
+    [NotMapped]
+    public User? PrimaryOwner => BookOwners.FirstOrDefault(bo => bo.IsPrimary)?.User ?? BookOwners.FirstOrDefault()?.User;
 }

@@ -1,0 +1,114 @@
+@model BookCatalogViewModel
+@{
+    ViewData["Title"] = "Каталог";
+}
+
+<div class="section--tight">
+    <div class="container">
+        <form id="catalogForm" method="get">
+            <div class="catalog-layout">
+                <aside class="catalog-side">
+                    <div class="card filters-card">
+                        <h3>Фильтры</h3>
+
+                        <div class="filter-group">
+                            <label>Поиск</label>
+                            <input type="text" name="search" class="form-input" value="@Model.SearchQuery" placeholder="Название или автор..." />
+                        </div>
+
+                        <div class="filter-group">
+                            <label>Жанры</label>
+                            @foreach (var g in Model.AllGenres)
+                            {
+                                var checkedAttr = Model.SelectedGenres.Contains(g) ? "checked" : null;
+                                <label class="filter-check">
+                                    <input type="checkbox" name="genresArr" value="@g" @checkedAttr />
+                                    <span>@g</span>
+                                </label>
+                            }
+                        </div>
+
+                        <div class="filter-group">
+                            <label>Состояние</label>
+                            @foreach (var c in Enum.GetValues<BookCondition>())
+                            {
+                                var checkedAttr = Model.SelectedConditions.Contains(c) ? "checked" : null;
+                                <label class="filter-check">
+                                    <input type="checkbox" name="conditionsArr" value="@c" @checkedAttr />
+                                    <span>@MappingProfile.ConditionToLabel(c)</span>
+                                </label>
+                            }
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="filter-check">
+                                <input type="checkbox" name="onlyAvailable" value="true" @(Model.OnlyAvailable ? "checked" : null) />
+                                <span>Только доступные</span>
+                            </label>
+                        </div>
+
+                        <input type="hidden" name="genres" id="hiddenGenres" />
+                        <input type="hidden" name="conditions" id="hiddenConditions" />
+
+                        <div class="filter-actions">
+                            <button type="submit" class="btn btn-primary w-full">Применить</button>
+                            <a href="/catalog" class="btn btn-outline" title="Сбросить">
+                                <svg class="icon"><use href="#i-x"/></svg>
+                            </a>
+                        </div>
+                    </div>
+                </aside>
+
+                <div class="catalog-results">
+                    <div class="catalog-header">
+                        <h1>Каталог книг</h1>
+                        <p class="text-muted">Найдено: <strong>@Model.Pagination.TotalItems</strong></p>
+                    </div>
+                    @if (Model.Books.Count == 0)
+                    {
+                        <div class="empty-state card">
+                            <svg class="icon"><use href="#i-search"/></svg>
+                            <h3>Ничего не найдено</h3>
+                            <p>Попробуйте изменить фильтры.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="book-grid">
+                            @foreach (var b in Model.Books)
+                            {
+                                <partial name="_BookCard" model="b" />
+                            }
+                        </div>
+
+                        @if (Model.Pagination.TotalPages > 1)
+                        {
+                            <div class="pagination">
+                                @if (Model.Pagination.HasPrev)
+                                {
+                                    <a href="?page=@(Model.Pagination.Page - 1)" class="btn btn-outline btn-sm">Назад</a>
+                                }
+                                <span>Стр. @Model.Pagination.Page из @Model.Pagination.TotalPages</span>
+                                @if (Model.Pagination.HasNext)
+                                {
+                                    <a href="?page=@(Model.Pagination.Page + 1)" class="btn btn-outline btn-sm">Вперёд</a>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('catalogForm')?.addEventListener('submit', () => {
+            const genres = [...document.querySelectorAll('input[name="genresArr"]:checked')].map(c => c.value);
+            document.getElementById('hiddenGenres').value = genres.join(',');
+            const conditions = [...document.querySelectorAll('input[name="conditionsArr"]:checked')].map(c => c.value);
+            document.getElementById('hiddenConditions').value = conditions.join(',');
+        });
+    </script>
+}
