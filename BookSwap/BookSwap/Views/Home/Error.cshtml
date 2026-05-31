@@ -1,0 +1,16 @@
+@{ ViewData["Title"] = "Ошибка"; }
+
+<div class="section--gray" style="padding:4rem 0; min-height:calc(100vh - 64px);">
+    <div class="container" style="max-width:540px;text-align:center;">
+        <div class="card">
+            <div class="card-body" style="padding:2.5rem 2rem;">
+                <div style="width:56px;height:56px;border-radius:50%;background:var(--red-100);color:var(--red-600);display:grid;place-items:center;margin:0 auto 1.25rem;">
+                    <svg class="icon" style="width:1.5rem;height:1.5rem;"><use href="#i-x"/></svg>
+                </div>
+                <h3 style="margin-bottom:.5rem;">Что-то пошло не так</h3>
+                <p style="color:var(--gray-500);font-size:.875rem;margin-bottom:1.5rem;">При обработке запроса произошла ошибка.</p>
+                <a href="/" class="btn btn-outline" style="font-size:.8125rem;padding:.5rem 1rem;">На главную</a>
+            </div>
+        </div>
+    </div>
+</div>
