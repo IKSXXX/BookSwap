@@ -5,6 +5,7 @@ using BookExchange.Web.Interfaces;
 using BookExchange.Web.Repositories;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -45,6 +46,7 @@ try
 
     builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
     builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+    builder.Services.AddTransient<IEmailSender, BookExchange.Web.Helpers.ConsoleEmailSender>();
     builder.Services.AddAutoMapper(cfg => { }, typeof(BookExchange.Web.Helpers.MappingProfile).Assembly);
     builder.Services.AddControllersWithViews();
     builder.Services.AddSignalR();

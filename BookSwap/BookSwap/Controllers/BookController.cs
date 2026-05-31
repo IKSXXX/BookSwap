@@ -236,4 +236,12 @@ public class BookController : Controller
         await _uow.SaveChangesAsync();
         return RedirectToAction("Details", "User", new { id = userId });
     }
+
+    [Authorize, HttpGet]
+    public async Task<IActionResult> FetchByIsbn(string isbn)
+    {
+        var r = await GoogleBooksHelper.FetchByISBNAsync(isbn);
+        if (r == null) return Json(new { found = false });
+        return Json(new { found = true, r.Title, r.Author, r.Description, Cover = r.CoverImageUrl, r.Year });
+    }
 }
