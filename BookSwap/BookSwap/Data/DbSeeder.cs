@@ -82,6 +82,15 @@ public static class DbSeeder
                 new BookOwner { BookId = books[3].Id, UserId = userMap["anna"].Id, IsPrimary = true },
                 new BookOwner { BookId = books[4].Id, UserId = userMap["igor"].Id, IsPrimary = true }
             );
+
+            ctx.BooksOfTheDay.Add(new BookOfTheDay { BookId = books[1].Id, Date = DateTime.Now.Date });
+
+            ctx.QuizQuestions.AddRange(
+                new QuizQuestion { BookId = books[0].Id, Quote = "Тварь я дрожащая или право имею?", CorrectAnswer = "Преступление и наказание", Option2 = "Война и мир", Option3 = "Мастер и Маргарита", Option4 = "1984" },
+                new QuizQuestion { BookId = books[1].Id, Quote = "Большой Брат следит за тобой.", CorrectAnswer = "1984", Option2 = "Заводной апельсин", Option3 = "Процесс", Option4 = "Игра престолов" },
+                new QuizQuestion { BookId = books[2].Id, Quote = "Рукописи не горят.", CorrectAnswer = "Мастер и Маргарита", Option2 = "Преступление и наказание", Option3 = "Анна Каренина", Option4 = "Три товарища" }
+            );
+
             await ctx.SaveChangesAsync();
         }
     }
