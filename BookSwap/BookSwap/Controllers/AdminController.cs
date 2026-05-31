@@ -1,3 +1,4 @@
+using AutoMapper;
 using BookExchange.Web.Data;
 using BookExchange.Web.Entities;
 using BookExchange.Web.Interfaces;
@@ -13,14 +14,14 @@ namespace BookExchange.Web.Controllers;
 public class AdminController : Controller
 {
     readonly IUnitOfWork _uow;
+    readonly IMapper _mapper;
     readonly UserManager<User> _um;
-    readonly RoleManager<IdentityRole> _rm;
 
-    public AdminController(IUnitOfWork uow, UserManager<User> um, RoleManager<IdentityRole> rm)
+    public AdminController(IUnitOfWork uow, IMapper mapper, UserManager<User> um)
     {
         _uow = uow;
+        _mapper = mapper;
         _um = um;
-        _rm = rm;
     }
 
     public async Task<IActionResult> Index()
@@ -107,5 +108,94 @@ public class AdminController : Controller
         _uow.Books.Remove(book);
         await _uow.SaveChangesAsync();
         return RedirectToAction(nameof(Books));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> BookOfTheDay()
+    {
+        var books = await _uow.Books.Query()
+            .Include(b => b.BookOwners).ThenInclude(bo => bo.User)
+            .Where(b => !b.IsHidden)
+            .ToListAsync();
+        var today = DateTime.Now.Date;
+        var current = (await _uow.BooksOfTheDay.FindAsync(b => b.Date == today)).FirstOrDefault();
+        return View(new SetBookOfDayViewModel
+        {
+            Date = today,
+            AvailableBooks = books.Select(_mapper.Map<BookCardViewModel>).ToList(),
+            CurrentBookOfDayId = current?.BookId
+        });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> BookOfTheDay(DateTime date, int bookId)
+    {
+        var existing = (await _uow.BooksOfTheDay.FindAsync(b => b.Date == date.Date)).FirstOrDefault();
+        if (existing != null)
+        {
+            existing.BookId = bookId;
+            _uow.BooksOfTheDay.Update(existing);
+        }
+        else
+        {
+            await _uow.BooksOfTheDay.AddAsync(new BookOfTheDay { BookId = bookId, Date = date.Date });
+        }
+        await _uow.SaveChangesAsync();
+        TempData["Success"] = "Книга дня обновлена.";
+        return RedirectToAction(nameof(BookOfTheDay));
+    }
+
+    public async Task<IActionResult> Quiz()
+    {
+        var qs = await _uow.QuizQuestions.Query().Include(q => q.Book).OrderBy(q => q.Id).ToListAsync();
+        return View(qs);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> CreateQuiz()
+    {
+        var books = await _uow.Books.Query()
+            .Include(b => b.BookOwners).ThenInclude(bo => bo.User)
+            .Where(b => !b.IsHidden)
+            .ToListAsync();
+        return View("QuizForm", new QuizQuestionFormViewModel
+        {
+            AvailableBooks = books.Select(_mapper.Map<BookCardViewModel>).ToList()
+        });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateQuiz(QuizQuestionFormViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            var books = await _uow.Books.Query()
+                .Include(b => b.BookOwners).ThenInclude(bo => bo.User)
+                .Where(b => !b.IsHidden)
+                .ToListAsync();
+            model.AvailableBooks = books.Select(_mapper.Map<BookCardViewModel>).ToList();
+            return View("QuizForm", model);
+        }
+        await _uow.QuizQuestions.AddAsync(new QuizQuestion
+        {
+            BookId = model.BookId,
+            Quote = model.Quote,
+            CorrectAnswer = model.CorrectAnswer,
+            Option2 = model.Option2,
+            Option3 = model.Option3,
+            Option4 = model.Option4
+        });
+        await _uow.SaveChangesAsync();
+        return RedirectToAction(nameof(Quiz));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteQuiz(int id)
+    {
+        var q = await _uow.QuizQuestions.GetByIdAsync(id);
+        if (q == null) return NotFound();
+        _uow.QuizQuestions.Remove(q);
+        await _uow.SaveChangesAsync();
+        return RedirectToAction(nameof(Quiz));
     }
 }

@@ -1,0 +1,31 @@
+@model SetBookOfDayViewModel
+@{ ViewData["Title"] = "Книга дня"; }
+
+<div class="section--gray" style="padding:2rem 0; min-height:calc(100vh - 64px);">
+    <div class="container" style="max-width:600px;">
+        <a asp-action="Index" class="btn btn-ghost btn-sm mb-4">← В админку</a>
+        <h1 class="mb-4">Книга дня</h1>
+
+        <form asp-action="BookOfTheDay" method="post">
+            @Html.AntiForgeryToken()
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Дата</label>
+                        <input type="date" name="date" value="@Model.Date.ToString("yyyy-MM-dd")" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label>Книга</label>
+                        <select name="bookId" class="form-input">
+                            @foreach (var b in Model.AvailableBooks)
+                            {
+                                <option value="@b.Id" selected="@(Model.CurrentBookOfDayId == b.Id)">@b.Title — @b.Author</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+        </form>
+    </div>
+</div>

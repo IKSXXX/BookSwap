@@ -1,0 +1,48 @@
+@model List<QuizQuestion>
+@{ ViewData["Title"] = "Викторина"; }
+
+<div class="section--gray" style="padding:2rem 0; min-height:calc(100vh - 64px);">
+    <div class="container">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;">
+            <div>
+                <a asp-action="Index" class="btn btn-ghost btn-sm mb-2">← В админку</a>
+                <h1>Вопросы викторины</h1>
+                <p class="text-muted" style="font-size:.875rem;">Всего: @Model.Count</p>
+            </div>
+            <a asp-action="CreateQuiz" class="btn btn-primary btn-sm">
+                <svg class="icon"><use href="#i-plus"/></svg>
+                Добавить
+            </a>
+        </div>
+
+        <div class="table-wrap">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Цитата</th>
+                        <th>Ответ</th>
+                        <th>Книга</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var q in Model)
+                    {
+                        <tr>
+                            <td style="max-width:400px;font-style:italic;color:var(--gray-600);">«@q.Quote»</td>
+                            <td style="font-weight:600;">@q.CorrectAnswer</td>
+                            <td class="text-muted">@(q.Book?.Title ?? "—")</td>
+                            <td>
+                                <form asp-action="DeleteQuiz" method="post" onsubmit="return confirm('Удалить?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@q.Id" />
+                                    <button class="btn btn-ghost btn-sm" style="color:var(--red-600);">Удалить</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

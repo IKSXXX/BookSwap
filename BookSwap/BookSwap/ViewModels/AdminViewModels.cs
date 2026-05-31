@@ -19,3 +19,23 @@ public class AdminUserListItemViewModel
     public DateTime RegistrationDate { get; set; }
     public int BooksCount { get; set; }
 }
+
+public class QuizQuestionFormViewModel
+{
+    public int? Id { get; set; }
+    public int BookId { get; set; }
+    public string Quote { get; set; } = string.Empty;
+    public string CorrectAnswer { get; set; } = string.Empty;
+    public string Option2 { get; set; } = string.Empty;
+    public string Option3 { get; set; } = string.Empty;
+    public string Option4 { get; set; } = string.Empty;
+    public List<BookCardViewModel> AvailableBooks { get; set; } = new();
+}
+
+public class SetBookOfDayViewModel
+{
+    public DateTime Date { get; set; } = DateTime.Now.Date;
+    public int BookId { get; set; }
+    public List<BookCardViewModel> AvailableBooks { get; set; } = new();
+    public int? CurrentBookOfDayId { get; set; }
+}
