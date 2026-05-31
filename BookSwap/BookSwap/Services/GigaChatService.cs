@@ -17,9 +17,13 @@ public class GigaChatService
     private const string AuthUrl = "https://ngw.devices.sberbank.ru:9443/api/v2/oauth";
     private const string ChatUrl = "https://gigachat.devices.sberbank.ru/api/v1/chat/completions";
 
-    public GigaChatService(HttpClient http, IConfiguration config, ILogger<GigaChatService> logger)
+    public GigaChatService(IConfiguration config, ILogger<GigaChatService> logger)
     {
-        _http = http;
+        var handler = new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+        };
+        _http = new HttpClient(handler);
         _config = config;
         _logger = logger;
     }
@@ -35,14 +39,19 @@ public class GigaChatService
             if (_accessToken != null && DateTime.UtcNow < _tokenExpiresAt.AddMinutes(-5))
                 return _accessToken;
 
-            var apiKey = _config["GigaChat:ApiKey"]
-                ?? throw new InvalidOperationException("GigaChat:ApiKey not configured");
+            var clientId = _config["GigaChat:ClientId"]
+                ?? throw new InvalidOperationException("GigaChat:ClientId not configured");
+            var clientSecret = _config["GigaChat:ClientSecret"]
+                ?? throw new InvalidOperationException("GigaChat:ClientSecret not configured");
 
             var requestId = Guid.NewGuid().ToString();
 
+            var credentials = Convert.ToBase64String(
+                System.Text.Encoding.UTF8.GetBytes($"{clientId}:{clientSecret}"));
+
             var request = new HttpRequestMessage(HttpMethod.Post, AuthUrl);
             request.Headers.Add("RqUID", requestId);
-            request.Headers.Add("Authorization", $"Bearer {apiKey}");
+            request.Headers.Add("Authorization", $"Basic {credentials}");
             request.Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 ["scope"] = "GIGACHAT_API_PERS"

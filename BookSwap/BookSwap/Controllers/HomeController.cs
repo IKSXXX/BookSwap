@@ -14,12 +14,14 @@ public class HomeController : Controller
     private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
     private readonly GigaChatService _gigaChat;
+    private readonly ILogger<HomeController> _logger;
 
-    public HomeController(IUnitOfWork uow, IMapper mapper, GigaChatService gigaChat)
+    public HomeController(IUnitOfWork uow, IMapper mapper, GigaChatService gigaChat, ILogger<HomeController> logger)
     {
         _uow = uow;
         _mapper = mapper;
         _gigaChat = gigaChat;
+        _logger = logger;
     }
 
     [HttpGet("/")]
@@ -72,7 +74,7 @@ public class HomeController : Controller
     public async Task<IActionResult> AiRecommend([FromForm] string? query)
     {
         if (string.IsNullOrWhiteSpace(query))
-            return Json(new AiRecommendationViewModel { Query = "", Books = new() });
+            return Json(new AiRecommendationViewModel { Query = "", Books = new List<BookCardViewModel>(), Source = "empty" });
 
         var books = await _uow.Books.Query()
             .Where(b => !b.IsHidden && b.IsAvailable)
@@ -81,7 +83,9 @@ public class HomeController : Controller
 
         var bookList = books.Select(b => $"{b.Title} — {b.Author} ({b.Genre})").ToList();
 
-        List<BookCardViewModel> result;
+        List<BookCardViewModel> result = new();
+        string source = "none";
+
         try
         {
             var recommendedTitles = await _gigaChat.GetBookRecommendationsAsync(query, bookList);
@@ -94,37 +98,53 @@ public class HomeController : Controller
                         b.Genre.Contains(t, StringComparison.OrdinalIgnoreCase)))
                     .Select(_mapper.Map<BookCardViewModel>)
                     .ToList();
-            }
-            else
-            {
-                result = new();
+
+                if (result.Count > 0) source = "gigachat";
             }
         }
-        catch
+        catch (Exception ex)
         {
-            result = new();
+            _logger.LogWarning(ex, "GigaChat unavailable, falling back to keyword search");
         }
 
         if (result.Count == 0)
         {
             var keywords = query.ToLowerInvariant()
-                .Split(new[] { ' ', ',', '.', '!', '?' }, StringSplitOptions.RemoveEmptyEntries)
+                .Split(new[] { ' ', ',', '.', '!', '?', '-', '—' }, StringSplitOptions.RemoveEmptyEntries)
                 .Where(w => w.Length > 2)
                 .ToArray();
 
-            result = books
-                .Select(b => new { book = b, score = ScoreBook(b, keywords) })
-                .Where(x => x.score > 0)
-                .OrderByDescending(x => x.score)
-                .Take(6)
-                .Select(x => _mapper.Map<BookCardViewModel>(x.book))
-                .ToList();
+            if (keywords.Length > 0)
+            {
+                var scored = books
+                    .Select(b => new { book = b, score = ScoreBook(b, keywords) })
+                    .Where(x => x.score > 0)
+                    .OrderByDescending(x => x.score)
+                    .ToList();
+
+                if (scored.Count > 0)
+                {
+                    var maxScore = scored[0].score;
+                    result = scored
+                        .Where(x => x.score >= maxScore / 2)
+                        .Take(6)
+                        .Select(x => _mapper.Map<BookCardViewModel>(x.book))
+                        .ToList();
+
+                    source = "keywords";
+                }
+            }
         }
 
-        if (result.Count == 0)
-            result = books.OrderBy(_ => Guid.NewGuid()).Take(6).Select(_mapper.Map<BookCardViewModel>).ToList();
-
-        return Json(new AiRecommendationViewModel { Query = query, Books = result });
+        return Json(new AiRecommendationViewModel
+        {
+            Query = query,
+            Books = result,
+            Source = source,
+            Message = result.Count == 0
+                ? $"По запросу \"{query}\" ничего не найдено. Попробуйте другой запрос."
+                : null
+        });
     }
 
     static bool FuzzyMatch(string a, string b)

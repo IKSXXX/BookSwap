@@ -26,4 +26,6 @@ public class AiRecommendationViewModel
 {
     public string Query { get; set; } = string.Empty;
     public List<BookCardViewModel> Books { get; set; } = new();
+    public string Source { get; set; } = "none";
+    public string? Message { get; set; }
 }
