@@ -3,6 +3,7 @@
 @{
     var isSignedIn = SignInManager.IsSignedIn(User);
     var currentUser = isSignedIn ? await UserManager.GetUserAsync(User) : null;
+    var isAdmin = currentUser != null && await UserManager.IsInRoleAsync(currentUser, "Admin");
     var currentController = (string?)ViewContext.RouteData.Values["controller"] ?? "";
 }
 <!DOCTYPE html>
@@ -46,6 +47,10 @@
                     @if (isSignedIn && currentUser != null)
                     {
                         <a asp-controller="User" asp-action="Details" asp-route-id="@currentUser.Id" class="nav-link @(currentController == "User" ? "is-active" : "")">Профиль</a>
+                        @if (isAdmin)
+                        {
+                            <a asp-controller="Admin" asp-action="Index" class="nav-link @(currentController == "Admin" ? "is-active" : "")">Админ</a>
+                        }
                     }
                 </div>
                 <div class="nav-cta">

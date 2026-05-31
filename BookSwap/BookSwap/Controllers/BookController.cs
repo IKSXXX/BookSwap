@@ -106,6 +106,17 @@ public class BookController : Controller
             .Take(4)
             .ToListAsync();
 
+        var discussions = await _uow.Discussions.Query()
+            .Where(d => d.BookId == id)
+            .Include(d => d.User)
+            .Include(d => d.Messages)
+            .OrderByDescending(d => d.CreatedAt)
+            .ToListAsync();
+
+        var currentId = _userManager.GetUserId(User);
+        var isFav = currentId != null && await _uow.Favorites.AnyAsync(f => f.UserId == currentId && f.BookId == id && !f.IsWishlist);
+        var isWish = currentId != null && await _uow.Favorites.AnyAsync(f => f.UserId == currentId && f.BookId == id && f.IsWishlist);
+
         var vm = new BookDetailsViewModel
         {
             Id = book.Id,
@@ -121,7 +132,17 @@ public class BookController : Controller
             IsAvailable = book.IsAvailable,
             Owner = _mapper.Map<OwnerSummaryViewModel>(book.PrimaryOwner ?? new User()),
             Owners = book.BookOwners.Select(bo => _mapper.Map<OwnerSummaryViewModel>(bo.User ?? new User())).ToList(),
-            Similar = similar.Select(_mapper.Map<BookCardViewModel>).ToList()
+            Similar = similar.Select(_mapper.Map<BookCardViewModel>).ToList(),
+            Discussions = discussions.Select(d => new DiscussionListItemViewModel
+            {
+                Id = d.Id,
+                Title = d.Title,
+                AuthorName = d.User?.UserName ?? "",
+                MessagesCount = d.Messages.Count,
+                CreatedAt = d.CreatedAt
+            }).ToList(),
+            IsFavorite = isFav,
+            IsInWishlist = isWish
         };
 
         return View(vm);

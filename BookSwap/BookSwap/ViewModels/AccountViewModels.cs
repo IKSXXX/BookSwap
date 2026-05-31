@@ -26,7 +26,9 @@ public class UserProfileViewModel
     public double Rating { get; set; }
     public DateTime RegistrationDate { get; set; }
     public int BooksCount { get; set; }
+    public int CompletedExchanges { get; set; }
     public List<BookCardViewModel> MyBooks { get; set; } = new();
+    public List<ExchangeListItemViewModel> Exchanges { get; set; } = new();
     public List<BookCardViewModel> Favorites { get; set; } = new();
     public List<ReviewDisplayViewModel> ReviewsReceived { get; set; } = new();
     public List<ReviewDisplayViewModel> ReviewsGiven { get; set; } = new();

@@ -18,6 +18,7 @@ public static class DbSeeder
         var ctx = scope.ServiceProvider.GetRequiredService<BookExchangeDbContext>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+        await ctx.Database.MigrateAsync();
 
         foreach (var role in new[] { AdminRole, UserRole })
         {
@@ -33,7 +34,8 @@ public static class DbSeeder
                 UserName = "admin",
                 Email = AdminEmail,
                 EmailConfirmed = true,
-                Location = "Система"
+                Location = "Система",
+                AvatarPath = "https://api.dicebear.com/9.x/thumbs/svg?seed=admin&backgroundColor=transparent"
             };
             await userManager.CreateAsync(admin, AdminPassword);
         }
@@ -47,6 +49,11 @@ public static class DbSeeder
             ("anna", "anna@bookswap.com", "Москва"),
             ("igor", "igor@bookswap.com", "Санкт-Петербург"),
             ("elena", "elena@bookswap.com", "Казань"),
+            ("dmitry", "dmitry@bookswap.com", "Новосибирск"),
+            ("olga", "olga@bookswap.com", "Екатеринбург"),
+            ("pavel", "pavel@bookswap.com", "Нижний Новгород"),
+            ("maria", "maria@bookswap.com", "Самара"),
+            ("sergey", "sergey@bookswap.com", "Ростов-на-Дону"),
         };
 
         var userMap = new Dictionary<string, User>();
@@ -55,7 +62,15 @@ public static class DbSeeder
             var u = await userManager.FindByEmailAsync(email);
             if (u == null)
             {
-                u = new User { UserName = name, Email = email, EmailConfirmed = true, Location = city };
+                u = new User
+                {
+                    UserName = name,
+                    Email = email,
+                    EmailConfirmed = true,
+                    Location = city,
+                    AvatarPath = $"https://api.dicebear.com/9.x/thumbs/svg?seed={name}&backgroundColor=transparent",
+                    RegistrationDate = DateTime.UtcNow.AddDays(-Random.Shared.Next(10, 200))
+                };
                 await userManager.CreateAsync(u, "Pass123!");
                 await userManager.AddToRoleAsync(u, UserRole);
             }
@@ -66,21 +81,32 @@ public static class DbSeeder
         {
             var books = new List<Book>
             {
-                new() { Title = "Преступление и наказание", Author = "Ф. Достоевский", Genre = "Классика", Condition = BookCondition.Good, Year = 1866, Description = "Великий роман о преступлении и наказании, о раскаянии и вере.", IsAvailable = true },
+                new() { Title = "Преступление и наказание", Author = "Ф. Достоевский", Genre = "Классика", Condition = BookCondition.Good, Year = 1866, Description = "Великий роман о преступлении и наказании.", IsAvailable = true },
                 new() { Title = "1984", Author = "Дж. Оруэлл", Genre = "Антиутопия", Condition = BookCondition.Excellent, Year = 1949, Description = "Классическая антиутопия о тоталитарном обществе.", IsAvailable = true },
-                new() { Title = "Мастер и Маргарита", Author = "М. Булгаков", Genre = "Классика", Condition = BookCondition.Acceptable, Year = 1967, Description = "Мистический роман о любви, дьяволе и Москве 30-х.", IsAvailable = true },
+                new() { Title = "Мастер и Маргарита", Author = "М. Булгаков", Genre = "Классика", Condition = BookCondition.Acceptable, Year = 1967, Description = "Мистический роман о любви, дьяволе и Москве 30-х.", IsAvailable = false },
+                new() { Title = "Война и мир", Author = "Л. Толстой", Genre = "Классика", Condition = BookCondition.Excellent, Year = 1869, Description = "Эпопея о судьбах людей на фоне наполеоновских войн.", IsAvailable = true },
                 new() { Title = "Гарри Поттер и философский камень", Author = "Дж. Роулинг", Genre = "Фэнтези", Condition = BookCondition.Good, Year = 1997, Description = "Первая книга о мальчике-волшебнике.", IsAvailable = true },
                 new() { Title = "Игра престолов", Author = "Дж. Мартин", Genre = "Фэнтези", Condition = BookCondition.Good, Year = 1996, Description = "Эпическая сага о борьбе за Железный трон.", IsAvailable = true },
+                new() { Title = "Евгений Онегин", Author = "А. Пушкин", Genre = "Классика", Condition = BookCondition.Good, Year = 1833, Description = "Роман в стихах, энциклопедия русской жизни.", IsAvailable = true },
+                new() { Title = "Шерлок Холмс", Author = "А.К. Дойл", Genre = "Детектив", Condition = BookCondition.Excellent, Year = 1892, Description = "Сборник рассказов о гениальном сыщике.", IsAvailable = true },
+                new() { Title = "Великий Гэтсби", Author = "Ф.С. Фицджеральд", Genre = "Классика", Condition = BookCondition.Excellent, Year = 1925, Description = "История любви и разочарования в эпоху джаза.", IsAvailable = true },
             };
             await ctx.Books.AddRangeAsync(books);
             await ctx.SaveChangesAsync();
 
             ctx.BookOwners.AddRange(
                 new BookOwner { BookId = books[0].Id, UserId = userMap["anna"].Id, IsPrimary = true },
+                new BookOwner { BookId = books[0].Id, UserId = userMap["igor"].Id, IsPrimary = false },
                 new BookOwner { BookId = books[1].Id, UserId = userMap["igor"].Id, IsPrimary = true },
                 new BookOwner { BookId = books[2].Id, UserId = userMap["elena"].Id, IsPrimary = true },
+                new BookOwner { BookId = books[2].Id, UserId = userMap["dmitry"].Id, IsPrimary = false },
                 new BookOwner { BookId = books[3].Id, UserId = userMap["anna"].Id, IsPrimary = true },
-                new BookOwner { BookId = books[4].Id, UserId = userMap["igor"].Id, IsPrimary = true }
+                new BookOwner { BookId = books[4].Id, UserId = userMap["dmitry"].Id, IsPrimary = true },
+                new BookOwner { BookId = books[5].Id, UserId = userMap["pavel"].Id, IsPrimary = true },
+                new BookOwner { BookId = books[5].Id, UserId = userMap["sergey"].Id, IsPrimary = false },
+                new BookOwner { BookId = books[6].Id, UserId = userMap["maria"].Id, IsPrimary = true },
+                new BookOwner { BookId = books[7].Id, UserId = userMap["dmitry"].Id, IsPrimary = true },
+                new BookOwner { BookId = books[8].Id, UserId = userMap["maria"].Id, IsPrimary = true }
             );
 
             ctx.BooksOfTheDay.Add(new BookOfTheDay { BookId = books[1].Id, Date = DateTime.Now.Date });
@@ -88,7 +114,18 @@ public static class DbSeeder
             ctx.QuizQuestions.AddRange(
                 new QuizQuestion { BookId = books[0].Id, Quote = "Тварь я дрожащая или право имею?", CorrectAnswer = "Преступление и наказание", Option2 = "Война и мир", Option3 = "Мастер и Маргарита", Option4 = "1984" },
                 new QuizQuestion { BookId = books[1].Id, Quote = "Большой Брат следит за тобой.", CorrectAnswer = "1984", Option2 = "Заводной апельсин", Option3 = "Процесс", Option4 = "Игра престолов" },
-                new QuizQuestion { BookId = books[2].Id, Quote = "Рукописи не горят.", CorrectAnswer = "Мастер и Маргарита", Option2 = "Преступление и наказание", Option3 = "Анна Каренина", Option4 = "Три товарища" }
+                new QuizQuestion { BookId = books[2].Id, Quote = "Рукописи не горят.", CorrectAnswer = "Мастер и Маргарита", Option2 = "Преступление и наказание", Option3 = "Анна Каренина", Option4 = "Три товарища" },
+                new QuizQuestion { BookId = books[4].Id, Quote = "Да, я волшебник.", CorrectAnswer = "Гарри Поттер и философский камень", Option2 = "Игра престолов", Option3 = "1984", Option4 = "Сто лет одиночества" },
+                new QuizQuestion { BookId = books[6].Id, Quote = "Когда играешь в игру престолов — побеждаешь или умираешь.", CorrectAnswer = "Игра престолов", Option2 = "Гарри Поттер и философский камень", Option3 = "Заводной апельсин", Option4 = "Процесс" }
+            );
+
+            var disc = new Discussion { BookId = books[1].Id, UserId = userMap["anna"].Id, Title = "Актуальна ли антиутопия сегодня?" };
+            ctx.Discussions.Add(disc);
+            await ctx.SaveChangesAsync();
+
+            ctx.DiscussionMessages.AddRange(
+                new DiscussionMessage { DiscussionId = disc.Id, UserId = userMap["anna"].Id, Text = "По-моему, книга как никогда актуальна. Что думаете?" },
+                new DiscussionMessage { DiscussionId = disc.Id, UserId = userMap["igor"].Id, Text = "Согласен! Особенно про новояз и манипуляции языком." }
             );
 
             await ctx.SaveChangesAsync();

@@ -388,6 +388,21 @@ section { padding: 3rem 0; }
 .ai-result-title { font-weight: 600; font-size: .875rem; color: var(--gray-900); }
 .ai-result-author { font-size: .75rem; color: var(--gray-500); }
 
+/* Admin */
+.admin-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
+.admin-links { display: flex; gap: 1rem; flex-wrap: wrap; }
+.admin-link-card { display: flex; align-items: center; gap: .75rem; padding: 1rem 1.25rem; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-lg); text-decoration: none; color: var(--gray-900); font-weight: 600; transition: all var(--dur) var(--ease); }
+.admin-link-card:hover { border-color: var(--gray-300); box-shadow: var(--shadow-sm); }
+
+/* Table */
+.table-wrap { border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; background: #fff; }
+.table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+.table th, .table td { padding: .75rem 1rem; text-align: left; border-bottom: 1px solid var(--line); }
+.table th { background: var(--gray-50); font-size: .75rem; font-weight: 600; color: var(--gray-600); text-transform: uppercase; }
+.table tbody tr:hover { background: var(--gray-50); }
+.table tbody tr:last-child td { border-bottom: none; }
+.row-hidden { opacity: .5; }
+
 @media (max-width: 768px) {
     .exchange-detail-grid { grid-template-columns: 1fr; }
 }

@@ -1,0 +1,40 @@
+@model AdminStatsViewModel
+@{
+    ViewData["Title"] = "Админ-панель";
+}
+
+<div class="section--gray" style="padding:2rem 0; min-height:calc(100vh - 64px);">
+    <div class="container">
+        <h1 class="mb-6">Админ-панель</h1>
+
+        <div class="admin-stats mb-6">
+            <div class="stat-card">
+                <div class="stat-value">@Model.UsersCount</div>
+                <div class="stat-label">пользователей</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">@Model.BooksCount</div>
+                <div class="stat-label">книг</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">@Model.ExchangesCount</div>
+                <div class="stat-label">обменов</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">@Model.ReviewsCount</div>
+                <div class="stat-label">отзывов</div>
+            </div>
+        </div>
+
+        <div class="admin-links">
+            <a asp-action="Users" class="admin-link-card">
+                <svg class="icon"><use href="#i-user"/></svg>
+                <span>Пользователи</span>
+            </a>
+            <a asp-action="Books" class="admin-link-card">
+                <svg class="icon"><use href="#i-book"/></svg>
+                <span>Книги</span>
+            </a>
+        </div>
+    </div>
+</div>

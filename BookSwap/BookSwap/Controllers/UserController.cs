@@ -1,5 +1,6 @@
 using AutoMapper;
 using BookExchange.Web.Entities;
+using BookExchange.Web.Helpers;
 using BookExchange.Web.Interfaces;
 using BookExchange.Web.ViewModels;
 using Microsoft.AspNetCore.Identity;
@@ -47,6 +48,13 @@ public class UserController : Controller
             .Select(f => f.Book!)
             .ToListAsync();
 
+        var exchanges = await _uow.Exchanges.Query()
+            .Where(e => e.SenderId == user.Id || e.ReceiverId == user.Id)
+            .Include(e => e.Sender).Include(e => e.Receiver)
+            .Include(e => e.BookRequested)
+            .OrderByDescending(e => e.CreatedAt)
+            .ToListAsync();
+
         var reviewsReceived = await _uow.Reviews.Query()
             .Where(r => r.ToUserId == user.Id)
             .Include(r => r.FromUser).Include(r => r.ToUser)
@@ -69,7 +77,20 @@ public class UserController : Controller
             Rating = user.Rating,
             RegistrationDate = user.RegistrationDate,
             BooksCount = myBooks.Count,
+            CompletedExchanges = exchanges.Count(e => e.Status == ExchangeStatus.Completed),
             MyBooks = myBooks.Select(_mapper.Map<BookCardViewModel>).ToList(),
+            Exchanges = exchanges.Select(e => new ExchangeListItemViewModel
+            {
+                Id = e.Id,
+                Status = e.Status,
+                StatusLabel = MappingProfile.StatusToLabel(e.Status),
+                CreatedAt = e.CreatedAt,
+                IsSender = e.SenderId == user.Id,
+                OtherUserId = (e.SenderId == user.Id ? e.ReceiverId : e.SenderId) ?? "",
+                OtherUserName = (e.SenderId == user.Id ? e.Receiver?.UserName : e.Sender?.UserName) ?? "",
+                BookRequestedTitle = e.BookRequested?.Title ?? "",
+                BookOfferedTitle = e.BookOffered?.Title
+            }).ToList(),
             Favorites = favorites.Select(_mapper.Map<BookCardViewModel>).ToList(),
             ReviewsReceived = reviewsReceived.Select(r => new ReviewDisplayViewModel
             {

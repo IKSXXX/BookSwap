@@ -11,6 +11,7 @@ public class BookCardViewModel
     public string Genre { get; set; } = string.Empty;
     public string ConditionLabel { get; set; } = string.Empty;
     public bool IsAvailable { get; set; }
+    public string? Description { get; set; }
     public OwnerSummaryViewModel Owner { get; set; } = new();
 }
 
@@ -19,6 +20,8 @@ public class OwnerSummaryViewModel
     public string Id { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string? Avatar { get; set; }
+    public int BooksCount { get; set; }
+    public int ExchangesCount { get; set; }
     public double Rating { get; set; }
 }
 
@@ -59,6 +62,18 @@ public class BookDetailsViewModel
     public OwnerSummaryViewModel Owner { get; set; } = new();
     public List<OwnerSummaryViewModel> Owners { get; set; } = new();
     public List<BookCardViewModel> Similar { get; set; } = new();
+    public List<DiscussionListItemViewModel> Discussions { get; set; } = new();
+    public bool IsFavorite { get; set; }
+    public bool IsInWishlist { get; set; }
+}
+
+public class DiscussionListItemViewModel
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string AuthorName { get; set; } = string.Empty;
+    public int MessagesCount { get; set; }
+    public DateTime CreatedAt { get; set; }
 }
 
 public class DiscussionDetailsViewModel
