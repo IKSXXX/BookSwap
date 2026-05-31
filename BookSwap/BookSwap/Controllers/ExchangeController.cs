@@ -95,23 +95,12 @@ public class ExchangeController : Controller
     {
         var userId = _um.GetUserId(User)!;
         var ex = await _uow.Exchanges.GetByIdAsync(id);
-
         if (ex == null) return NotFound();
         if (ex.SenderId != userId && ex.ReceiverId != userId) return Forbid();
 
         var sender = await _um.FindByIdAsync(ex.SenderId);
         var receiver = await _um.FindByIdAsync(ex.ReceiverId);
-        var bookRequested = await _uow.Books.GetByIdAsync(ex.BookRequestedId);
-        Book? bookOffered = ex.BookOfferedId.HasValue ? await _uow.Books.GetByIdAsync(ex.BookOfferedId.Value) : null;
-
         var messages = await _uow.Messages.FindAsync(m => m.ExchangeRequestId == id);
-        var senderIds = messages.Select(m => m.SenderId).Distinct().ToList();
-        var senders = new Dictionary<string, User>();
-        foreach (var sid in senderIds)
-        {
-            var u = await _um.FindByIdAsync(sid);
-            if (u != null) senders[sid] = u;
-        }
 
         var vm = new ExchangeDetailsViewModel
         {
@@ -121,12 +110,12 @@ public class ExchangeController : Controller
             CreatedAt = ex.CreatedAt,
             Sender = new OwnerSummaryViewModel { Id = ex.SenderId, Name = sender?.UserName ?? "" },
             Receiver = new OwnerSummaryViewModel { Id = ex.ReceiverId, Name = receiver?.UserName ?? "" },
-            BookRequested = bookRequested != null ? _mapper.Map<BookCardViewModel>(bookRequested) : null,
-            BookOffered = bookOffered != null ? _mapper.Map<BookCardViewModel>(bookOffered) : null,
+            BookRequested = _mapper.Map<BookCardViewModel>(await _uow.Books.GetByIdAsync(ex.BookRequestedId)),
+            BookOffered = ex.BookOfferedId.HasValue ? _mapper.Map<BookCardViewModel>(await _uow.Books.GetByIdAsync(ex.BookOfferedId.Value)) : null,
             Messages = messages.OrderBy(m => m.SentAt).Select(m => new ChatMessageViewModel
             {
                 SenderId = m.SenderId,
-                SenderName = senders.GetValueOrDefault(m.SenderId)?.UserName ?? "",
+                SenderName = m.SenderId == ex.SenderId ? sender?.UserName ?? "" : receiver?.UserName ?? "",
                 Text = m.Text,
                 SentAt = m.SentAt
             }).ToList(),
@@ -173,28 +162,21 @@ public class ExchangeController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Complete(int id) => await TransitionAsync(id, ExchangeStatus.Accepted, ExchangeStatus.Completed, onAccept: async ex =>
     {
-        var reqBook = await _uow.Books.GetByIdAsync(ex.BookRequestedId);
-        if (reqBook != null)
-        {
-            var oldOwner = (await _uow.BookOwners.FindAsync(bo => bo.BookId == reqBook.Id && bo.IsPrimary)).FirstOrDefault();
-            if (oldOwner != null) _uow.BookOwners.Remove(oldOwner);
-            await _uow.BookOwners.AddAsync(new BookOwner { BookId = reqBook.Id, UserId = ex.SenderId, IsPrimary = true });
-            reqBook.IsAvailable = true;
-            _uow.Books.Update(reqBook);
-        }
+        await TransferBook(ex.BookRequestedId, ex.SenderId);
         if (ex.BookOfferedId.HasValue)
-        {
-            var offBook = await _uow.Books.GetByIdAsync(ex.BookOfferedId.Value);
-            if (offBook != null)
-            {
-                var oldOwner = (await _uow.BookOwners.FindAsync(bo => bo.BookId == offBook.Id && bo.IsPrimary)).FirstOrDefault();
-                if (oldOwner != null) _uow.BookOwners.Remove(oldOwner);
-                await _uow.BookOwners.AddAsync(new BookOwner { BookId = offBook.Id, UserId = ex.ReceiverId, IsPrimary = true });
-                offBook.IsAvailable = true;
-                _uow.Books.Update(offBook);
-            }
-        }
+            await TransferBook(ex.BookOfferedId.Value, ex.ReceiverId);
     });
+
+    async Task TransferBook(int bookId, string newOwnerId)
+    {
+        var book = await _uow.Books.GetByIdAsync(bookId);
+        if (book == null) return;
+        var old = (await _uow.BookOwners.FindAsync(o => o.BookId == bookId && o.IsPrimary)).FirstOrDefault();
+        if (old != null) _uow.BookOwners.Remove(old);
+        await _uow.BookOwners.AddAsync(new BookOwner { BookId = bookId, UserId = newOwnerId, IsPrimary = true });
+        book.IsAvailable = true;
+        _uow.Books.Update(book);
+    }
 
     [HttpGet]
     public async Task<IActionResult> LeaveReview(int id)

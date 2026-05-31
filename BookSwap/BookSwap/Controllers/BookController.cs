@@ -178,24 +178,16 @@ public class BookController : Controller
         var userId = _userManager.GetUserId(User)!;
         var book = await _uow.Books.GetByIdAsync(id);
         if (book == null) return Forbid();
+        if (!await _uow.BookOwners.AnyAsync(bo => bo.BookId == id && bo.UserId == userId)) return Forbid();
 
-        var isOwner = await _uow.BookOwners.AnyAsync(bo => bo.BookId == id && bo.UserId == userId);
-        if (!isOwner) return Forbid();
-
-        var vm = new BookFormViewModel
+        return View("Form", new BookFormViewModel
         {
-            Id = book.Id,
-            Title = book.Title,
-            Author = book.Author,
-            ISBN = book.ISBN,
-            Description = book.Description,
-            Genre = book.Genre,
-            Condition = book.Condition,
-            Year = book.Year,
-            Language = book.Language,
+            Id = book.Id, Title = book.Title, Author = book.Author,
+            ISBN = book.ISBN, Description = book.Description,
+            Genre = book.Genre, Condition = book.Condition,
+            Year = book.Year, Language = book.Language,
             ExistingCoverPath = book.CoverImagePath
-        };
-        return View("Form", vm);
+        });
     }
 
     [Authorize, HttpPost, ValidateAntiForgeryToken]
