@@ -1,4 +1,4 @@
-@model List<BookCardViewModel>
+@model HomeViewModel
 @{
     ViewData["Title"] = "Главная";
 }
@@ -16,23 +16,40 @@
 
 <section class="section--gray">
     <div class="container">
-        <h2 class="text-center mb-4">Как это работает</h2>
-        <div class="steps-grid">
-            <div class="step">
-                <div class="step__icon step__icon--blue">1</div>
-                <h3>Найдите книгу</h3>
-                <p>Просматривайте каталог книг других читателей</p>
-            </div>
-            <div class="step">
-                <div class="step__icon step__icon--green">2</div>
-                <h3>Предложите обмен</h3>
-                <p>Выберите книгу из своей коллекции для обмена</p>
-            </div>
-            <div class="step">
-                <div class="step__icon step__icon--yellow">3</div>
-                <h3>Получите книгу</h3>
-                <p>Договоритесь о встрече и получите книгу</p>
-            </div>
+        <div class="home-pair">
+            @if (Model.BookOfTheDay != null)
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="mb-3">
+                            <svg class="icon" style="color:var(--yellow-400);"><use href="#i-star"/></svg>
+                            Книга дня
+                        </h3>
+                        <partial name="_BookCard" model="Model.BookOfTheDay" />
+                    </div>
+                </div>
+            }
+
+            @if (Model.QuizQuestion != null)
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="mb-3">
+                            <svg class="icon" style="color:var(--blue-500);"><use href="#i-book"/></svg>
+                            Викторина
+                        </h3>
+                        <p class="quiz-quote">«@Model.QuizQuestion.Quote»</p>
+                        <p class="text-muted mb-3" style="font-size:.875rem;">Угадайте книгу по цитате:</p>
+                        <div class="quiz-options" id="quizOptions" data-question-id="@Model.QuizQuestion.Id">
+                            @foreach (var opt in Model.QuizQuestion.Options)
+                            {
+                                <button type="button" class="quiz-option" data-answer="@opt">@opt</button>
+                            }
+                        </div>
+                        <div id="quizResult" class="quiz-result" hidden></div>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 </section>
@@ -40,10 +57,10 @@
 <section>
     <div class="container">
         <h2 class="mb-4">Недавно добавленные</h2>
-        @if (Model.Count > 0)
+        @if (Model.RecentBooks.Count > 0)
         {
             <div class="book-grid">
-                @foreach (var book in Model)
+                @foreach (var book in Model.RecentBooks)
                 {
                     <partial name="_BookCard" model="book" />
                 }
@@ -55,3 +72,34 @@
         }
     </div>
 </section>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.quiz-option').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const container = document.getElementById('quizOptions');
+                const questionId = container.dataset.questionId;
+                const answer = btn.dataset.answer;
+                const result = document.getElementById('quizResult');
+
+                container.querySelectorAll('.quiz-option').forEach(b => b.disabled = true);
+
+                const res = await fetch('/quiz/answer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `questionId=${questionId}&answer=${encodeURIComponent(answer)}`
+                });
+                const data = await res.json();
+
+                if (data.isCorrect) {
+                    btn.classList.add('quiz-option--correct');
+                    result.textContent = 'Правильно! 🎉';
+                } else {
+                    btn.classList.add('quiz-option--wrong');
+                    result.textContent = `Неверно. Правильный ответ: ${data.correctAnswer}`;
+                }
+                result.hidden = false;
+            });
+        });
+    </script>
+}
