@@ -1,5 +1,6 @@
+using BookExchange.Db.Data;
+using BookExchange.Db.Entities;
 using BookExchange.Web.Data;
-using BookExchange.Web.Entities;
 using BookExchange.Web.Helpers;
 using BookExchange.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;

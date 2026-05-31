@@ -1,6 +1,6 @@
 using AutoMapper;
-using BookExchange.Web.Entities;
-using BookExchange.Web.Interfaces;
+using BookExchange.Db.Entities;
+using BookExchange.Db.Interfaces;
 using BookExchange.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;

@@ -1,7 +1,7 @@
 using AutoMapper;
-using BookExchange.Web.Entities;
+using BookExchange.Db.Entities;
 using BookExchange.Web.Helpers;
-using BookExchange.Web.Interfaces;
+using BookExchange.Db.Interfaces;
 using BookExchange.Web.Services;
 using BookExchange.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;

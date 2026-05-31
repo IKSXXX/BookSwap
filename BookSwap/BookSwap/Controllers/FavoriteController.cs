@@ -1,5 +1,5 @@
-using BookExchange.Web.Entities;
-using BookExchange.Web.Interfaces;
+using BookExchange.Db.Entities;
+using BookExchange.Db.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

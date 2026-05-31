@@ -1,4 +1,4 @@
-using BookExchange.Web.Entities;
+using BookExchange.Db.Entities;
 
 namespace BookExchange.Web.ViewModels;
 

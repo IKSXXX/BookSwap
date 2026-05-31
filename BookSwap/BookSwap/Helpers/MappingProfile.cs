@@ -1,5 +1,5 @@
 using AutoMapper;
-using BookExchange.Web.Entities;
+using BookExchange.Db.Entities;
 using BookExchange.Web.ViewModels;
 
 namespace BookExchange.Web.Helpers;

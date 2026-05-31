@@ -1,5 +1,5 @@
-using BookExchange.Web.Data;
-using BookExchange.Web.Entities;
+using BookExchange.Db.Data;
+using BookExchange.Db.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 

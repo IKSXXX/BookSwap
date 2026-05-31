@@ -1,8 +1,9 @@
+using BookExchange.Db.Data;
+using BookExchange.Db.Entities;
 using BookExchange.Web.Data;
-using BookExchange.Web.Entities;
 using BookExchange.Web.Hubs;
-using BookExchange.Web.Interfaces;
-using BookExchange.Web.Repositories;
+using BookExchange.Db.Interfaces;
+using BookExchange.Db.Repositories;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
