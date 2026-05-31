@@ -80,15 +80,15 @@ public static class DbSeeder
         {
             var books = new List<Book>
             {
-                new() { Title = "Преступление и наказание", Author = "Ф. Достоевский", Genre = "Классика", Condition = BookCondition.Good, Year = 1866, Description = "Великий роман о преступлении и наказании.", IsAvailable = true },
-                new() { Title = "1984", Author = "Дж. Оруэлл", Genre = "Антиутопия", Condition = BookCondition.Excellent, Year = 1949, Description = "Классическая антиутопия о тоталитарном обществе.", IsAvailable = true },
-                new() { Title = "Мастер и Маргарита", Author = "М. Булгаков", Genre = "Классика", Condition = BookCondition.Acceptable, Year = 1967, Description = "Мистический роман о любви, дьяволе и Москве 30-х.", IsAvailable = false },
-                new() { Title = "Война и мир", Author = "Л. Толстой", Genre = "Классика", Condition = BookCondition.Excellent, Year = 1869, Description = "Эпопея о судьбах людей на фоне наполеоновских войн.", IsAvailable = true },
-                new() { Title = "Гарри Поттер и философский камень", Author = "Дж. Роулинг", Genre = "Фэнтези", Condition = BookCondition.Good, Year = 1997, Description = "Первая книга о мальчике-волшебнике.", IsAvailable = true },
-                new() { Title = "Игра престолов", Author = "Дж. Мартин", Genre = "Фэнтези", Condition = BookCondition.Good, Year = 1996, Description = "Эпическая сага о борьбе за Железный трон.", IsAvailable = true },
-                new() { Title = "Евгений Онегин", Author = "А. Пушкин", Genre = "Классика", Condition = BookCondition.Good, Year = 1833, Description = "Роман в стихах, энциклопедия русской жизни.", IsAvailable = true },
-                new() { Title = "Шерлок Холмс", Author = "А.К. Дойл", Genre = "Детектив", Condition = BookCondition.Excellent, Year = 1892, Description = "Сборник рассказов о гениальном сыщике.", IsAvailable = true },
-                new() { Title = "Великий Гэтсби", Author = "Ф.С. Фицджеральд", Genre = "Классика", Condition = BookCondition.Excellent, Year = 1925, Description = "История любви и разочарования в эпоху джаза.", IsAvailable = true },
+                new() { Title = "Преступление и наказание", Author = "Ф. Достоевский", Genre = "Классика", Condition = BookCondition.Good, Year = 1866, Description = "Великий роман о преступлении и наказании.", CoverImagePath = "/images/books/crime.jpg", IsAvailable = true },
+                new() { Title = "1984", Author = "Дж. Оруэлл", Genre = "Антиутопия", Condition = BookCondition.Excellent, Year = 1949, Description = "Классическая антиутопия о тоталитарном обществе.", CoverImagePath = "/images/books/1984.jpg", IsAvailable = true },
+                new() { Title = "Мастер и Маргарита", Author = "М. Булгаков", Genre = "Классика", Condition = BookCondition.Acceptable, Year = 1967, Description = "Мистический роман о любви, дьяволе и Москве 30-х.", CoverImagePath = "/images/books/master.jpg", IsAvailable = false },
+                new() { Title = "Война и мир", Author = "Л. Толстой", Genre = "Классика", Condition = BookCondition.Excellent, Year = 1869, Description = "Эпопея о судьбах людей на фоне наполеоновских войн.", CoverImagePath = "/images/books/war.jpg", IsAvailable = true },
+                new() { Title = "Гарри Поттер и философский камень", Author = "Дж. Роулинг", Genre = "Фэнтези", Condition = BookCondition.Good, Year = 1997, Description = "Первая книга о мальчике-волшебнике.", CoverImagePath = "/images/books/harry.jpg", IsAvailable = true },
+                new() { Title = "Игра престолов", Author = "Дж. Мартин", Genre = "Фэнтези", Condition = BookCondition.Good, Year = 1996, Description = "Эпическая сага о борьбе за Железный трон.", CoverImagePath = "/images/books/thrones.jpg", IsAvailable = true },
+                new() { Title = "Евгений Онегин", Author = "А. Пушкин", Genre = "Классика", Condition = BookCondition.Good, Year = 1833, Description = "Роман в стихах, энциклопедия русской жизни.", CoverImagePath = "/images/books/onegin.jpg", IsAvailable = true },
+                new() { Title = "Шерлок Холмс", Author = "А.К. Дойл", Genre = "Детектив", Condition = BookCondition.Excellent, Year = 1892, Description = "Сборник рассказов о гениальном сыщике.", CoverImagePath = "/images/books/holmes.jpg", IsAvailable = true },
+                new() { Title = "Великий Гэтсби", Author = "Ф.С. Фицджеральд", Genre = "Классика", Condition = BookCondition.Excellent, Year = 1925, Description = "История любви и разочарования в эпоху джаза.", CoverImagePath = "/images/books/gatsby.jpg", IsAvailable = true },
             };
             await ctx.Books.AddRangeAsync(books);
             await ctx.SaveChangesAsync();
