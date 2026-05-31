@@ -9,17 +9,24 @@
             <div class="profile-avatar-wrap">
                 <div class="profile-avatar">@(Model.UserName.Substring(0, 1).ToUpper())</div>
             </div>
-            <div class="profile-info">
-                <h1>@Model.UserName</h1>
-                <div class="profile-meta">
-                    @if (!string.IsNullOrEmpty(Model.Location))
+                <div class="profile-info">
+                    <h1>@Model.UserName</h1>
+                    <div class="profile-meta">
+                        @if (!string.IsNullOrEmpty(Model.Location))
+                        {
+                            <span><svg class="icon"><use href="#i-location"/></svg>@Model.Location</span>
+                        }
+                        <span><svg class="icon rating-star icon--fill"><use href="#i-star"/></svg>@Model.Rating.ToString("0.0")</span>
+                        <span><svg class="icon"><use href="#i-calendar"/></svg>С @Model.RegistrationDate.ToLocalTime().ToString("MMMM yyyy")</span>
+                    </div>
+                    @if (Model.IsCurrentUser)
                     {
-                        <span><svg class="icon"><use href="#i-location"/></svg>@Model.Location</span>
+                        <a asp-controller="Account" asp-action="EditProfile" class="btn btn-outline btn-sm" style="margin-top:.75rem;">
+                            <svg class="icon"><use href="#i-edit"/></svg>
+                            Редактировать
+                        </a>
                     }
-                    <span><svg class="icon rating-star icon--fill"><use href="#i-star"/></svg>@Model.Rating.ToString("0.0")</span>
-                    <span><svg class="icon"><use href="#i-calendar"/></svg>С @Model.RegistrationDate.ToLocalTime().ToString("MMMM yyyy")</span>
                 </div>
-            </div>
         </div>
 
         <div class="profile-stats mb-6">

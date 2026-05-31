@@ -16,6 +16,16 @@ public class RegisterViewModel
     public string ConfirmPassword { get; set; } = string.Empty;
 }
 
+public class EditProfileViewModel
+{
+    public string UserName { get; set; } = string.Empty;
+    public string? Location { get; set; }
+    public IFormFile? Avatar { get; set; }
+    public string? ExistingAvatarPath { get; set; }
+    public string? NewPassword { get; set; }
+    public string? CurrentPassword { get; set; }
+}
+
 public class UserProfileViewModel
 {
     public string Id { get; set; } = string.Empty;
