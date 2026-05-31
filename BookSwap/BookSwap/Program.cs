@@ -47,6 +47,7 @@ try
     builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
     builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
     builder.Services.AddTransient<IEmailSender, BookExchange.Web.Helpers.ConsoleEmailSender>();
+    builder.Services.AddHttpClient<BookExchange.Web.Services.GigaChatService>();
     builder.Services.AddAutoMapper(cfg => { }, typeof(BookExchange.Web.Helpers.MappingProfile).Assembly);
     builder.Services.AddControllersWithViews();
     builder.Services.AddSignalR();
