@@ -4,66 +4,103 @@
     var isSignedIn = SignInManager.IsSignedIn(User);
     var currentUser = isSignedIn ? await UserManager.GetUserAsync(User) : null;
     var isAdmin = currentUser != null && await UserManager.IsInRoleAsync(currentUser, "Admin");
+    var userInitial = currentUser != null && !string.IsNullOrEmpty(currentUser.UserName)
+        ? currentUser.UserName.Substring(0, 1).ToUpper()
+        : "?";
     var currentController = (string?)ViewContext.RouteData.Values["controller"] ?? "";
+    var currentAction = (string?)ViewContext.RouteData.Values["action"] ?? "";
+    var isAuthPage = currentController == "Account" && (currentAction == "Login" || currentAction == "Register");
 }
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@(ViewData["Title"] ?? "BookSwap")</title>
+    <title>@(ViewData["Title"] ?? "КнигоОбмен") — КнигоОбмен</title>
+    <meta name="description" content="КнигоОбмен — платформа для обмена книгами между читателями по всей России." />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
+
+    
     <svg width="0" height="0" style="position:absolute" aria-hidden="true">
         <defs>
             <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
-            <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
-            <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
-            <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></symbol>
-            <symbol id="i-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
-            <symbol id="i-swap" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></symbol>
-            <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
-            <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
-            <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
-            <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+            <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></symbol>
+            <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></symbol>
+            <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></symbol>
+            <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6l8-3z"/><path d="m9 12 2 2 4-4"/></symbol>
+            <symbol id="i-logout" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></symbol>
+            <symbol id="i-login" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M9 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H9"/></symbol>
+            <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+            <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></symbol>
+            <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></symbol>
+            <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 13 4 4 10-10"/></symbol>
+            <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+            <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1a5.5 5.5 0 0 0 0-7.9z"/></symbol>
+            <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></symbol>
+            <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 7 1-5 4.9 1.2 6.8L12 17.8l-6.3 3.3 1.2-6.8-5-4.9 7-1L12 2z"/></symbol>
+            <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"/></symbol>
+            <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
+            <symbol id="i-swap" viewBox="0 0 24 24"><path d="m17 3 4 4-4 4"/><path d="M21 7H9a4 4 0 0 0-4 4"/><path d="m7 21-4-4 4-4"/><path d="M3 17h12a4 4 0 0 0 4-4"/></symbol>
+            <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17V11"/><path d="M13 17V7"/><path d="M18 17V4"/></symbol>
+            <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M5 12H2M22 12h-3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/><path d="m12 8 1.4 2.6L16 12l-2.6 1.4L12 16l-1.4-2.6L8 12l2.6-1.4L12 8z"/></symbol>
+            <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+            <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></symbol>
+            <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+            <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></symbol>
+            <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3h.1a1.6 1.6 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8v.1a1.6 1.6 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></symbol>
             <symbol id="i-location" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
-            <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
-            <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></symbol>
-            <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 2l2.4 7.2H22l-6 4.8 2.4 7.2L12 16.8l-6.4 4.4L8 14l-6-4.8h7.6z"/></symbol>
+            <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+            <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol>
+            <symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"/></symbol>
+            <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-11 11"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></symbol>
             <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
             <symbol id="i-message-circle" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></symbol>
-            <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
-            <symbol id="i-arrow-left" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></symbol>
-            <symbol id="i-arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
-            <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
-            <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></symbol>
-            <symbol id="i-send" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></symbol>
         </defs>
     </svg>
 
-    <header>
+    <header class="navbar">
         <div class="container">
-            <nav class="navbar">
-                <a asp-controller="Home" asp-action="Index" class="brand">BookSwap</a>
-                <div class="nav-links">
-                    <a asp-controller="Home" asp-action="Index" class="nav-link @(currentController == "Home" ? "is-active" : "")">Главная</a>
-                    <a asp-controller="Book" asp-action="Index" class="nav-link @(currentController == "Book" ? "is-active" : "")">Каталог</a>
-                    @if (isSignedIn && currentUser != null)
+            <a href="/" class="brand">
+                <span class="brand-mark"><svg class="icon"><use href="#i-book"/></svg></span>
+                <span class="brand-name">Книго<span class="accent">Обмен</span></span>
+            </a>
+            <button class="nav-toggle" id="navToggle" aria-label="Меню" type="button">
+                <svg class="icon"><use href="#i-menu"/></svg>
+            </button>
+            <nav class="nav-links" id="navLinks">
+                <a asp-controller="Home" asp-action="Index"
+                   class="nav-link @(currentController == "Home" ? "is-active" : "")">
+                    Главная
+                </a>
+                <a asp-controller="Book" asp-action="Index"
+                   class="nav-link @(currentController == "Book" && currentAction == "Index" ? "is-active" : "")">
+                    Каталог
+                </a>
+                @if (isSignedIn && currentUser != null)
+                {
+                    <a asp-controller="User" asp-action="Details" asp-route-id="@currentUser.Id"
+                       class="nav-link @(currentController == "User" ? "is-active" : "")">
+                        Личный кабинет
+                    </a>
+                    @if (isAdmin)
                     {
-                        <a asp-controller="User" asp-action="Details" asp-route-id="@currentUser.Id" class="nav-link @(currentController == "User" ? "is-active" : "")">Профиль</a>
-                        @if (isAdmin)
-                        {
-                            <a asp-controller="Admin" asp-action="Index" class="nav-link @(currentController == "Admin" ? "is-active" : "")">Админ</a>
-                        }
+                        <a asp-controller="Admin" asp-action="Index"
+                           class="nav-link nav-link--admin @(currentController == "Admin" ? "is-active" : "")">
+                            <svg class="icon"><use href="#i-shield"/></svg>
+                            Админ-панель
+                        </a>
                     }
-                </div>
+                }
+
                 <div class="nav-cta">
                     @if (isSignedIn && currentUser != null)
                     {
+                        <!-- Notification bell -->
                         <div class="notif-bell-wrap" style="position:relative;">
                             <button class="notif-bell" id="notifBell" title="Уведомления">
                                 <svg class="icon"><use href="#i-bell"/></svg>
@@ -79,11 +116,12 @@
                                 </div>
                             </div>
                         </div>
+
                         <a asp-controller="User" asp-action="Details" asp-route-id="@currentUser.Id" class="btn btn-primary btn-sm">
                             <svg class="icon"><use href="#i-user"/></svg>
                             Профиль
                         </a>
-                        <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline;">
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="nav-logout">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-ghost btn-sm" title="Выйти">
                                 <svg class="icon"><use href="#i-logout"/></svg>
@@ -92,7 +130,10 @@
                     }
                     else
                     {
-                        <a asp-controller="Account" asp-action="MockLogin" class="btn btn-primary btn-sm">Войти</a>
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-sm">
+                            <svg class="icon"><use href="#i-user"/></svg>
+                            Войти
+                        </a>
                     }
                 </div>
             </nav>
@@ -125,7 +166,41 @@
 
     <footer>
         <div class="container">
-            <p>© @DateTime.Now.Year BookSwap</p>
+            <div>
+                <div>
+                    <h4>КнигоОбмен</h4>
+                    <p>Платформа для обмена книгами между читателями по всей России</p>
+                </div>
+                <div>
+                    <h4>Навигация</h4>
+                    <ul>
+                        <li><a asp-controller="Home" asp-action="Index">Главная</a></li>
+                        <li><a asp-controller="Book" asp-action="Index">Каталог</a></li>
+                        @if (isSignedIn && currentUser != null)
+                        {
+                            <li><a asp-controller="User" asp-action="Details" asp-route-id="@currentUser.Id">Профиль</a></li>
+                        }
+                    </ul>
+                </div>
+                <div>
+                    <h4>Помощь</h4>
+                    <ul>
+                        <li><a asp-controller="Home" asp-action="Privacy">Как это работает</a></li>
+                        <li><a asp-controller="Home" asp-action="Privacy">Правила обмена</a></li>
+                        <li><a asp-controller="Home" asp-action="Privacy">FAQ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Контакты</h4>
+                    <ul>
+                        <li><a href="mailto:info@bookswap.example">Поддержка</a></li>
+                        <li><a asp-controller="Home" asp-action="Privacy">О проекте</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                © @DateTime.Now.Year КнигоОбмен. Все права защищены.
+            </div>
         </div>
     </footer>
 
@@ -134,6 +209,7 @@
         document.getElementById('navToggle')?.addEventListener('click', () => {
             document.getElementById('navLinks')?.classList.toggle('is-open');
         });
+        // tabs
         document.addEventListener('click', e => {
             const btn = e.target.closest('.tab-btn');
             if (!btn) return;
@@ -144,14 +220,19 @@
             container.querySelectorAll('.tab-content').forEach(c => c.hidden = (c.id !== 'tab-' + tab));
         });
     </script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
 
+    <!-- Toast container -->
     <div class="toast-container" id="toastContainer"></div>
 
+    <!-- Notification & Toast system -->
     <script>
+        // ===== TOAST SYSTEM =====
         const ToastManager = {
             container: null,
             init() {
                 this.container = document.getElementById('toastContainer');
+                // Show existing server-side alerts as toasts
                 document.querySelectorAll('.alert--success').forEach(el => {
                     this.show(el.textContent.trim(), 'success');
                     el.closest('.container')?.remove();
@@ -162,8 +243,19 @@
                 });
             },
             show(message, type = 'info', duration = 7000) {
-                const icons = { success: '#i-check', error: '#i-x', info: '#i-bookmark', warning: '#i-star' };
-                const titles = { success: 'Успешно', error: 'Ошибка', info: 'Информация', warning: 'Внимание' };
+                const icons = {
+                    success: '#i-check',
+                    error: '#i-x',
+                    info: '#i-bookmark',
+                    warning: '#i-star'
+                };
+                const titles = {
+                    success: 'Успешно',
+                    error: 'Ошибка',
+                    info: 'Информация',
+                    warning: 'Внимание'
+                };
+
                 const toast = document.createElement('div');
                 toast.className = `toast toast--${type}`;
                 toast.innerHTML = `
@@ -172,10 +264,15 @@
                         <div class="toast__title">${titles[type] || titles.info}</div>
                         <div class="toast__text">${message}</div>
                     </div>
-                    <button class="toast__close" title="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
+                    <button class="toast__close" title="Закрыть">
+                        <svg class="icon"><use href="#i-x"/></svg>
+                    </button>
                     <div class="toast__progress"><div class="toast__progress-bar" style="width:100%"></div></div>
                 `;
+
                 this.container.appendChild(toast);
+
+                // Progress bar animation
                 const bar = toast.querySelector('.toast__progress-bar');
                 if (bar) {
                     bar.style.width = '100%';
@@ -184,9 +281,14 @@
                         bar.style.width = '0%';
                     });
                 }
+
+                // Close button
                 toast.querySelector('.toast__close').addEventListener('click', () => this.dismiss(toast));
+
+                // Auto dismiss
                 const timer = setTimeout(() => this.dismiss(toast), duration);
                 toast._timer = timer;
+
                 return toast;
             },
             dismiss(toast) {
@@ -196,44 +298,69 @@
             }
         };
 
+        // ===== NOTIFICATION BELL =====
         const NotifManager = {
-            bell: null, dropdown: null, countEl: null, listEl: null, notifications: [],
+            bell: null,
+            dropdown: null,
+            countEl: null,
+            listEl: null,
+            notifications: [],
+
             init() {
                 this.bell = document.getElementById('notifBell');
                 this.dropdown = document.getElementById('notifDropdown');
                 this.countEl = document.getElementById('notifCount');
                 this.listEl = document.getElementById('notifList');
+
                 if (!this.bell) return;
-                this.bell.addEventListener('click', e => {
+
+                this.bell.addEventListener('click', (e) => {
                     e.stopPropagation();
                     this.dropdown.classList.toggle('is-open');
                 });
-                document.addEventListener('click', e => {
-                    if (!this.dropdown?.contains(e.target) && !this.bell?.contains(e.target))
+
+                document.addEventListener('click', (e) => {
+                    if (!this.dropdown?.contains(e.target) && !this.bell?.contains(e.target)) {
                         this.dropdown?.classList.remove('is-open');
+                    }
                 });
+
                 document.getElementById('notifClearAll')?.addEventListener('click', () => {
                     this.notifications = [];
                     this.render();
                 });
+
+                // Load from localStorage
                 this.load();
             },
+
             add(text, type = 'exchange') {
-                this.notifications.unshift({ id: Date.now(), text, type, time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }), unread: true });
+                const notif = {
+                    id: Date.now(),
+                    text,
+                    type,
+                    time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+                    unread: true
+                };
+                this.notifications.unshift(notif);
                 if (this.notifications.length > 20) this.notifications.pop();
                 this.save();
                 this.render();
                 ToastManager.show(text, 'info');
             },
+
             render() {
                 if (!this.listEl) return;
-                const unread = this.notifications.filter(n => n.unread).length;
-                this.countEl.style.display = unread > 0 ? 'grid' : 'none';
-                this.countEl.textContent = unread > 9 ? '9+' : unread;
+                const unreadCount = this.notifications.filter(n => n.unread).length;
+
+                this.countEl.style.display = unreadCount > 0 ? 'grid' : 'none';
+                this.countEl.textContent = unreadCount > 9 ? '9+' : unreadCount;
+
                 if (this.notifications.length === 0) {
                     this.listEl.innerHTML = '<div class="notif-empty">Нет уведомлений</div>';
                     return;
                 }
+
                 this.listEl.innerHTML = this.notifications.map(n => `
                     <div class="notif-item ${n.unread ? 'unread' : ''}" data-id="${n.id}">
                         <div class="notif-item__icon notif-item__icon--${n.type}">
@@ -245,6 +372,7 @@
                         </div>
                     </div>
                 `).join('');
+
                 this.listEl.querySelectorAll('.notif-item').forEach(el => {
                     el.addEventListener('click', () => {
                         const id = parseInt(el.dataset.id);
@@ -255,16 +383,33 @@
                     });
                 });
             },
-            save() { try { localStorage.setItem('bookswap_notifications', JSON.stringify(this.notifications)); } catch {} },
-            load() { try { const d = localStorage.getItem('bookswap_notifications'); if (d) this.notifications = JSON.parse(d); } catch {} this.render(); },
+
+            save() {
+                try { localStorage.setItem('bookswap_notifications', JSON.stringify(this.notifications)); } catch (e) {}
+            },
+            load() {
+                try {
+                    const data = localStorage.getItem('bookswap_notifications');
+                    if (data) this.notifications = JSON.parse(data);
+                } catch (e) {}
+                this.render();
+            },
             connectSignalR() {
                 if (typeof signalR === 'undefined') return;
-                const conn = new signalR.HubConnectionBuilder().withUrl('/hubs/chat').withAutomaticReconnect().build();
-                conn.on('ReceiveNotification', n => this.add(n.text, n.type || 'exchange'));
-                conn.start().catch(() => {});
+                const conn = new signalR.HubConnectionBuilder()
+                    .withUrl('/hubs/chat')
+                    .withAutomaticReconnect()
+                    .build();
+
+                conn.on('ReceiveNotification', (n) => {
+                    this.add(n.text, n.type || 'exchange');
+                });
+
+                conn.start().catch(e => console.warn('SignalR notif connect failed', e));
             }
         };
 
+        // Init on DOM ready
         document.addEventListener('DOMContentLoaded', () => {
             ToastManager.init();
             NotifManager.init();

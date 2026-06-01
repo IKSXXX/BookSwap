@@ -1,8 +1,13 @@
+@*
+    Карточка книги — соответствует Figma BookCard: обложка 3:4, бейдж состояния справа сверху,
+    заголовок / автор / жанр в теле и метаинформация внизу.
+*@
 @model BookCardViewModel
 @{
     string conditionClass = Model.ConditionLabel switch
     {
         "Отличное" => "badge--green",
+        "Новое" => "badge--green",
         "Хорошее" => "badge--blue",
         "Удовлетворительное" => "badge--yellow",
         _ => "badge--secondary"
@@ -42,6 +47,10 @@
                 <svg class="icon"><use href="#i-user" /></svg>
                 <span>@Model.Owner.Name</span>
             </span>
+        }
+        else
+        {
+            <span></span>
         }
         @if (Model.Owner.Rating > 0)
         {

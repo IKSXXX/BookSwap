@@ -1,103 +1,169 @@
 @model HomeViewModel
+@inject SignInManager<User> SignInManager
 @{
     ViewData["Title"] = "Главная";
 }
 
+@* ---------- Hero ---------- *@
 <section class="hero">
     <div class="container">
-        <h1>Обменивайтесь книгами</h1>
-        <p>Найдите книгу для чтения или поделитесь своей коллекцией с другими читателями</p>
+        <h1>Обменивайтесь книгами<br/>с другими читателями</h1>
+        <p class="hero__sub">
+            Платформа для обмена книгами между любителями чтения. Находите интересные произведения,
+            делитесь своими книгами и открывайте новые миры.
+        </p>
         <div class="hero__ctas">
-            <a asp-controller="Book" asp-action="Index" class="btn btn-primary btn-lg">Найти книги</a>
-            <a asp-controller="Book" asp-action="Create" class="btn btn-outline btn-lg">Добавить свои книги</a>
+            <a asp-controller="Book" asp-action="Index" class="btn btn-on-blue btn-lg">
+                <svg class="icon"><use href="#i-search"/></svg>
+                Найти книги
+            </a>
+            @if (!SignInManager.IsSignedIn(User))
+            {
+                <a asp-controller="Account" asp-action="Register" class="btn btn-blue-outline btn-lg">
+                    <svg class="icon"><use href="#i-plus"/></svg>
+                    Добавить свои книги
+                </a>
+            }
+            else
+            {
+                <a asp-controller="Book" asp-action="Create" class="btn btn-blue-outline btn-lg">
+                    <svg class="icon"><use href="#i-plus"/></svg>
+                    Добавить свои книги
+                </a>
+            }
         </div>
     </div>
 </section>
 
-<section class="section--gray">
+@* ---------- How it works ---------- *@
+<section class="section section--gray">
     <div class="container">
-        <h2 class="text-center mb-4">Как это работает</h2>
+        <div class="text-center mb-8">
+            <h2 class="mb-3">Как это работает</h2>
+            <p class="text-muted text-lg">Три простых шага для начала обмена</p>
+        </div>
         <div class="steps-grid">
             <div class="step">
-                <div class="step__icon step__icon--blue">1</div>
-                <h3>Найдите книгу</h3>
-                <p>Просматривайте каталог книг других читателей</p>
+                <div class="step__icon step__icon--blue">
+                    <svg class="icon"><use href="#i-search"/></svg>
+                </div>
+                <h3>1. Найдите книгу</h3>
+                <p>Просматривайте каталог книг других читателей и выбирайте интересные для вас</p>
             </div>
             <div class="step">
-                <div class="step__icon step__icon--green">2</div>
-                <h3>Предложите обмен</h3>
-                <p>Выберите книгу из своей коллекции для обмена</p>
+                <div class="step__icon step__icon--green">
+                    <svg class="icon"><use href="#i-swap"/></svg>
+                </div>
+                <h3>2. Предложите обмен</h3>
+                <p>Отправьте предложение владельцу книги и выберите, что предложить взамен</p>
             </div>
             <div class="step">
-                <div class="step__icon step__icon--yellow">3</div>
-                <h3>Получите книгу</h3>
-                <p>Договоритесь о встрече и получите книгу</p>
+                <div class="step__icon step__icon--purple">
+                    <svg class="icon"><use href="#i-message-circle"/></svg>
+                </div>
+                <h3>3. Договоритесь</h3>
+                <p>Обсудите детали обмена в чате и договоритесь о встрече для передачи книг</p>
             </div>
         </div>
     </div>
 </section>
 
-<section>
+@* ---------- Latest books ---------- *@
+<section class="section">
     <div class="container">
-        <h2 class="mb-4">Недавно добавленные</h2>
-        @if (Model.RecentBooks.Count > 0)
+        <div class="section-head">
+            <h2>Новые книги</h2>
+            <a asp-controller="Book" asp-action="Index" class="btn btn-outline">
+                Смотреть все
+                <svg class="icon"><use href="#i-arrow-right"/></svg>
+            </a>
+        </div>
+        @if (Model.RecentBooks.Any())
         {
-            <div class="book-grid">
-                @foreach (var book in Model.RecentBooks)
+            <div class="book-grid book-grid--6">
+                @foreach (var b in Model.RecentBooks.Take(6))
                 {
-                    <partial name="_BookCard" model="book" />
+                    <partial name="_BookCard" model="b" />
                 }
             </div>
         }
         else
         {
-            <p class="text-muted">Пока нет книг.</p>
+            <div class="empty-state card">
+                <svg class="icon"><use href="#i-book"/></svg>
+                <p>В каталоге пока нет книг.</p>
+            </div>
         }
     </div>
 </section>
 
+@* ---------- Book of the Day + Quiz ---------- *@
 @if (Model.BookOfTheDay != null || Model.QuizQuestion != null)
 {
-    <section class="section--gray">
+    <section class="section section--gray">
         <div class="container">
-            <h2 class="text-center mb-4">Сегодня на полке</h2>
-            <div class="home-pair">
+            <div class="text-center mb-8">
+                <h2 class="mb-3">Сегодня на полке</h2>
+                <p class="text-muted text-lg">Книга дня и маленькая викторина — немного вдохновения</p>
+            </div>
+            <div class="feature-pair">
                 @if (Model.BookOfTheDay != null)
                 {
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="feature-label mb-3">
-                                <svg class="icon" style="color:var(--yellow-400);"><use href="#i-star"/></svg>
-                                Книга дня
-                            </div>
+                    <div class="feature-card">
+                        <div class="feature-card__label">
+                            <svg class="icon"><use href="#i-sparkles"/></svg>
+                            Книга дня
+                        </div>
+                        <div class="feature-card__body">
                             <a asp-controller="Book" asp-action="Details" asp-route-id="@Model.BookOfTheDay.Id" class="feature-cover">
                                 @if (!string.IsNullOrEmpty(Model.BookOfTheDay.CoverImagePath))
                                 {
                                     <img src="@Model.BookOfTheDay.CoverImagePath" alt="@Model.BookOfTheDay.Title" />
                                 }
+                                else
+                                {
+                                    <div class="book-card__placeholder"><svg class="icon"><use href="#i-book"/></svg></div>
+                                }
                             </a>
-                            <h3 class="mt-3 mb-1">@Model.BookOfTheDay.Title</h3>
-                            <p class="text-muted">@Model.BookOfTheDay.Author</p>
+                            <div class="feature-info">
+                                <h3 class="mb-1">@Model.BookOfTheDay.Title</h3>
+                                <p class="text-muted mb-2">@Model.BookOfTheDay.Author</p>
+                                @if (!string.IsNullOrEmpty(Model.BookOfTheDay.Genre))
+                                {
+                                    <div class="mb-3"><span class="badge badge--blue">@Model.BookOfTheDay.Genre</span></div>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.BookOfTheDay.Description))
+                                {
+                                    <p class="feature-desc">@Model.BookOfTheDay.Description</p>
+                                }
+                                <a asp-controller="Book" asp-action="Details" asp-route-id="@Model.BookOfTheDay.Id" class="btn btn-primary btn-sm feature-cta">
+                                    Открыть
+                                    <svg class="icon"><use href="#i-arrow-right"/></svg>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 }
-
                 @if (Model.QuizQuestion != null)
                 {
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="feature-label mb-3">
-                                <svg class="icon" style="color:var(--blue-500);"><use href="#i-book"/></svg>
-                                Угадай книгу
-                            </div>
-                            <p class="quiz-quote">«@Model.QuizQuestion.Quote»</p>
-                            <div class="quiz-options" id="quizOptions" data-question-id="@Model.QuizQuestion.Id">
+                    <div class="feature-card">
+                        <div class="feature-card__label">
+                            <svg class="icon"><use href="#i-star"/></svg>
+                            Угадай книгу
+                        </div>
+                        <div class="feature-card__body feature-card__body--stack">
+                            <blockquote class="quiz-quote">«@Model.QuizQuestion.Quote»</blockquote>
+                            <div class="quiz-options" id="quizOptions" data-qid="@Model.QuizQuestion.Id">
                                 @foreach (var opt in Model.QuizQuestion.Options)
                                 {
                                     <button type="button" class="quiz-option" data-answer="@opt">@opt</button>
                                 }
                             </div>
-                            <div id="quizResult" class="quiz-result" hidden></div>
+                            <div id="quizFeedback" class="quiz-feedback" hidden></div>
+                            <button type="button" id="quizNext" class="btn btn-ghost btn-sm mt-2" hidden>
+                                Ещё вопрос
+                                <svg class="icon"><use href="#i-arrow-right"/></svg>
+                            </button>
                         </div>
                     </div>
                 }
@@ -106,30 +172,69 @@
     </section>
 }
 
+@* ---------- CTA ---------- *@
+<section class="section section--blue-soft">
+    <div class="container text-center">
+        <h2 class="mb-3">Готовы начать обмен?</h2>
+        <p class="text-muted text-lg mb-6">
+            Присоединяйтесь к сообществу читателей и откройте для себя новые книги
+        </p>
+        <a asp-controller="Book" asp-action="Index" class="btn btn-primary btn-lg">
+            Перейти к каталогу
+            <svg class="icon"><use href="#i-arrow-right"/></svg>
+        </a>
+    </div>
+</section>
+
 @section Scripts {
-    <script>
-        document.querySelectorAll('.quiz-option').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const container = document.getElementById('quizOptions');
-                const questionId = container.dataset.questionId;
-                const answer = btn.dataset.answer;
-                const result = document.getElementById('quizResult');
-                container.querySelectorAll('.quiz-option').forEach(b => b.disabled = true);
-                const res = await fetch('/quiz/answer', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `questionId=${questionId}&answer=${encodeURIComponent(answer)}`
-                });
-                const data = await res.json();
-                if (data.isCorrect) {
-                    btn.classList.add('quiz-option--correct');
-                    result.textContent = 'Правильно!';
-                } else {
-                    btn.classList.add('quiz-option--wrong');
-                    result.textContent = `Неверно. Ответ: ${data.correctAnswer}`;
-                }
-                result.hidden = false;
+<script>
+    (function() {
+        const box = document.getElementById('quizOptions');
+        if (!box) return;
+        const feedback = document.getElementById('quizFeedback');
+        const nextBtn = document.getElementById('quizNext');
+        let locked = false;
+
+        async function loadNext() {
+            try {
+                const res = await fetch('/quiz/next');
+                const q = await res.json();
+                if (!q) return;
+                box.dataset.qid = q.id;
+                box.innerHTML = q.options.map(o =>
+                    `<button type="button" class="quiz-option" data-answer="${o.replace(/"/g, '&quot;')}">${o}</button>`
+                ).join('');
+                document.querySelector('.quiz-quote').textContent = '«' + q.quote + '»';
+                feedback.hidden = true;
+                nextBtn.hidden = true;
+                locked = false;
+            } catch(e) {}
+        }
+
+        box.addEventListener('click', async e => {
+            const btn = e.target.closest('.quiz-option');
+            if (!btn || locked) return;
+            locked = true;
+            const answer = btn.dataset.answer;
+            const qid = box.dataset.qid;
+            const fd = new FormData();
+            fd.append('questionId', qid);
+            fd.append('answer', answer);
+            const res = await fetch('/quiz/answer', { method: 'POST', body: fd });
+            const data = await res.json();
+            [...box.children].forEach(b => {
+                b.disabled = true;
+                if (b.dataset.answer === data.correctAnswer) b.classList.add('is-correct');
+                else if (b === btn && !data.isCorrect) b.classList.add('is-wrong');
             });
+            feedback.hidden = false;
+            feedback.textContent = data.isCorrect ? 'Верно! 🎉' : 'Неверно. Правильный ответ: ' + data.correctAnswer;
+            feedback.classList.toggle('is-correct', data.isCorrect);
+            feedback.classList.toggle('is-wrong', !data.isCorrect);
+            nextBtn.hidden = false;
         });
-    </script>
+
+        nextBtn.addEventListener('click', loadNext);
+    })();
+</script>
 }

@@ -46,6 +46,7 @@ public class ExchangeListItemViewModel
     public DateTime CreatedAt { get; set; }
     public string OtherUserId { get; set; } = string.Empty;
     public string OtherUserName { get; set; } = string.Empty;
+    public string OtherUserAvatar { get; set; } = string.Empty;
     public string BookRequestedTitle { get; set; } = string.Empty;
     public string? BookOfferedTitle { get; set; }
     public bool IsSender { get; set; }

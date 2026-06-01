@@ -88,6 +88,7 @@ public class UserController : Controller
                 IsSender = e.SenderId == user.Id,
                 OtherUserId = (e.SenderId == user.Id ? e.ReceiverId : e.SenderId) ?? "",
                 OtherUserName = (e.SenderId == user.Id ? e.Receiver?.UserName : e.Sender?.UserName) ?? "",
+                OtherUserAvatar = (e.SenderId == user.Id ? e.Receiver?.AvatarPath : e.Sender?.AvatarPath) ?? "",
                 BookRequestedTitle = e.BookRequested?.Title ?? "",
                 BookOfferedTitle = e.BookOffered?.Title
             }).ToList(),
