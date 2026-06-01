@@ -39,19 +39,12 @@ public class GigaChatService
             if (_accessToken != null && DateTime.UtcNow < _tokenExpiresAt.AddMinutes(-5))
                 return _accessToken;
 
-            var clientId = _config["GigaChat:ClientId"]
-                ?? throw new InvalidOperationException("GigaChat:ClientId not configured");
-            var clientSecret = _config["GigaChat:ClientSecret"]
-                ?? throw new InvalidOperationException("GigaChat:ClientSecret not configured");
-
-            var requestId = Guid.NewGuid().ToString();
-
-            var credentials = Convert.ToBase64String(
-                System.Text.Encoding.UTF8.GetBytes($"{clientId}:{clientSecret}"));
+            var authKey = _config["GigaChat:AuthorizationKey"]
+                ?? throw new InvalidOperationException("GigaChat:AuthorizationKey not configured");
 
             var request = new HttpRequestMessage(HttpMethod.Post, AuthUrl);
-            request.Headers.Add("RqUID", requestId);
-            request.Headers.Add("Authorization", $"Basic {credentials}");
+            request.Headers.Add("RqUID", Guid.NewGuid().ToString());
+            request.Headers.Add("Authorization", $"Basic {authKey}");
             request.Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 ["scope"] = "GIGACHAT_API_PERS"

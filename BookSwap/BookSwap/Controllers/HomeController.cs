@@ -50,6 +50,18 @@ public class HomeController : Controller
         return View(vm);
     }
 
+    //[HttpGet("/book/random")]
+    //public async Task<IActionResult> RandomBook()
+    //{
+    //    var ids = await _uow.Books.Query()
+    //        .Where(b => !b.IsHidden && b.IsAvailable)
+    //        .Select(b => b.Id)
+    //        .ToListAsync();
+    //    if (ids.Count == 0) return RedirectToAction(nameof(Index));
+    //    var id = ids[Random.Shared.Next(ids.Count)];
+    //    return RedirectToAction("Details", "Book", new { id });
+    //}
+
     [HttpGet("/quiz/next")]
     public async Task<IActionResult> QuizNext()
     {
