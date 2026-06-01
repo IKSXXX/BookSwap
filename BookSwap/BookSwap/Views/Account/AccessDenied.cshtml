@@ -1,11 +1,24 @@
-@{
-    ViewData["Title"] = "Доступ запрещён";
-}
+@{ ViewData["Title"] = "Доступ запрещён"; }
 
-<div class="auth-wrap">
-    <div class="auth-card" style="text-align:center;">
-        <h2>Доступ запрещён</h2>
-        <p>У вас нет прав на просмотр этой страницы.</p>
-        <a href="/" class="btn btn-outline">На главную</a>
+<div class="section--gray" style="padding:4rem 0; min-height:calc(100vh - 64px);">
+    <div class="container" style="max-width:420px;margin:0 auto;text-align:center;">
+        <div class="card">
+            <div class="card-body" style="padding:2.5rem 2rem;">
+                <div style="width:56px;height:56px;border-radius:50%;background:var(--red-100);color:var(--red-600);display:grid;place-items:center;margin:0 auto 1.25rem;">
+                    <svg class="icon" style="width:1.5rem;height:1.5rem;"><use href="#i-shield"/></svg>
+                </div>
+                <h3 style="margin-bottom:.5rem;">Доступ запрещён</h3>
+                <p style="color:var(--gray-500);font-size:.875rem;margin-bottom:1.5rem;">У вас нет прав на просмотр этой страницы.</p>
+                <div style="display:flex;gap:.5rem;justify-content:center;">
+                    <a href="/" class="btn btn-outline" style="font-size:.8125rem;padding:.5rem 1rem;">
+                        <svg class="icon" style="width:.875rem;height:.875rem;"><use href="#i-home"/></svg>
+                        На главную
+                    </a>
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-primary" style="font-size:.8125rem;padding:.5rem 1rem;">
+                        Войти
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
