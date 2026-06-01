@@ -19,6 +19,9 @@ public static class DbSeeder
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
 
+        if (ctx.Database.IsRelational())
+            await ctx.Database.MigrateAsync();
+
         foreach (var role in new[] { AdminRole, UserRole })
         {
             if (!await roleManager.RoleExistsAsync(role))

@@ -22,8 +22,16 @@ try
     var builder = WebApplication.CreateBuilder(args);
     builder.Host.UseSerilog();
 
-    builder.Services.AddDbContext<BookExchangeDbContext>(options =>
-        options.UseInMemoryDatabase("BookSwap"));
+    var useMockData = builder.Configuration.GetValue<bool>("UseMockData");
+
+    if (useMockData)
+        builder.Services.AddDbContext<BookExchangeDbContext>(options => options.UseInMemoryDatabase("BookSwap"));
+    else
+    {
+        var connStr = builder.Configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found");
+        builder.Services.AddDbContext<BookExchangeDbContext>(options => options.UseNpgsql(connStr));
+    }
 
     builder.Services.AddIdentity<User, IdentityRole>(options =>
     {
@@ -45,8 +53,13 @@ try
         options.ExpireTimeSpan = TimeSpan.FromDays(30);
     });
 
-    builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-    builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+    if (useMockData)
+        builder.Services.AddScoped<IUnitOfWork, BookExchange.Web.Mocks.MockUnitOfWork>();
+    else
+    {
+        builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+        builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+    }
     builder.Services.AddTransient<IEmailSender, BookExchange.Web.Helpers.ConsoleEmailSender>();
     builder.Services.AddSingleton<BookExchange.Web.Services.GigaChatService>();
     builder.Services.AddAutoMapper(cfg => { }, typeof(BookExchange.Web.Helpers.MappingProfile).Assembly);
@@ -65,30 +78,31 @@ try
     app.UseRouting();
     app.UseAuthentication();
 
-    app.Use(async (ctx, next) =>
+    if (useMockData)
     {
-        if (ctx.User.Identity?.IsAuthenticated != true)
+        app.Use(async (ctx, next) =>
         {
-            var um = ctx.RequestServices.GetRequiredService<UserManager<User>>();
-            var admin = await um.FindByEmailAsync(DbSeeder.AdminEmail);
-            if (admin != null)
+            if (ctx.User.Identity?.IsAuthenticated != true)
             {
-                var claims = new List<System.Security.Claims.Claim>
+                var um = ctx.RequestServices.GetRequiredService<UserManager<User>>();
+                var admin = await um.FindByEmailAsync(DbSeeder.AdminEmail);
+                if (admin != null)
                 {
-                    new(System.Security.Claims.ClaimTypes.NameIdentifier, admin.Id),
-                    new(System.Security.Claims.ClaimTypes.Name, admin.UserName ?? "admin"),
-                    new(System.Security.Claims.ClaimTypes.Email, admin.Email ?? ""),
-                };
-                var roles = await um.GetRolesAsync(admin);
-                foreach (var role in roles)
-                    claims.Add(new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, role));
-
-                var identity = new System.Security.Claims.ClaimsIdentity(claims, IdentityConstants.ApplicationScheme);
-                await ctx.SignInAsync(IdentityConstants.ApplicationScheme, new System.Security.Claims.ClaimsPrincipal(identity));
+                    var claims = new List<System.Security.Claims.Claim>
+                    {
+                        new(System.Security.Claims.ClaimTypes.NameIdentifier, admin.Id),
+                        new(System.Security.Claims.ClaimTypes.Name, admin.UserName ?? "admin"),
+                    };
+                    var roles = await um.GetRolesAsync(admin);
+                    foreach (var role in roles)
+                        claims.Add(new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, role));
+                    var identity = new System.Security.Claims.ClaimsIdentity(claims, IdentityConstants.ApplicationScheme);
+                    await ctx.SignInAsync(IdentityConstants.ApplicationScheme, new System.Security.Claims.ClaimsPrincipal(identity));
+                }
             }
-        }
-        await next();
-    });
+            await next();
+        });
+    }
 
     app.UseAuthorization();
 
