@@ -130,12 +130,14 @@ public class ExchangeController : Controller
         return View(vm);
     }
 
-    async Task<IActionResult> TransitionAsync(int id, ExchangeStatus from, ExchangeStatus to, Func<ExchangeRequest, Task>? onAccept = null)
+    async Task<IActionResult> TransitionAsync(int id, ExchangeStatus from, ExchangeStatus to, bool receiverOnly = false, bool senderOnly = false, Func<ExchangeRequest, Task>? onAccept = null)
     {
         var userId = _um.GetUserId(User)!;
         var ex = await _uow.Exchanges.GetByIdAsync(id);
         if (ex == null || ex.Status != from) return NotFound();
-        if (ex.SenderId != userId && ex.ReceiverId != userId) return Forbid();
+        if (receiverOnly && ex.ReceiverId != userId) return Forbid();
+        if (senderOnly && ex.SenderId != userId) return Forbid();
+        if (!receiverOnly && !senderOnly && ex.SenderId != userId && ex.ReceiverId != userId) return Forbid();
 
         ex.Status = to;
         _uow.Exchanges.Update(ex);
@@ -149,15 +151,24 @@ public class ExchangeController : Controller
 
     [HttpPost, ValidateAntiForgeryToken]
     public Task<IActionResult> Accept(int id)
-        => TransitionAsync(id, ExchangeStatus.Pending, ExchangeStatus.Accepted);
+        => TransitionAsync(id, ExchangeStatus.Pending, ExchangeStatus.Accepted, receiverOnly: true, onAccept: async ex =>
+        {
+            var reqBook = await _uow.Books.GetByIdAsync(ex.BookRequestedId);
+            if (reqBook != null) { reqBook.IsAvailable = false; _uow.Books.Update(reqBook); }
+            if (ex.BookOfferedId.HasValue)
+            {
+                var offBook = await _uow.Books.GetByIdAsync(ex.BookOfferedId.Value);
+                if (offBook != null) { offBook.IsAvailable = false; _uow.Books.Update(offBook); }
+            }
+        });
 
     [HttpPost, ValidateAntiForgeryToken]
     public Task<IActionResult> Reject(int id)
-        => TransitionAsync(id, ExchangeStatus.Pending, ExchangeStatus.Rejected);
+        => TransitionAsync(id, ExchangeStatus.Pending, ExchangeStatus.Rejected, receiverOnly: true);
 
     [HttpPost, ValidateAntiForgeryToken]
     public Task<IActionResult> Cancel(int id)
-        => TransitionAsync(id, ExchangeStatus.Pending, ExchangeStatus.Cancelled);
+        => TransitionAsync(id, ExchangeStatus.Pending, ExchangeStatus.Cancelled, senderOnly: true);
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Complete(int id) => await TransitionAsync(id, ExchangeStatus.Accepted, ExchangeStatus.Completed, onAccept: async ex =>

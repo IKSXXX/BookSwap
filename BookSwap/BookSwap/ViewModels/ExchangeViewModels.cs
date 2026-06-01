@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using BookExchange.Db.Entities;
 
 namespace BookExchange.Web.ViewModels;
@@ -7,6 +8,8 @@ public class CreateExchangeViewModel
     public int BookRequestedId { get; set; }
     public BookCardViewModel? BookRequested { get; set; }
     public List<BookCardViewModel> MyAvailableBooks { get; set; } = new();
+
+    [Display(Name = "Книга для обмена")]
     public int? SelectedOfferedBookId { get; set; }
 }
 
@@ -58,6 +61,10 @@ public class ReviewFormViewModel
     public string ToUserId { get; set; } = string.Empty;
     public string ToUserName { get; set; } = string.Empty;
 
+    [Range(1, 5)]
     public int Rating { get; set; } = 5;
+
+    [StringLength(1000)]
+    [Display(Name = "Комментарий")]
     public string? Comment { get; set; }
 }

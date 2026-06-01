@@ -38,6 +38,12 @@ public class AccountController : Controller
             return View(model);
         }
 
+        if (user.IsBlocked)
+        {
+            ModelState.AddModelError(string.Empty, "Ваша учётная запись заблокирована.");
+            return View(model);
+        }
+
         var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, false);
         if (result.Succeeded)
             return Redirect(model.ReturnUrl ?? "/");

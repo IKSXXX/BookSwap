@@ -31,20 +31,11 @@ public static class DbSeeder
         var admin = await userManager.FindByEmailAsync(AdminEmail);
         if (admin == null)
         {
-            admin = new User
-            {
-                UserName = "admin",
-                Email = AdminEmail,
-                EmailConfirmed = true,
-                Location = "Система",
-                AvatarPath = "https://api.dicebear.com/9.x/thumbs/svg?seed=admin&backgroundColor=transparent"
-            };
+            admin = new User { UserName = "admin", Email = AdminEmail, EmailConfirmed = true, Location = "Система", AvatarPath = "https://api.dicebear.com/9.x/thumbs/svg?seed=admin&backgroundColor=transparent" };
             await userManager.CreateAsync(admin, AdminPassword);
         }
-        if (!await userManager.IsInRoleAsync(admin, AdminRole))
-            await userManager.AddToRoleAsync(admin, AdminRole);
-        if (!await userManager.IsInRoleAsync(admin, UserRole))
-            await userManager.AddToRoleAsync(admin, UserRole);
+        if (!await userManager.IsInRoleAsync(admin, AdminRole)) await userManager.AddToRoleAsync(admin, AdminRole);
+        if (!await userManager.IsInRoleAsync(admin, UserRole)) await userManager.AddToRoleAsync(admin, UserRole);
 
         var demoUsers = new (string name, string email, string city)[]
         {
@@ -64,15 +55,7 @@ public static class DbSeeder
             var u = await userManager.FindByEmailAsync(email);
             if (u == null)
             {
-                u = new User
-                {
-                    UserName = name,
-                    Email = email,
-                    EmailConfirmed = true,
-                    Location = city,
-                    AvatarPath = $"https://api.dicebear.com/9.x/thumbs/svg?seed={name}&backgroundColor=transparent",
-                    RegistrationDate = DateTime.UtcNow.AddDays(-Random.Shared.Next(10, 200))
-                };
+                u = new User { UserName = name, Email = email, EmailConfirmed = true, Location = city, AvatarPath = $"https://api.dicebear.com/9.x/thumbs/svg?seed={name}&backgroundColor=transparent", RegistrationDate = DateTime.UtcNow.AddDays(-Random.Shared.Next(10, 200)) };
                 await userManager.CreateAsync(u, "Pass123!");
                 await userManager.AddToRoleAsync(u, UserRole);
             }
@@ -83,15 +66,24 @@ public static class DbSeeder
         {
             var books = new List<Book>
             {
-                new() { Title = "Преступление и наказание", Author = "Ф. Достоевский", Genre = "Классика", Condition = BookCondition.Good, Year = 1866, Description = "Великий роман о преступлении и наказании.", CoverImagePath = "/images/books/crime.jpg", IsAvailable = true },
-                new() { Title = "1984", Author = "Дж. Оруэлл", Genre = "Антиутопия", Condition = BookCondition.Excellent, Year = 1949, Description = "Классическая антиутопия о тоталитарном обществе.", CoverImagePath = "/images/books/1984.jpg", IsAvailable = true },
-                new() { Title = "Мастер и Маргарита", Author = "М. Булгаков", Genre = "Классика", Condition = BookCondition.Acceptable, Year = 1967, Description = "Мистический роман о любви, дьяволе и Москве 30-х.", CoverImagePath = "/images/books/master.jpg", IsAvailable = false },
+                new() { Title = "Преступление и наказание", Author = "Ф. Достоевский", Genre = "Классика", Condition = BookCondition.Good, Year = 1866, Description = "Роман о студенте Раскольникове, решившемся на убийство ради идеи.", CoverImagePath = "/images/books/crime.jpg", IsAvailable = true },
+                new() { Title = "1984", Author = "Дж. Оруэлл", Genre = "Антиутопия", Condition = BookCondition.Excellent, Year = 1949, Description = "Антиутопия о тоталитарном обществе под контролем Большого Брата.", CoverImagePath = "/images/books/1984.jpg", IsAvailable = true },
+                new() { Title = "Мастер и Маргарита", Author = "М. Булгаков", Genre = "Классика", Condition = BookCondition.Acceptable, Year = 1967, Description = "Мистический роман о визите дьявола в Москву.", CoverImagePath = "/images/books/master.jpg", IsAvailable = true },
                 new() { Title = "Война и мир", Author = "Л. Толстой", Genre = "Классика", Condition = BookCondition.Excellent, Year = 1869, Description = "Эпопея о судьбах людей на фоне наполеоновских войн.", CoverImagePath = "/images/books/war.jpg", IsAvailable = true },
-                new() { Title = "Гарри Поттер и философский камень", Author = "Дж. Роулинг", Genre = "Фэнтези", Condition = BookCondition.Good, Year = 1997, Description = "Первая книга о мальчике-волшебнике.", CoverImagePath = "/images/books/harry.jpg", IsAvailable = true },
-                new() { Title = "Игра престолов", Author = "Дж. Мартин", Genre = "Фэнтези", Condition = BookCondition.Good, Year = 1996, Description = "Эпическая сага о борьбе за Железный трон.", CoverImagePath = "/images/books/thrones.jpg", IsAvailable = true },
-                new() { Title = "Евгений Онегин", Author = "А. Пушкин", Genre = "Классика", Condition = BookCondition.Good, Year = 1833, Description = "Роман в стихах, энциклопедия русской жизни.", CoverImagePath = "/images/books/onegin.jpg", IsAvailable = true },
-                new() { Title = "Шерлок Холмс", Author = "А.К. Дойл", Genre = "Детектив", Condition = BookCondition.Excellent, Year = 1892, Description = "Сборник рассказов о гениальном сыщике.", CoverImagePath = "/images/books/holmes.jpg", IsAvailable = true },
-                new() { Title = "Великий Гэтсби", Author = "Ф.С. Фицджеральд", Genre = "Классика", Condition = BookCondition.Excellent, Year = 1925, Description = "История любви и разочарования в эпоху джаза.", CoverImagePath = "/images/books/gatsby.jpg", IsAvailable = true },
+                new() { Title = "Гарри Поттер и философский камень", Author = "Дж. Роулинг", Genre = "Фэнтези", Condition = BookCondition.Good, Year = 1997, Description = "Первая книга о мальчике-волшебнике, узнавшем о своей магии.", CoverImagePath = "/images/books/harry.jpg", IsAvailable = true },
+                new() { Title = "Игра престолов", Author = "Дж. Мартин", Genre = "Фэнтези", Condition = BookCondition.Good, Year = 1996, Description = "Эпическая сага о борьбе за Железный трон Семи Королевств.", CoverImagePath = "/images/books/thrones.jpg", IsAvailable = true },
+                new() { Title = "Евгений Онегин", Author = "А. Пушкин", Genre = "Классика", Condition = BookCondition.Good, Year = 1833, Description = "Роман в стихах о светском денди и деревенской девушке.", CoverImagePath = "/images/books/onegin.jpg", IsAvailable = true },
+                new() { Title = "Шерлок Холмс", Author = "А.К. Дойл", Genre = "Детектив", Condition = BookCondition.Excellent, Year = 1892, Description = "Сборник рассказов о гениальном детективе и его верном друге.", CoverImagePath = "/images/books/holmes.jpg", IsAvailable = true },
+                new() { Title = "Великий Гэтсби", Author = "Ф.С. Фицджеральд", Genre = "Классика", Condition = BookCondition.Excellent, Year = 1925, Description = "История загадочного миллионера и его неразделённой любви.", CoverImagePath = "/images/books/gatsby.jpg", IsAvailable = true },
+                new() { Title = "Сто лет одиночества", Author = "Г. Маркес", Genre = "Магический реализм", Condition = BookCondition.Good, Year = 1967, Description = "Хроника семьи Буэндиа в вымышленном городе Макондо.", CoverImagePath = "/images/books/solitude.jpg", IsAvailable = true },
+                new() { Title = "Три товарища", Author = "Э.М. Ремарк", Genre = "Классика", Condition = BookCondition.Good, Year = 1936, Description = "История дружбы и любви в послевоенной Германии.", CoverImagePath = "/images/books/comrades.jpg", IsAvailable = true },
+                new() { Title = "Отцы и дети", Author = "И. Тургенев", Genre = "Классика", Condition = BookCondition.Good, Year = 1862, Description = "Роман о конфликте поколений и идеологий в России XIX века.", CoverImagePath = "/images/books/fathers.jpg", IsAvailable = true },
+                new() { Title = "Анна Каренина", Author = "Л. Толстой", Genre = "Классика", Condition = BookCondition.Good, Year = 1878, Description = "Трагическая история любви замужней дворянки.", CoverImagePath = "/images/books/anna.jpg", IsAvailable = true },
+                new() { Title = "Процесс", Author = "Ф. Кафка", Genre = "Классика", Condition = BookCondition.Acceptable, Year = 1925, Description = "Философский роман о человеке, обвинённом по неизвестной причине.", CoverImagePath = "/images/books/trial.jpg", IsAvailable = true },
+                new() { Title = "Заводной апельсин", Author = "Э. Бёрджесс", Genre = "Антиутопия", Condition = BookCondition.Good, Year = 1962, Description = "Провокационный роман о насилии и свободе воли.", CoverImagePath = "/images/books/orange.jpg", IsAvailable = true },
+                new() { Title = "О дивный новый мир", Author = "О. Хаксли", Genre = "Антиутопия", Condition = BookCondition.Good, Year = 1932, Description = "Мир, где людей создают в пробирках и контролируют сомой.", CoverImagePath = "/images/books/brave.jpg", IsAvailable = true },
+                new() { Title = "Убить пересмешника", Author = "Х. Ли", Genre = "Классика", Condition = BookCondition.Good, Year = 1960, Description = "История расовой несправедливости глазами ребёнка в американском Юге.", CoverImagePath = "/images/books/mockingbird.jpg", IsAvailable = true },
+                new() { Title = "Над пропастью во ржи", Author = "Дж. Сэлинджер", Genre = "Классика", Condition = BookCondition.Excellent, Year = 1951, Description = "Исповедь бунтующего подростка в большом городе.", CoverImagePath = "/images/books/rye.jpg", IsAvailable = true },
             };
             await ctx.Books.AddRangeAsync(books);
             await ctx.SaveChangesAsync();
@@ -103,13 +95,44 @@ public static class DbSeeder
                 new BookOwner { BookId = books[2].Id, UserId = userMap["elena"].Id, IsPrimary = true },
                 new BookOwner { BookId = books[2].Id, UserId = userMap["dmitry"].Id, IsPrimary = false },
                 new BookOwner { BookId = books[3].Id, UserId = userMap["anna"].Id, IsPrimary = true },
+                new BookOwner { BookId = books[3].Id, UserId = userMap["pavel"].Id, IsPrimary = false },
                 new BookOwner { BookId = books[4].Id, UserId = userMap["dmitry"].Id, IsPrimary = true },
                 new BookOwner { BookId = books[5].Id, UserId = userMap["pavel"].Id, IsPrimary = true },
                 new BookOwner { BookId = books[5].Id, UserId = userMap["sergey"].Id, IsPrimary = false },
                 new BookOwner { BookId = books[6].Id, UserId = userMap["maria"].Id, IsPrimary = true },
                 new BookOwner { BookId = books[7].Id, UserId = userMap["dmitry"].Id, IsPrimary = true },
-                new BookOwner { BookId = books[8].Id, UserId = userMap["maria"].Id, IsPrimary = true }
+                new BookOwner { BookId = books[8].Id, UserId = userMap["maria"].Id, IsPrimary = true },
+                new BookOwner { BookId = books[9].Id, UserId = userMap["olga"].Id, IsPrimary = true },
+                new BookOwner { BookId = books[10].Id, UserId = userMap["sergey"].Id, IsPrimary = true },
+                new BookOwner { BookId = books[11].Id, UserId = userMap["elena"].Id, IsPrimary = true },
+                new BookOwner { BookId = books[12].Id, UserId = userMap["anna"].Id, IsPrimary = true },
+                new BookOwner { BookId = books[13].Id, UserId = userMap["olga"].Id, IsPrimary = true },
+                new BookOwner { BookId = books[14].Id, UserId = userMap["pavel"].Id, IsPrimary = true },
+                new BookOwner { BookId = books[15].Id, UserId = userMap["sergey"].Id, IsPrimary = true },
+                new BookOwner { BookId = books[16].Id, UserId = userMap["olga"].Id, IsPrimary = true },
+                new BookOwner { BookId = books[17].Id, UserId = userMap["anna"].Id, IsPrimary = true }
             );
+
+            ctx.ExchangeRequests.AddRange(
+                new ExchangeRequest { BookRequestedId = books[1].Id, SenderId = userMap["anna"].Id, ReceiverId = userMap["igor"].Id, Status = ExchangeStatus.Completed },
+                new ExchangeRequest { BookRequestedId = books[0].Id, SenderId = userMap["igor"].Id, ReceiverId = userMap["anna"].Id, Status = ExchangeStatus.Completed },
+                new ExchangeRequest { BookRequestedId = books[4].Id, SenderId = userMap["elena"].Id, ReceiverId = userMap["dmitry"].Id, Status = ExchangeStatus.Completed }
+            );
+            await ctx.SaveChangesAsync();
+
+            ctx.Reviews.AddRange(
+                new Review { FromUserId = userMap["anna"].Id, ToUserId = userMap["igor"].Id, Rating = 5, Comment = "Отличный обмен, книга в идеальном состоянии!", ExchangeRequestId = ctx.ExchangeRequests.First().Id },
+                new Review { FromUserId = userMap["igor"].Id, ToUserId = userMap["anna"].Id, Rating = 4, Comment = "Спасибо! Быстро и удобно.", ExchangeRequestId = ctx.ExchangeRequests.Skip(1).First().Id },
+                new Review { FromUserId = userMap["elena"].Id, ToUserId = userMap["dmitry"].Id, Rating = 5, Comment = "Рекомендую, всё прошло гладко.", ExchangeRequestId = ctx.ExchangeRequests.Skip(2).First().Id }
+            );
+            await ctx.SaveChangesAsync();
+
+            foreach (var u in userMap.Values)
+            {
+                var avg = await ctx.Reviews.Where(r => r.ToUserId == u.Id).Select(r => r.Rating).ToListAsync();
+                u.Rating = avg.Count > 0 ? Math.Round(avg.Average(), 2) : 0;
+            }
+            await ctx.SaveChangesAsync();
 
             ctx.BooksOfTheDay.Add(new BookOfTheDay { BookId = books[1].Id, Date = DateTime.Now.Date });
 
