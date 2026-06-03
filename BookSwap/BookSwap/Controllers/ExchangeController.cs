@@ -58,7 +58,9 @@ public class ExchangeController : Controller
     [HttpPost("Exchange/Create/{bookId:int}"), ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(int bookId, int? selectedOfferedBookId)
     {
-        var book = await _uow.Books.GetByIdAsync(bookId);
+        var book = await _uow.Books.Query()
+            .Include(b => b.BookOwners).ThenInclude(bo => bo.User)
+            .FirstOrDefaultAsync(b => b.Id == bookId);
         if (book == null || !book.IsAvailable) return NotFound();
 
         var userId = _um.GetUserId(User)!;
@@ -247,7 +249,7 @@ public class ExchangeController : Controller
         var user = await _um.FindByIdAsync(model.ToUserId);
         if (user != null)
         {
-            user.Rating = avg.Count > 0 ? Math.Round(avg.Average(), 2) : 0;
+            user.Rating = avg.Count > 0 ? Math.Round(avg.Average() ?? 0, 2) : 0;
             await _um.UpdateAsync(user);
         }
 

@@ -28,7 +28,7 @@
                             <span><svg class="icon"><use href="#i-calendar"/></svg>Участник с @Model.RegistrationDate.ToLocalTime().ToString("MMMM yyyy")</span>
                         </div>
                     </div>
-                    @if (Model.IsCurrentUser)
+                    @if (Model.IsCurrent)
                     {
                         <a asp-controller="Account" asp-action="EditProfile" class="btn btn-outline">
                             <svg class="icon"><use href="#i-edit"/></svg>
@@ -75,7 +75,7 @@
             <div class="tabs-list">
                 <button type="button" class="tab-btn active" data-tab="books">
                     <svg class="icon"><use href="#i-book"/></svg>
-                    Мои книги (@Model.MyBooks.Count)
+                    @(Model.IsCurrent ? "Мои книги" : $"Книги {Model.UserName}") (@Model.MyBooks.Count)
                 </button>
                 <button type="button" class="tab-btn" data-tab="exchanges">
                     <svg class="icon"><use href="#i-swap"/></svg>
@@ -92,7 +92,7 @@
             </div>
 
             <div class="tab-content" id="tab-books">
-                @if (Model.IsCurrentUser)
+                @if (Model.IsCurrent)
                 {
                     <div class="book-grid">
                         <a asp-controller="Book" asp-action="Create" class="book-tile-add">
@@ -172,7 +172,7 @@
                 {
                     <div class="empty-state card">
                         <svg class="icon"><use href="#i-heart"/></svg>
-                        @if (Model.IsCurrentUser)
+                        @if (Model.IsCurrent)
                         {
                             <p>В избранном пусто.</p>
                             <a asp-controller="Book" asp-action="Index" class="empty-state__link">Перейти в каталог →</a>

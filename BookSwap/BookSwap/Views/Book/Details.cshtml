@@ -134,9 +134,10 @@
                                 @(Model.IsFavorite ? "В избранном" : "В избранное")
                             </button>
                         </form>
-                        <form asp-controller="Wishlist" asp-action="Toggle" method="post" style="margin:0;">
+                        <form asp-controller="Favorite" asp-action="Toggle" method="post" style="margin:0;">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="bookId" value="@Model.Id" />
+                            <input type="hidden" name="isWishlist" value="true" />
                             <button type="submit" class="btn @(Model.IsInWishlist ? "btn-add" : "btn-outline")" style="font-size:.8125rem;padding:.5rem 1rem;">
                                 <svg class="icon" style="width:.875rem;height:.875rem;"><use href="#i-bookmark"/></svg>
                                 @(Model.IsInWishlist ? "В вишлисте" : "В вишлист")

@@ -74,10 +74,11 @@ public class UserController : Controller
             Email = isCurrent ? user.Email : null,
             AvatarPath = user.AvatarPath,
             Location = user.Location,
-            Rating = user.Rating,
+            Rating = user.Rating ?? 0,
             RegistrationDate = user.RegistrationDate,
             BooksCount = myBooks.Count,
             CompletedExchanges = exchanges.Count(e => e.Status == ExchangeStatus.Completed),
+            IsCurrent = isCurrent,
             MyBooks = myBooks.Select(_mapper.Map<BookCardViewModel>).ToList(),
             Exchanges = exchanges.Select(e => new ExchangeListItemViewModel
             {
@@ -99,7 +100,7 @@ public class UserController : Controller
                 FromUserName = r.FromUser?.UserName ?? "",
                 ToUserId = r.ToUserId,
                 ToUserName = r.ToUser?.UserName ?? "",
-                Rating = r.Rating,
+                Rating = r.Rating ?? 0,
                 Comment = r.Comment,
                 CreatedAt = r.CreatedAt
             }).ToList(),
@@ -109,11 +110,10 @@ public class UserController : Controller
                 FromUserName = r.FromUser?.UserName ?? "",
                 ToUserId = r.ToUserId,
                 ToUserName = r.ToUser?.UserName ?? "",
-                Rating = r.Rating,
+                Rating = r.Rating ?? 0,
                 Comment = r.Comment,
                 CreatedAt = r.CreatedAt
             }).ToList(),
-            IsCurrentUser = isCurrent
         };
 
         return View(vm);

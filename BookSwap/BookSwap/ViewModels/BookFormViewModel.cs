@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using BookExchange.Db.Entities;
 
 namespace BookExchange.Web.ViewModels;
@@ -5,7 +6,9 @@ namespace BookExchange.Web.ViewModels;
 public class BookFormViewModel
 {
     public int? Id { get; set; }
+    [Required(ErrorMessage = "Введите название")]
     public string Title { get; set; } = string.Empty;
+    [Required(ErrorMessage = "Введите автора")]
     public string Author { get; set; } = string.Empty;
     public string? ISBN { get; set; }
     public string? Description { get; set; }

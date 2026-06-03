@@ -130,7 +130,7 @@ public static class DbSeeder
             foreach (var u in userMap.Values)
             {
                 var avg = await ctx.Reviews.Where(r => r.ToUserId == u.Id).Select(r => r.Rating).ToListAsync();
-                u.Rating = avg.Count > 0 ? Math.Round(avg.Average(), 2) : 0;
+                u.Rating = avg.Count > 0 ? Math.Round(avg.Average() ?? 0, 2) : 0;
             }
             await ctx.SaveChangesAsync();
 

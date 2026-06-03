@@ -74,19 +74,18 @@ public class UserProfileViewModel
     public DateTime RegistrationDate { get; set; }
     public int BooksCount { get; set; }
     public int CompletedExchanges { get; set; }
+    public bool IsCurrent { get; set; }
     public List<BookCardViewModel> MyBooks { get; set; } = new();
     public List<ExchangeListItemViewModel> Exchanges { get; set; } = new();
     public List<BookCardViewModel> Favorites { get; set; } = new();
     public List<ReviewDisplayViewModel> ReviewsReceived { get; set; } = new();
     public List<ReviewDisplayViewModel> ReviewsGiven { get; set; } = new();
-    public bool IsCurrentUser { get; set; }
 }
 
 public class ReviewDisplayViewModel
 {
     public string FromUserId { get; set; } = string.Empty;
     public string FromUserName { get; set; } = string.Empty;
-    public string? FromUserAvatar { get; set; }
     public string ToUserId { get; set; } = string.Empty;
     public string ToUserName { get; set; } = string.Empty;
     public int Rating { get; set; }

@@ -51,7 +51,7 @@ public class AdminController : Controller
                 Email = u.Email ?? "",
                 IsBlocked = u.IsBlocked,
                 IsAdmin = roles.Contains(DbSeeder.AdminRole),
-                Rating = u.Rating,
+                Rating = u.Rating ?? 0,
                 RegistrationDate = u.RegistrationDate,
                 BooksCount = await _uow.BookOwners.Query().CountAsync(bo => bo.UserId == u.Id)
             });
