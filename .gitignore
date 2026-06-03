@@ -13,6 +13,5 @@ x86/
 *.sln.docstates
 *.nupkg
 *.snupkg
-*.db
 *.sqlite
 *.sqlite3
