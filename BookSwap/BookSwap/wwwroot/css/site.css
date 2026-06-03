@@ -600,10 +600,41 @@ input[type="radio"] {
 
 /* ---------- Hero ---------- */
 .hero {
-    background: linear-gradient(to right, var(--blue-600), var(--blue-800));
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    background:
+        radial-gradient(120% 120% at 0% 0%, #1e3a8a 0%, transparent 55%),
+        radial-gradient(100% 140% at 100% 0%, #4f46e5 0%, transparent 50%),
+        linear-gradient(135deg, var(--blue-700), var(--blue-600) 60%, #1e3a8a);
     color: #fff;
-    padding: clamp(3rem, 7vw, 5rem) 0;
+    padding: clamp(3.5rem, 8vw, 6rem) 0;
     text-align: center;
+}
+/* dotted paper texture overlay */
+.hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: radial-gradient(rgb(255 255 255 / .07) 1px, transparent 1px);
+    background-size: 22px 22px;
+    mask-image: radial-gradient(120% 80% at 50% 0%, #000 40%, transparent 100%);
+}
+/* soft floating glow */
+.hero::after {
+    content: "";
+    position: absolute;
+    width: 520px; height: 520px;
+    right: -120px; bottom: -220px;
+    z-index: -1;
+    background: radial-gradient(circle, rgb(96 165 250 / .35), transparent 70%);
+    filter: blur(8px);
+    animation: heroGlow 9s var(--ease) infinite alternate;
+}
+@keyframes heroGlow {
+    from { transform: translateY(0) scale(1); opacity: .8; }
+    to   { transform: translateY(-26px) scale(1.08); opacity: 1; }
 }
 .hero > .container {
     display: flex;
@@ -612,10 +643,11 @@ input[type="radio"] {
 }
 .hero h1 {
     color: #fff;
-    font-size: clamp(2rem, 4.2vw, 3rem);
-    font-weight: 700;
+    font-size: clamp(2rem, 4.6vw, 3.25rem);
+    font-weight: 800;
     margin-bottom: 1.5rem;
-    letter-spacing: -.02em;
+    letter-spacing: -.03em;
+    line-height: 1.1;
     max-width: 48rem;
 }
 .hero__sub {
@@ -1796,31 +1828,56 @@ footer .brand-name .accent { color: var(--blue-500); }
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: none; }
 }
-.fade-in > * { animation: fadeUp .25s var(--ease) both; }
+.fade-in > * { animation: fadeUp .35s var(--ease) both; }
+/* staggered reveal of the first few top-level blocks */
+.fade-in > *:nth-child(1) { animation-delay: .02s; }
+.fade-in > *:nth-child(2) { animation-delay: .08s; }
+.fade-in > *:nth-child(3) { animation-delay: .14s; }
+.fade-in > *:nth-child(4) { animation-delay: .20s; }
+.fade-in > *:nth-child(5) { animation-delay: .26s; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
     .nav-links {
-        display: none;
         position: absolute;
         top: 64px;
         left: 0; right: 0;
         background: #fff;
         border-bottom: 1px solid var(--line);
         flex-direction: column;
-        padding: 1rem;
+        padding: 0 1rem;
         gap: .5rem;
         align-items: stretch;
         box-shadow: var(--shadow-md);
+        /* animated collapse */
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        pointer-events: none;
+        transform: translateY(-6px);
+        transition: max-height .32s var(--ease), opacity .22s var(--ease), transform .28s var(--ease), padding .28s var(--ease);
     }
-    .nav-links.is-open { display: flex; }
+    .nav-links.is-open {
+        max-height: 80vh;
+        opacity: 1;
+        pointer-events: auto;
+        transform: none;
+        padding: 1rem;
+        overflow-y: auto;
+    }
     .nav-links .nav-link { padding: .5rem .25rem; }
     .nav-toggle { display: grid; place-items: center; }
     .navbar > .container { position: relative; }
-    .user-menu { width: 100%; }
-    .user-trigger { width: 100%; justify-content: space-between; }
-    .user-dropdown { position: static; box-shadow: none; border: none; padding: 0; margin-top: .5rem; }
-    .user-menu .user-dropdown { display: block; }
+    /* CTA row inside collapsed menu: wrap & space out */
+    .nav-cta {
+        flex-wrap: wrap;
+        margin-top: .5rem;
+        padding-top: .75rem;
+        border-top: 1px solid var(--line);
+    }
+    .nav-cta .btn { flex: 1 1 auto; justify-content: center; }
+    /* keep notif dropdown on-screen when bell is inside the menu */
+    .notif-dropdown { right: 0; left: auto; }
 }
 
 /* Hide Rail-specific classes (kept for compatibility no-op) */
@@ -1878,17 +1935,30 @@ footer .brand-name .accent { color: var(--blue-500); }
     position: absolute;
     top: calc(100% + .5rem);
     right: 0;
-    width: 360px;
+    width: min(360px, calc(100vw - 1.5rem));
     max-height: 420px;
     background: #fff;
     border: 1px solid var(--line);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-xl);
     z-index: 100;
-    display: none;
     overflow: hidden;
+    /* animated reveal */
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    transform: translateY(-8px) scale(.98);
+    transform-origin: top right;
+    pointer-events: none;
+    visibility: hidden;
+    transition: opacity .18s var(--ease), transform .2s var(--ease), visibility .18s;
 }
-.notif-dropdown.is-open { display: flex; flex-direction: column; }
+.notif-dropdown.is-open {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    visibility: visible;
+}
 .notif-dropdown__head {
     display: flex;
     align-items: center;
@@ -1945,18 +2015,20 @@ footer .brand-name .accent { color: var(--blue-500); }
     position: fixed;
     top: 80px;
     right: 20px;
+    left: auto;
     z-index: 9999;
     display: flex;
     flex-direction: column;
     gap: .75rem;
     pointer-events: none;
+    max-width: calc(100vw - 24px);
 }
 .toast {
     display: flex;
     align-items: flex-start;
     gap: .75rem;
-    min-width: 320px;
-    max-width: 440px;
+    min-width: 0;
+    width: min(440px, calc(100vw - 24px));
     padding: 1rem 1.25rem;
     background: #fff;
     border: 1px solid var(--line);
@@ -2072,3 +2144,59 @@ footer .brand-name .accent { color: var(--blue-500); }
 .breadcrumb a:hover { color: var(--blue-600); }
 .breadcrumb__sep { color: var(--gray-300); }
 .breadcrumb__current { color: var(--gray-700); font-weight: 500; }
+
+/* =====================================================
+   POLISH: micro-interactions, focus, mobile, motion
+   ===================================================== */
+
+/* Keyboard focus rings on interactive non-input elements */
+.nav-link:focus-visible,
+.book-card:focus-visible,
+.pagination a:focus-visible,
+.btn:focus-visible {
+    outline: 2px solid var(--blue-500);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+/* Step icons & brand mark get a subtle hover lift */
+.step__icon { transition: transform .25s var(--ease), box-shadow .25s var(--ease); }
+.step:hover .step__icon { transform: translateY(-4px) scale(1.05); box-shadow: var(--shadow-md); }
+.brand-mark { transition: transform .25s var(--ease); }
+.brand:hover .brand-mark { transform: rotate(-6deg) scale(1.05); }
+
+/* Pagination active feedback */
+.pagination a { transition: background var(--dur) var(--ease), transform var(--dur) var(--ease); }
+.pagination a:active { transform: scale(.92); }
+
+/* Reveal helper for hidden-toggled panels (quiz/AI). Add .reveal in markup. */
+.reveal { animation: fadeUp .28s var(--ease) both; }
+
+/* Quiz correct/wrong emphasis */
+@keyframes quizPulse {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.04); }
+    100% { transform: scale(1); }
+}
+.quiz-option.is-correct { animation: quizPulse .35s var(--ease); }
+
+/* Mobile spacing tightening */
+@media (max-width: 640px) {
+    .feature-card__body { grid-template-columns: 1fr; }
+    .feature-cover, .feature-card__body > .feature-cover { width: 100%; max-width: 180px; margin-inline: auto; }
+    .section { padding-block: clamp(2rem, 6vw, 2.75rem); }
+    .hero { padding: clamp(2.5rem, 10vw, 3.5rem) 0; }
+    .hero__ctas { width: 100%; }
+    .hero__ctas .btn { flex: 1 1 100%; justify-content: center; }
+}
+
+/* Respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+        scroll-behavior: auto !important;
+    }
+    .hero::after { animation: none; }
+}

@@ -228,6 +228,7 @@
                 else if (b === btn && !data.isCorrect) b.classList.add('is-wrong');
             });
             feedback.hidden = false;
+            feedback.classList.add('reveal');
             feedback.textContent = data.isCorrect ? 'Верно! 🎉' : 'Неверно. Правильный ответ: ' + data.correctAnswer;
             feedback.classList.toggle('is-correct', data.isCorrect);
             feedback.classList.toggle('is-wrong', !data.isCorrect);

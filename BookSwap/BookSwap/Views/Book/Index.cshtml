@@ -161,6 +161,7 @@
             const box = document.getElementById('aiResults');
             if (!q) return;
             box.hidden = false;
+            box.classList.add('reveal');
             box.innerHTML = '<p class="text-sm text-muted">Ищу...</p>';
             try {
                 const fd = new FormData();
