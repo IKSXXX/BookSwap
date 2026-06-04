@@ -20,7 +20,24 @@ public static class DbSeeder
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
 
         if (ctx.Database.IsRelational())
+        {
             await ctx.Database.MigrateAsync();
+            // Ensure Notifications table exists (may not be covered by existing migrations)
+            await ctx.Database.ExecuteSqlRawAsync(@"
+                CREATE TABLE IF NOT EXISTS ""Notifications"" (
+                    ""Id"" SERIAL PRIMARY KEY,
+                    ""UserId"" TEXT NOT NULL,
+                    ""Type"" TEXT NOT NULL DEFAULT 'exchange',
+                    ""Text"" TEXT NOT NULL,
+                    ""RelatedUrl"" TEXT,
+                    ""IsRead"" BOOLEAN NOT NULL DEFAULT FALSE,
+                    ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    ""UpdatedAt"" TIMESTAMPTZ,
+                    CONSTRAINT ""FK_Notifications_AspNetUsers_UserId"" FOREIGN KEY (""UserId"") REFERENCES ""AspNetUsers""(""Id"") ON DELETE CASCADE
+                );
+                CREATE INDEX IF NOT EXISTS ""IX_Notifications_UserId_IsRead"" ON ""Notifications"" (""UserId"", ""IsRead"");
+            ");
+        }
 
         foreach (var role in new[] { AdminRole, UserRole })
         {

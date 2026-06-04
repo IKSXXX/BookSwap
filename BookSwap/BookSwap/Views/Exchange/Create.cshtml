@@ -1,82 +1,164 @@
 @model CreateExchangeViewModel
-@{
-    ViewData["Title"] = "Создать обмен";
-}
+@{ ViewData["Title"] = "Создать обмен"; }
 
 <div class="section--gray" style="padding:2rem 0; min-height:calc(100vh - 64px);">
-    <div class="container" style="max-width:800px;">
-        <a asp-controller="Book" asp-action="Details" asp-route-id="@Model.BookRequestedId" class="btn btn-ghost btn-sm mb-4">
+    <div class="container">
+        <a asp-controller="Book" asp-action="Details" asp-route-id="@Model.BookRequestedId" class="btn btn-ghost btn-sm mb-6">
             <svg class="icon"><use href="#i-arrow-left"/></svg>
             Назад к книге
         </a>
 
-        <h1 class="mb-4">Создать обмен</h1>
+        <div class="mb-6">
+            <h1 class="mb-2">Создать обмен</h1>
+            <p class="text-muted">Выберите книгу, которую хотите предложить взамен</p>
+        </div>
 
         <form asp-action="Create" asp-route-bookId="@Model.BookRequestedId" method="post">
             @Html.AntiForgeryToken()
 
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h3 class="mb-3">Вы хотите получить</h3>
-                    @if (Model.BookRequested != null)
-                    {
-                        <div class="exchange-pick exchange-pick--selected">
-                            @if (!string.IsNullOrEmpty(Model.BookRequested.CoverImagePath))
-                            {
-                                <img src="@Model.BookRequested.CoverImagePath" alt="" class="exchange-pick__cover" />
-                            }
-                            <div>
-                                <div class="exchange-pick__title">@Model.BookRequested.Title</div>
-                                <div class="exchange-pick__author">@Model.BookRequested.Author</div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            </div>
-
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h3 class="mb-3">Вы отдаёте</h3>
-                    <div class="exchange-pick-list">
-                        <label class="exchange-pick exchange-pick--free exchange-pick--selected">
-                            <input type="radio" name="selectedOfferedBookId" value="" checked />
-                            <div>
-                                <div class="exchange-pick__title">Безвозмездно</div>
-                                <div class="exchange-pick__author">Ничего не предлагаю взамен</div>
-                            </div>
-                        </label>
-                        @foreach (var b in Model.MyAvailableBooks)
+            <div class="exchange-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <svg class="icon text-primary"><use href="#i-heart"/></svg>
+                            Вы хотите получить
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.BookRequested != null)
                         {
-                            <label class="exchange-pick">
-                                <input type="radio" name="selectedOfferedBookId" value="@b.Id" />
-                                @if (!string.IsNullOrEmpty(b.CoverImagePath))
-                                {
-                                    <img src="@b.CoverImagePath" alt="" class="exchange-pick__cover" />
-                                }
-                                <div>
-                                    <div class="exchange-pick__title">@b.Title</div>
-                                    <div class="exchange-pick__author">@b.Author</div>
+                            <div class="book-pick book-pick--them book-pick--selected">
+                                <div class="book-pick__cover">
+                                    @if (!string.IsNullOrEmpty(Model.BookRequested.CoverImagePath))
+                                    {
+                                        <img src="@Model.BookRequested.CoverImagePath" alt="@Model.BookRequested.Title" />
+                                    }
+                                    else
+                                    {
+                                        <div class="book-card__placeholder"><svg class="icon"><use href="#i-book"/></svg></div>
+                                    }
                                 </div>
-                            </label>
+                                <div class="book-pick__body">
+                                    <div class="book-pick__title">@Model.BookRequested.Title</div>
+                                    <div class="book-pick__author">@Model.BookRequested.Author</div>
+                                    <span class="badge badge--secondary">@Model.BookRequested.Genre</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <svg class="icon text-primary"><use href="#i-book"/></svg>
+                            Ваши книги
+                            <span class="badge badge--secondary">@Model.MyAvailableBooks.Count</span>
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.MyAvailableBooks.Count == 0)
+                        {
+                            <div class="empty-state">
+                                <svg class="icon"><use href="#i-book"/></svg>
+                                <p>У вас нет доступных книг для обмена.</p>
+                                <a asp-controller="Book" asp-action="Create" class="btn btn-outline btn-sm">
+                                    <svg class="icon"><use href="#i-plus"/></svg>
+                                    Добавить книгу
+                                </a>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="stack">
+                                <label class="book-pick book-pick--my" data-my-pick data-title="Безвозмездно">
+                                    <input type="radio" name="selectedOfferedBookId" value="" checked class="book-pick__check" />
+                                    <div class="book-pick__cover book-pick__cover--icon">
+                                        <svg class="icon"><use href="#i-heart"/></svg>
+                                    </div>
+                                    <div class="book-pick__body">
+                                        <div class="book-pick__title">Безвозмездно</div>
+                                        <div class="book-pick__author">Отдаю в дар — ничего не предлагаю взамен</div>
+                                    </div>
+                                </label>
+
+                                @foreach (var b in Model.MyAvailableBooks)
+                                {
+                                    string conditionClass = b.ConditionLabel switch
+                                    {
+                                        "Отличное" or "Новое" => "badge--green",
+                                        "Хорошее" => "badge--blue",
+                                        "Удовлетворительное" => "badge--yellow",
+                                        _ => "badge--secondary"
+                                    };
+                                    <label class="book-pick book-pick--my" data-my-pick data-title="@b.Title">
+                                        <input type="radio" name="selectedOfferedBookId" value="@b.Id" class="book-pick__check" />
+                                        <div class="book-pick__cover">
+                                            @if (!string.IsNullOrEmpty(b.CoverImagePath))
+                                            {
+                                                <img src="@b.CoverImagePath" alt="@b.Title" />
+                                            }
+                                            else
+                                            {
+                                                <div class="book-card__placeholder"><svg class="icon"><use href="#i-book"/></svg></div>
+                                            }
+                                        </div>
+                                        <div class="book-pick__body">
+                                            <div class="book-pick__title">@b.Title</div>
+                                            <div class="book-pick__author">@b.Author</div>
+                                            <div class="flex gap-1 mt-1" style="flex-wrap:wrap;">
+                                                <span class="badge @conditionClass">@b.ConditionLabel</span>
+                                                <span class="badge badge--secondary">@b.Genre</span>
+                                            </div>
+                                        </div>
+                                    </label>
+                                }
+                            </div>
                         }
                     </div>
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary">
-                <svg class="icon"><use href="#i-swap"/></svg>
-                Отправить предложение
-            </button>
+            <div class="card mt-6">
+                <div class="card-body">
+                    <h3 class="mb-4">Сводка обмена</h3>
+                    <div class="exchange-summary-grid">
+                        <div class="exchange-summary-cell">
+                            <div class="text-muted text-sm mb-1">Вы получаете</div>
+                            <div class="exchange-summary-cell__val">@(Model.BookRequested?.Title ?? "—")</div>
+                        </div>
+                        <div class="exchange-summary-grid__arrow">
+                            <svg class="icon"><use href="#i-swap"/></svg>
+                        </div>
+                        <div class="exchange-summary-cell">
+                            <div class="text-muted text-sm mb-1">Вы отдаёте</div>
+                            <div class="exchange-summary-cell__val" id="summary-offered">Безвозмездно</div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block mt-4" style="padding-block:.625rem;" @(Model.MyAvailableBooks.Count == 0 ? "disabled" : "")>
+                        <svg class="icon"><use href="#i-swap"/></svg>
+                        Отправить предложение обмена
+                    </button>
+                    <p class="text-muted text-xs text-center mt-3">
+                        После отправки владелец получит уведомление и сможет принять или отклонить предложение.
+                    </p>
+                </div>
+            </div>
         </form>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        document.querySelectorAll('.exchange-pick input[type="radio"]').forEach(input => {
-            input.addEventListener('change', () => {
-                document.querySelectorAll('.exchange-pick').forEach(el => el.classList.remove('exchange-pick--selected'));
-                if (input.checked) input.closest('.exchange-pick').classList.add('exchange-pick--selected');
+        document.querySelectorAll('[data-my-pick]').forEach(el => {
+            el.addEventListener('change', () => {
+                document.querySelectorAll('[data-my-pick]').forEach(e => e.classList.toggle('book-pick--selected', e.querySelector('input').checked));
+            });
+            if (el.querySelector('input').checked) el.classList.add('book-pick--selected');
+            el.addEventListener('click', () => {
+                const title = el.dataset.title || 'Безвозмездно';
+                const out = document.getElementById('summary-offered');
+                if (out) out.textContent = title;
             });
         });
     </script>

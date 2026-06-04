@@ -2,10 +2,12 @@ using AutoMapper;
 using BookExchange.Db.Entities;
 using BookExchange.Web.Helpers;
 using BookExchange.Db.Interfaces;
+using BookExchange.Web.Hubs;
 using BookExchange.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace BookExchange.Web.Controllers;
@@ -16,12 +18,14 @@ public class ExchangeController : Controller
     readonly IUnitOfWork _uow;
     readonly IMapper _mapper;
     readonly UserManager<User> _um;
+    readonly IHubContext<ChatHub> _hub;
 
-    public ExchangeController(IUnitOfWork uow, IMapper mapper, UserManager<User> um)
+    public ExchangeController(IUnitOfWork uow, IMapper mapper, UserManager<User> um, IHubContext<ChatHub> hub)
     {
         _uow = uow;
         _mapper = mapper;
         _um = um;
+        _hub = hub;
     }
 
     [HttpGet("Exchange/Create/{bookId:int}")]
@@ -89,6 +93,30 @@ public class ExchangeController : Controller
         await _uow.Exchanges.AddAsync(request);
         await _uow.SaveChangesAsync();
 
+        // Notification for the receiver
+        var sender = await _um.GetUserAsync(User);
+        var notif = new Notification
+        {
+            UserId = receiverId,
+            Type = "exchange",
+            Text = $"{sender?.UserName ?? "Пользователь"} хочет обменяться с вами книгой «{book.Title}»",
+            RelatedUrl = Url.Action(nameof(Details), new { id = request.Id })
+        };
+        await _uow.Notifications.AddAsync(notif);
+        await _uow.SaveChangesAsync();
+
+        try
+        {
+            await _hub.Clients.User(receiverId).SendAsync("ReceiveNotification", new
+            {
+                id = notif.Id,
+                text = notif.Text,
+                type = notif.Type,
+                url = notif.RelatedUrl
+            });
+        }
+        catch { /* SignalR push best-effort */ }
+
         return RedirectToAction(nameof(Details), new { id = request.Id });
     }
 
@@ -110,21 +138,22 @@ public class ExchangeController : Controller
             Status = ex.Status,
             StatusLabel = MappingProfile.StatusToLabel(ex.Status),
             CreatedAt = ex.CreatedAt,
-            Sender = new OwnerSummaryViewModel { Id = ex.SenderId, Name = sender?.UserName ?? "" },
-            Receiver = new OwnerSummaryViewModel { Id = ex.ReceiverId, Name = receiver?.UserName ?? "" },
+            Sender = _mapper.Map<OwnerSummaryViewModel>(sender),
+            Receiver = _mapper.Map<OwnerSummaryViewModel>(receiver),
             BookRequested = _mapper.Map<BookCardViewModel>(await _uow.Books.GetByIdAsync(ex.BookRequestedId)),
             BookOffered = ex.BookOfferedId.HasValue ? _mapper.Map<BookCardViewModel>(await _uow.Books.GetByIdAsync(ex.BookOfferedId.Value)) : null,
             Messages = messages.OrderBy(m => m.SentAt).Select(m => new ChatMessageViewModel
             {
                 SenderId = m.SenderId,
                 SenderName = m.SenderId == ex.SenderId ? sender?.UserName ?? "" : receiver?.UserName ?? "",
+                SenderAvatar = m.SenderId == ex.SenderId ? sender?.AvatarPath : receiver?.AvatarPath,
                 Text = m.Text,
                 SentAt = m.SentAt
             }).ToList(),
             CanAccept = ex.Status == ExchangeStatus.Pending && ex.ReceiverId == userId,
             CanReject = ex.Status == ExchangeStatus.Pending && ex.ReceiverId == userId,
             CanCancel = ex.Status == ExchangeStatus.Pending && ex.SenderId == userId,
-            CanComplete = ex.Status == ExchangeStatus.Accepted,
+            CanComplete = ex.Status == ExchangeStatus.Accepted && (ex.SenderId == userId || ex.ReceiverId == userId),
             CanLeaveReview = ex.Status == ExchangeStatus.Completed && !await _uow.Reviews.AnyAsync(r => r.ExchangeRequestId == ex.Id && r.FromUserId == userId),
             CurrentUserId = userId
         };

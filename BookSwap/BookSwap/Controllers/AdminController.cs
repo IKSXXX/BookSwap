@@ -32,7 +32,35 @@ public class AdminController : Controller
             UsersCount = _um.Users.Count(),
             BooksCount = await _uow.Books.Query().CountAsync(),
             ExchangesCount = await _uow.Exchanges.Query().CountAsync(),
-            ReviewsCount = await _uow.Reviews.Query().CountAsync()
+            ReviewsCount = await _uow.Reviews.Query().CountAsync(),
+            BlockedUsersCount = _um.Users.Count(u => u.IsBlocked),
+            HiddenBooksCount = await _uow.Books.Query().CountAsync(b => b.IsHidden),
+            PendingExchangesCount = await _uow.Exchanges.Query().CountAsync(e => e.Status == ExchangeStatus.Pending),
+            CompletedExchangesCount = await _uow.Exchanges.Query().CountAsync(e => e.Status == ExchangeStatus.Completed),
+            QuizQuestionsCount = await _uow.QuizQuestions.Query().CountAsync(),
+            RecentUsers = _um.Users
+                .OrderByDescending(u => u.RegistrationDate)
+                .Take(5)
+                .Select(u => new AdminRecentUserViewModel
+                {
+                    Id = u.Id,
+                    UserName = u.UserName ?? "",
+                    RegistrationDate = u.RegistrationDate,
+                    IsBlocked = u.IsBlocked
+                })
+                .ToList(),
+            RecentBooks = await _uow.Books.Query()
+                .OrderByDescending(b => b.CreatedAt)
+                .Take(5)
+                .Select(b => new AdminRecentBookViewModel
+                {
+                    Id = b.Id,
+                    Title = b.Title,
+                    Author = b.Author,
+                    CreatedAt = b.CreatedAt,
+                    IsHidden = b.IsHidden
+                })
+                .ToListAsync()
         };
         return View(vm);
     }

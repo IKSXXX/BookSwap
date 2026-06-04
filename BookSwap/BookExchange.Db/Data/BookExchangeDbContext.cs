@@ -21,6 +21,7 @@ public class BookExchangeDbContext : IdentityDbContext<User>
     public DbSet<DiscussionMessage> DiscussionMessages => Set<DiscussionMessage>();
     public DbSet<QuizQuestion> QuizQuestions => Set<QuizQuestion>();
     public DbSet<BookOfTheDay> BooksOfTheDay => Set<BookOfTheDay>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -88,6 +89,12 @@ public class BookExchangeDbContext : IdentityDbContext<User>
         {
             e.HasIndex(x => x.Date).IsUnique();
             e.HasOne(x => x.Book).WithMany().HasForeignKey(x => x.BookId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        b.Entity<Notification>(e =>
+        {
+            e.HasIndex(x => new { x.UserId, x.IsRead });
+            e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 

@@ -14,5 +14,6 @@ public interface IUnitOfWork : IAsyncDisposable
     IRepository<DiscussionMessage> DiscussionMessages { get; }
     IRepository<QuizQuestion> QuizQuestions { get; }
     IRepository<BookOfTheDay> BooksOfTheDay { get; }
+    IRepository<Notification> Notifications { get; }
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

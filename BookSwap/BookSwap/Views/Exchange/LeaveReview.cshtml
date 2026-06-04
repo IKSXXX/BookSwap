@@ -1,45 +1,51 @@
 @model ReviewFormViewModel
-@{
-    ViewData["Title"] = "Оставить отзыв";
-}
+@{ ViewData["Title"] = "Оставить отзыв"; }
 
 <div class="section--gray" style="padding:2rem 0; min-height:calc(100vh - 64px);">
-    <div class="container" style="max-width:500px;">
-        <a asp-controller="Exchange" asp-action="Details" asp-route-id="@Model.ExchangeRequestId" class="btn btn-ghost btn-sm mb-4">
+    <div class="container">
+        <a asp-action="Details" asp-route-id="@Model.ExchangeRequestId" class="btn btn-ghost btn-sm mb-6">
             <svg class="icon"><use href="#i-arrow-left"/></svg>
-            Назад к обмену
+            К обмену
         </a>
 
-        <div class="card">
-            <div class="card-body">
-                <h1 class="mb-4">Отзыв для @Model.ToUserName</h1>
-
-                <form asp-action="LeaveReview" method="post">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" asp-for="ExchangeRequestId" />
-                    <input type="hidden" asp-for="ToUserId" />
-                    <input type="hidden" asp-for="ToUserName" />
-                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
-
-                    <div class="form-group">
-                        <label asp-for="Rating">Оценка</label>
-                        <select asp-for="Rating" class="form-input">
-                            <option value="5">5 — Отлично</option>
-                            <option value="4">4 — Хорошо</option>
-                            <option value="3">3 — Нормально</option>
-                            <option value="2">2 — Плохо</option>
-                            <option value="1">1 — Ужасно</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="Comment">Комментарий</label>
-                        <textarea asp-for="Comment" rows="4" class="form-input" placeholder="Расскажите о своём опыте обмена..."></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary w-full">Отправить отзыв</button>
-                </form>
+        <div class="form-wrap">
+            <div class="mb-6">
+                <h1 class="mb-2">Оставить отзыв</h1>
+                <p class="text-muted">Поделитесь впечатлениями от обмена с @Model.ToUserName.</p>
             </div>
+
+            <form asp-action="LeaveReview" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="ExchangeRequestId" />
+                <input type="hidden" asp-for="ToUserId" />
+                <input type="hidden" asp-for="ToUserName" />
+
+                <div class="card">
+                    <div class="card-body stack">
+                        <div class="form-group">
+                            <label asp-for="Rating" class="form-label">Оценка</label>
+                            <select asp-for="Rating" class="form-input form-select">
+                                @for (int i = 5; i >= 1; i--)
+                                {
+                                    <option value="@i">@(new string('★', i))@(new string('☆', 5-i)) — @i из 5</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Comment" class="form-label">Комментарий</label>
+                            <textarea asp-for="Comment" rows="5" class="form-input form-textarea" placeholder="Как прошёл обмен? Что понравилось?"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 mt-6">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <svg class="icon"><use href="#i-check"/></svg>
+                        Отправить отзыв
+                    </button>
+                    <a asp-action="Details" asp-route-id="@Model.ExchangeRequestId" class="btn btn-outline btn-lg">Отмена</a>
+                </div>
+            </form>
         </div>
     </div>
 </div>

@@ -5,44 +5,177 @@
 
 <div class="section--gray" style="padding:2rem 0; min-height:calc(100vh - 64px);">
     <div class="container">
-        <h1 class="mb-6">Админ-панель</h1>
+        <div class="admin-head mb-6">
+            <div>
+                <h1 class="mb-1">Админ-панель</h1>
+                <p class="text-muted">Обзор платформы и управление контентом</p>
+            </div>
+            <span class="badge badge--blue">
+                <svg class="icon"><use href="#i-shield"/></svg>
+                Администратор
+            </span>
+        </div>
 
-        <div class="admin-stats mb-6">
-            <div class="stat-card">
-                <div class="stat-value">@Model.UsersCount</div>
-                <div class="stat-label">пользователей</div>
+        @* ---- Stat cards ---- *@
+        <div class="admin-stats mb-8">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="stat-card__icon stat-card__icon--blue">
+                        <svg class="icon"><use href="#i-users"/></svg>
+                    </div>
+                    <div class="stat-card__value">@Model.UsersCount</div>
+                    <div class="stat-card__label">пользователей</div>
+                    @if (Model.BlockedUsersCount > 0)
+                    {
+                        <div class="stat-card__hint stat-card__hint--red">@Model.BlockedUsersCount заблокировано</div>
+                    }
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value">@Model.BooksCount</div>
-                <div class="stat-label">книг</div>
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="stat-card__icon stat-card__icon--green">
+                        <svg class="icon"><use href="#i-book"/></svg>
+                    </div>
+                    <div class="stat-card__value">@Model.BooksCount</div>
+                    <div class="stat-card__label">книг</div>
+                    @if (Model.HiddenBooksCount > 0)
+                    {
+                        <div class="stat-card__hint">@Model.HiddenBooksCount скрыто</div>
+                    }
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value">@Model.ExchangesCount</div>
-                <div class="stat-label">обменов</div>
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="stat-card__icon stat-card__icon--blue">
+                        <svg class="icon"><use href="#i-swap"/></svg>
+                    </div>
+                    <div class="stat-card__value">@Model.ExchangesCount</div>
+                    <div class="stat-card__label">обменов</div>
+                    <div class="stat-card__hint">
+                        @Model.PendingExchangesCount в ожидании · @Model.CompletedExchangesCount завершено
+                    </div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value">@Model.ReviewsCount</div>
-                <div class="stat-label">отзывов</div>
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="stat-card__icon stat-card__icon--yellow">
+                        <svg class="icon"><use href="#i-star"/></svg>
+                    </div>
+                    <div class="stat-card__value">@Model.ReviewsCount</div>
+                    <div class="stat-card__label">отзывов</div>
+                </div>
             </div>
         </div>
 
-        <div class="admin-links">
+        @* ---- Management links ---- *@
+        <h2 class="admin-section-title">Управление</h2>
+        <div class="admin-links mb-8">
             <a asp-action="Users" class="admin-link-card">
-                <svg class="icon"><use href="#i-user"/></svg>
-                <span>Пользователи</span>
+                <span class="admin-link-card__icon stat-card__icon--blue">
+                    <svg class="icon"><use href="#i-users"/></svg>
+                </span>
+                <span class="grow">
+                    <strong>Пользователи</strong>
+                    <span class="text-muted text-sm">Блокировка, права администратора</span>
+                </span>
+                <svg class="icon text-muted"><use href="#i-arrow-right"/></svg>
             </a>
             <a asp-action="Books" class="admin-link-card">
-                <svg class="icon"><use href="#i-book"/></svg>
-                <span>Книги</span>
+                <span class="admin-link-card__icon stat-card__icon--green">
+                    <svg class="icon"><use href="#i-book"/></svg>
+                </span>
+                <span class="grow">
+                    <strong>Книги</strong>
+                    <span class="text-muted text-sm">Скрытие и удаление книг</span>
+                </span>
+                <svg class="icon text-muted"><use href="#i-arrow-right"/></svg>
             </a>
             <a asp-action="BookOfTheDay" class="admin-link-card">
-                <svg class="icon"><use href="#i-star"/></svg>
-                <span>Книга дня</span>
+                <span class="admin-link-card__icon stat-card__icon--yellow">
+                    <svg class="icon"><use href="#i-star"/></svg>
+                </span>
+                <span class="grow">
+                    <strong>Книга дня</strong>
+                    <span class="text-muted text-sm">Выбор книги на сегодня</span>
+                </span>
+                <svg class="icon text-muted"><use href="#i-arrow-right"/></svg>
             </a>
             <a asp-action="Quiz" class="admin-link-card">
-                <svg class="icon"><use href="#i-book"/></svg>
-                <span>Викторина</span>
+                <span class="admin-link-card__icon stat-card__icon--blue">
+                    <svg class="icon"><use href="#i-sparkles"/></svg>
+                </span>
+                <span class="grow">
+                    <strong>Викторина</strong>
+                    <span class="text-muted text-sm">@Model.QuizQuestionsCount вопросов</span>
+                </span>
+                <svg class="icon text-muted"><use href="#i-arrow-right"/></svg>
             </a>
+        </div>
+
+        @* ---- Recent activity ---- *@
+        <div class="admin-recent-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <svg class="icon text-primary"><use href="#i-users"/></svg>
+                        Новые пользователи
+                    </h3>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    @if (Model.RecentUsers.Count == 0)
+                    {
+                        <div class="admin-recent-empty">Пока нет пользователей</div>
+                    }
+                    else
+                    {
+                        @foreach (var u in Model.RecentUsers)
+                        {
+                            <a asp-controller="User" asp-action="Details" asp-route-id="@u.Id" class="admin-recent-row">
+                                <span class="admin-recent-row__main">
+                                    <strong>@u.UserName</strong>
+                                    @if (u.IsBlocked)
+                                    {
+                                        <span class="badge badge--red">Заблокирован</span>
+                                    }
+                                </span>
+                                <span class="text-muted text-sm">@u.RegistrationDate.ToLocalTime().ToString("dd.MM.yyyy")</span>
+                            </a>
+                        }
+                    }
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <svg class="icon text-primary"><use href="#i-book"/></svg>
+                        Недавно добавленные книги
+                    </h3>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    @if (Model.RecentBooks.Count == 0)
+                    {
+                        <div class="admin-recent-empty">Пока нет книг</div>
+                    }
+                    else
+                    {
+                        @foreach (var b in Model.RecentBooks)
+                        {
+                            <a asp-controller="Book" asp-action="Details" asp-route-id="@b.Id" class="admin-recent-row">
+                                <span class="admin-recent-row__main">
+                                    <strong>@b.Title</strong>
+                                    <span class="text-muted text-sm">@b.Author</span>
+                                    @if (b.IsHidden)
+                                    {
+                                        <span class="badge badge--secondary">Скрыта</span>
+                                    }
+                                </span>
+                                <span class="text-muted text-sm">@b.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</span>
+                            </a>
+                        }
+                    }
+                </div>
+            </div>
         </div>
     </div>
 </div>

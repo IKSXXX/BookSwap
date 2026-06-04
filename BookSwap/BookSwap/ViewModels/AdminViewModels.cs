@@ -6,6 +6,33 @@ public class AdminStatsViewModel
     public int BooksCount { get; set; }
     public int ExchangesCount { get; set; }
     public int ReviewsCount { get; set; }
+
+    // Дополнительные метрики
+    public int BlockedUsersCount { get; set; }
+    public int HiddenBooksCount { get; set; }
+    public int PendingExchangesCount { get; set; }
+    public int CompletedExchangesCount { get; set; }
+    public int QuizQuestionsCount { get; set; }
+
+    public List<AdminRecentUserViewModel> RecentUsers { get; set; } = new();
+    public List<AdminRecentBookViewModel> RecentBooks { get; set; } = new();
+}
+
+public class AdminRecentUserViewModel
+{
+    public string Id { get; set; } = string.Empty;
+    public string UserName { get; set; } = string.Empty;
+    public DateTime RegistrationDate { get; set; }
+    public bool IsBlocked { get; set; }
+}
+
+public class AdminRecentBookViewModel
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Author { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public bool IsHidden { get; set; }
 }
 
 public class AdminUserListItemViewModel

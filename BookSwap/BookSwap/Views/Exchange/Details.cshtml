@@ -8,24 +8,47 @@
         ExchangeStatus.Completed => "badge--green",
         ExchangeStatus.Rejected => "badge--red",
         ExchangeStatus.Cancelled => "badge--secondary",
-        _ => "badge--secondary"
+        _ => "badge--secondary",
     };
     var other = Model.CurrentUserId == Model.Sender.Id ? Model.Receiver : Model.Sender;
+    string CondClass(string label) => label switch
+    {
+        "Отличное" or "Новое" => "badge--green",
+        "Хорошее" => "badge--blue",
+        "Удовлетворительное" => "badge--yellow",
+        _ => "badge--secondary"
+    };
 }
 
 <div class="section--gray" style="padding:2rem 0; min-height:calc(100vh - 64px);">
-    <div class="container" style="max-width:900px;">
-        <a asp-controller="User" asp-action="Details" asp-route-id="@Model.CurrentUserId" class="btn btn-ghost btn-sm mb-4">
+    <div class="container">
+        <a href="javascript:history.back()" class="btn btn-ghost btn-sm mb-6">
             <svg class="icon"><use href="#i-arrow-left"/></svg>
-            Назад к профилю
+            Назад
         </a>
 
-        <div class="card mb-4">
+        @* Header card *@
+        <div class="card mb-6">
             <div class="card-body">
                 <div class="exchange-head">
-                    <div>
-                        <h3 class="mb-1">Обмен с @other.Name</h3>
-                        <span class="text-muted" style="font-size:.875rem;">@Model.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</span>
+                    <div class="exchange-head__user">
+                        @if (!string.IsNullOrEmpty(other.Avatar))
+                        {
+                            <img src="@other.Avatar" alt="@other.Name" class="owner-avatar" />
+                        }
+                        else
+                        {
+                            <img src="/images/avatars/profile_icon.png" alt="@other.Name" class="owner-avatar" />
+                        }
+                        <div>
+                            <h3 class="mb-1">Обмен с <a asp-controller="User" asp-action="Details" asp-route-id="@other.Id" class="exchange-row__name-link">@other.Name</a></h3>
+                            <div class="text-sm text-muted flex items-center gap-2">
+                                <svg class="icon rating-star icon--fill"><use href="#i-star"/></svg>
+                                <span>@other.Rating.ToString("0.0")</span>
+                                <span>·</span>
+                                <span>Создан @Model.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</span>
+                            </div>
+                        </div>
                     </div>
                     <span class="badge @statusBadge">@Model.StatusLabel</span>
                 </div>
@@ -33,142 +56,197 @@
         </div>
 
         <div class="exchange-detail-grid">
-            <div>
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h3 class="mb-3">Детали</h3>
-                        <p class="text-muted mb-2">Вы получаете:</p>
-                        @if (Model.BookRequested != null)
-                        {
-                            <div class="exchange-pick exchange-pick--selected mb-3">
-                                @if (!string.IsNullOrEmpty(Model.BookRequested.CoverImagePath))
-                                {
-                                    <img src="@Model.BookRequested.CoverImagePath" alt="" class="exchange-pick__cover" />
-                                }
-                                <div>
-                                    <div class="exchange-pick__title">@Model.BookRequested.Title</div>
-                                    <div class="exchange-pick__author">@Model.BookRequested.Author</div>
-                                </div>
-                            </div>
-                        }
-                        <p class="text-muted mb-2">Вы отдаёте:</p>
-                        @if (Model.BookOffered != null)
-                        {
-                            <div class="exchange-pick exchange-pick--selected">
-                                @if (!string.IsNullOrEmpty(Model.BookOffered.CoverImagePath))
-                                {
-                                    <img src="@Model.BookOffered.CoverImagePath" alt="" class="exchange-pick__cover" />
-                                }
-                                <div>
-                                    <div class="exchange-pick__title">@Model.BookOffered.Title</div>
-                                    <div class="exchange-pick__author">@Model.BookOffered.Author</div>
-                                </div>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="exchange-pick exchange-pick--free">
-                                <div>
-                                    <div class="exchange-pick__title">Безвозмездно</div>
-                                    <div class="exchange-pick__author">Передача в дар</div>
-                                </div>
-                            </div>
-                        }
-                    </div>
+            @* Chat *@
+            <div class="chat-card">
+                <div class="chat-card__head">
+                    <h3>
+                        <svg class="icon text-primary"><use href="#i-message-circle"/></svg>
+                        Чат обмена
+                    </h3>
                 </div>
-
-                @if (Model.CanAccept || Model.CanReject || Model.CanCancel || Model.CanComplete)
-                {
-                    <div class="card">
-                        <div class="card-body">
-                            <h3 class="mb-3">Действия</h3>
-                            <div class="exchange-actions">
-                                @if (Model.CanAccept)
-                                {
-                                    <form asp-action="Accept" method="post">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@Model.Id" />
-                                        <button class="btn btn-primary btn-sm">Принять</button>
-                                    </form>
-                                }
-                                @if (Model.CanReject)
-                                {
-                                    <form asp-action="Reject" method="post">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@Model.Id" />
-                                        <button class="btn btn-outline btn-sm" style="color:var(--red-600);border-color:var(--red-600);">Отклонить</button>
-                                    </form>
-                                }
-                                @if (Model.CanCancel)
-                                {
-                                    <form asp-action="Cancel" method="post">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@Model.Id" />
-                                        <button class="btn btn-outline btn-sm">Отменить</button>
-                                    </form>
-                                }
-                                @if (Model.CanComplete)
-                                {
-                                    <form asp-action="Complete" method="post">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@Model.Id" />
-                                        <button class="btn btn-primary btn-sm">Завершить</button>
-                                    </form>
-                                }
-                                @if (Model.CanLeaveReview)
-                                {
-                                    <a asp-action="LeaveReview" asp-route-id="@Model.Id" class="btn btn-outline btn-sm">
-                                        <svg class="icon"><use href="#i-star"/></svg>
-                                        Оставить отзыв
-                                    </a>
-                                }
-                            </div>
+                <div id="chatMessages" class="chat-messages"
+                     data-exchange-id="@Model.Id"
+                     data-current-user="@Model.CurrentUserId">
+                    @if (Model.Messages.Count == 0)
+                    {
+                        <div class="chat-empty">
+                            <svg class="icon"><use href="#i-chat"/></svg>
+                            <p>Пока нет сообщений. Напишите первым!</p>
                         </div>
-                    </div>
+                    }
+                    else
+                    {
+                        DateTime? lastDay = null;
+                        foreach (var m in Model.Messages)
+                        {
+                            var localDay = m.SentAt.ToLocalTime().Date;
+                            if (lastDay != localDay)
+                            {
+                                lastDay = localDay;
+                                var label = localDay == DateTime.Today ? "Сегодня"
+                                    : localDay == DateTime.Today.AddDays(-1) ? "Вчера"
+                                    : localDay.ToString("dd MMMM yyyy");
+                                <div class="chat-date-sep">@label</div>
+                            }
+                            var mine = m.SenderId == Model.CurrentUserId;
+                            <div class="chat-row @(mine ? "chat-row--mine" : "")">
+                                <div class="chat-bubble @(mine ? "chat-bubble--mine" : "chat-bubble--theirs")">
+                                    <div class="chat-text">@m.Text</div>
+                                    <time>@m.SentAt.ToLocalTime().ToString("HH:mm")</time>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+                @if (Model.Status == ExchangeStatus.Pending || Model.Status == ExchangeStatus.Accepted)
+                {
+                    <form id="chatForm" class="chat-compose">
+                        <input type="text" id="chatInput" placeholder="Напишите сообщение..." maxlength="1000" autocomplete="off" />
+                        <button type="submit" class="btn btn-primary">
+                            <svg class="icon"><use href="#i-send"/></svg>
+                        </button>
+                    </form>
                 }
             </div>
 
-            <div class="card">
-                <div class="card-body">
-                    <h3 class="mb-3">Чат</h3>
-                    <div class="chat-messages" id="chatMessages" data-exchange-id="@Model.Id" data-current-user="@Model.CurrentUserId">
-                        @if (Model.Messages.Count == 0)
+            @* Sidebar *@
+            <aside class="stack-lg">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <svg class="icon text-primary"><use href="#i-swap"/></svg>
+                            Детали обмена
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-muted text-sm mb-2">Вы получаете</div>
+                        @if (Model.BookRequested != null)
                         {
-                            <div class="empty-state" style="padding:2rem 1rem;">
-                                <p>Пока нет сообщений.</p>
+                            <div class="book-pick book-pick--them book-pick--selected mb-4">
+                                <div class="book-pick__cover">
+                                    @if (!string.IsNullOrEmpty(Model.BookRequested.CoverImagePath))
+                                    {
+                                        <img src="@Model.BookRequested.CoverImagePath" alt="@Model.BookRequested.Title" />
+                                    }
+                                    else
+                                    {
+                                        <div class="book-card__placeholder"><svg class="icon"><use href="#i-book"/></svg></div>
+                                    }
+                                </div>
+                                <div class="book-pick__body">
+                                    <div class="book-pick__title">@Model.BookRequested.Title</div>
+                                    <div class="book-pick__author">@Model.BookRequested.Author</div>
+                                    <span class="badge @CondClass(Model.BookRequested.ConditionLabel)">@Model.BookRequested.ConditionLabel</span>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="text-muted text-sm mb-2">Вы отдаёте</div>
+                        @if (Model.BookOffered != null)
+                        {
+                            <div class="book-pick book-pick--my book-pick--selected">
+                                <div class="book-pick__cover">
+                                    @if (!string.IsNullOrEmpty(Model.BookOffered.CoverImagePath))
+                                    {
+                                        <img src="@Model.BookOffered.CoverImagePath" alt="@Model.BookOffered.Title" />
+                                    }
+                                    else
+                                    {
+                                        <div class="book-card__placeholder"><svg class="icon"><use href="#i-book"/></svg></div>
+                                    }
+                                </div>
+                                <div class="book-pick__body">
+                                    <div class="book-pick__title">@Model.BookOffered.Title</div>
+                                    <div class="book-pick__author">@Model.BookOffered.Author</div>
+                                    <span class="badge @CondClass(Model.BookOffered.ConditionLabel)">@Model.BookOffered.ConditionLabel</span>
+                                </div>
                             </div>
                         }
                         else
                         {
-                            @foreach (var m in Model.Messages)
-                            {
-                                var mine = m.SenderId == Model.CurrentUserId;
-                                <div class="chat-msg @(mine ? "chat-msg--mine" : "")">
-                                    <div class="chat-bubble @(mine ? "chat-bubble--mine" : "chat-bubble--theirs")">
-                                        <div class="chat-text">@m.Text</div>
-                                        <time>@m.SentAt.ToLocalTime().ToString("HH:mm")</time>
-                                    </div>
+                            <div class="book-pick book-pick--my">
+                                <div class="book-pick__cover book-pick__cover--icon">
+                                    <svg class="icon"><use href="#i-heart"/></svg>
                                 </div>
-                            }
+                                <div class="book-pick__body">
+                                    <div class="book-pick__title">Безвозмездно</div>
+                                    <div class="book-pick__author">Передача в дар</div>
+                                </div>
+                            </div>
                         }
                     </div>
-                    @if (Model.Status == ExchangeStatus.Pending || Model.Status == ExchangeStatus.Accepted)
-                    {
-                        <form id="chatForm" class="chat-compose">
-                            <input type="text" id="chatInput" placeholder="Напишите сообщение..." maxlength="1000" autocomplete="off" />
-                            <button type="submit" class="btn btn-primary btn-sm">
-                                <svg class="icon"><use href="#i-check"/></svg>
-                            </button>
-                        </form>
-                    }
                 </div>
-            </div>
+
+                @if (Model.CanAccept || Model.CanReject || Model.CanCancel || Model.CanComplete || Model.CanLeaveReview)
+                {
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <svg class="icon text-primary"><use href="#i-settings"/></svg>
+                                Действия
+                            </h3>
+                        </div>
+                        <div class="card-body stack">
+                            @if (Model.CanAccept)
+                            {
+                                <form asp-action="Accept" method="post" class="mb-3">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <button class="btn btn-accept btn-block">
+                                        <svg class="icon"><use href="#i-check"/></svg>
+                                        Принять обмен
+                                    </button>
+                                </form>
+                            }
+                            @if (Model.CanReject)
+                            {
+                                <form asp-action="Reject" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <button class="btn btn-reject btn-block">
+                                        <svg class="icon"><use href="#i-x"/></svg>
+                                        Отклонить
+                                    </button>
+                                </form>
+                            }
+                            @if (Model.CanCancel)
+                            {
+                                <form asp-action="Cancel" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <button class="btn btn-cancel-action btn-block">
+                                        <svg class="icon"><use href="#i-x"/></svg>
+                                        Отменить заявку
+                                    </button>
+                                </form>
+                            }
+                            @if (Model.CanComplete)
+                            {
+                                <form asp-action="Complete" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <button class="btn btn-accept btn-block">
+                                        <svg class="icon"><use href="#i-check"/></svg>
+                                        Завершить обмен
+                                    </button>
+                                </form>
+                            }
+                            @if (Model.CanLeaveReview)
+                            {
+                                <a asp-action="LeaveReview" asp-route-id="@Model.Id" class="btn btn-add btn-block">
+                                    <svg class="icon"><use href="#i-star"/></svg>
+                                    Оставить отзыв
+                                </a>
+                            }
+                        </div>
+                    </div>
+                }
+            </aside>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
     <script>
         (async () => {
             const box = document.getElementById('chatMessages');
@@ -179,11 +257,11 @@
             const conn = new signalR.HubConnectionBuilder().withUrl('/hubs/chat').withAutomaticReconnect().build();
 
             conn.on('ReceiveMessage', m => {
-                const empty = box.querySelector('.empty-state');
+                const empty = box.querySelector('.chat-empty');
                 if (empty) empty.remove();
                 const mine = m.senderId === currentUserId;
                 const row = document.createElement('div');
-                row.className = 'chat-msg' + (mine ? ' chat-msg--mine' : '');
+                row.className = 'chat-row' + (mine ? ' chat-row--mine' : '');
                 const d = new Date(m.sentAt);
                 const time = d.toTimeString().slice(0,5);
                 row.innerHTML = `<div class="chat-bubble ${mine ? 'chat-bubble--mine' : 'chat-bubble--theirs'}"><div class="chat-text"></div><time>${time}</time></div>`;

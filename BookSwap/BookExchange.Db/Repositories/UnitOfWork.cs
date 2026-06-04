@@ -18,6 +18,7 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<DiscussionMessage>? _discussionMessages;
     private IRepository<QuizQuestion>? _quizQuestions;
     private IRepository<BookOfTheDay>? _booksOfTheDay;
+    private IRepository<Notification>? _notifications;
 
     public UnitOfWork(BookExchangeDbContext context) => _context = context;
 
@@ -31,6 +32,7 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<DiscussionMessage> DiscussionMessages => _discussionMessages ??= new Repository<DiscussionMessage>(_context);
     public IRepository<QuizQuestion> QuizQuestions => _quizQuestions ??= new Repository<QuizQuestion>(_context);
     public IRepository<BookOfTheDay> BooksOfTheDay => _booksOfTheDay ??= new Repository<BookOfTheDay>(_context);
+    public IRepository<Notification> Notifications => _notifications ??= new Repository<Notification>(_context);
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default)
         => _context.SaveChangesAsync(ct);

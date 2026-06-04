@@ -39,25 +39,9 @@
         <h3 class="book-card__title">@Model.Title</h3>
         <p class="book-card__author">@Model.Author</p>
         <span class="badge badge--secondary">@Model.Genre</span>
-    </div>
-    <div class="book-card__footer">
         @if (!string.IsNullOrWhiteSpace(Model.Owner.Name))
         {
-            <span class="book-card__meta">
-                <svg class="icon"><use href="#i-user" /></svg>
-                <span>@Model.Owner.Name</span>
-            </span>
-        }
-        else
-        {
-            <span></span>
-        }
-        @if (Model.Owner.Rating > 0)
-        {
-            <span class="book-card__meta">
-                <svg class="icon rating-star icon--fill"><use href="#i-star" /></svg>
-                <span>@Model.Owner.Rating.ToString("0.0")</span>
-            </span>
+            <span class="book-card__owner-name">@Model.Owner.Name</span>
         }
     </div>
 </a>
