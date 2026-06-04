@@ -51,7 +51,9 @@ public class ExchangeListItemViewModel
     public string OtherUserName { get; set; } = string.Empty;
     public string OtherUserAvatar { get; set; } = string.Empty;
     public string BookRequestedTitle { get; set; } = string.Empty;
+    public string? BookRequestedCover { get; set; }
     public string? BookOfferedTitle { get; set; }
+    public string? BookOfferedCover { get; set; }
     public bool IsSender { get; set; }
 }
 

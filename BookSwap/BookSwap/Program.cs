@@ -78,7 +78,7 @@ try
     app.UseRouting();
     app.UseAuthentication();
 
-    if (useMockData)
+    if (useMockData && app.Environment.IsDevelopment())
     {
         app.Use(async (ctx, next) =>
         {
@@ -113,6 +113,13 @@ try
     app.MapHub<DiscussionHub>("/hubs/discussion");
 
     await DbSeeder.SeedAsync(app.Services);
+
+    if (useMockData)
+    {
+        using var scope = app.Services.CreateScope();
+        var ctx = scope.ServiceProvider.GetRequiredService<BookExchangeDbContext>();
+        await BookExchange.Web.Mocks.MockDataStore.LoadFromDbContextAsync(ctx);
+    }
 
     app.Run();
 }

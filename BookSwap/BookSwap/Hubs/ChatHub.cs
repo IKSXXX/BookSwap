@@ -1,28 +1,27 @@
-using BookExchange.Db.Data;
 using BookExchange.Db.Entities;
+using BookExchange.Db.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 
 namespace BookExchange.Web.Hubs;
 
 [Authorize]
 public class ChatHub : Hub
 {
-    readonly BookExchangeDbContext _ctx;
+    readonly IUnitOfWork _uow;
     readonly UserManager<User> _um;
 
-    public ChatHub(BookExchangeDbContext ctx, UserManager<User> um)
+    public ChatHub(IUnitOfWork uow, UserManager<User> um)
     {
-        _ctx = ctx;
+        _uow = uow;
         _um = um;
     }
 
     public async Task JoinGroup(int exchangeId)
     {
         var userId = _um.GetUserId(Context.User!);
-        var exchange = await _ctx.ExchangeRequests.FindAsync(exchangeId);
+        var exchange = await _uow.Exchanges.GetByIdAsync(exchangeId);
         if (exchange == null) return;
         if (exchange.SenderId != userId && exchange.ReceiverId != userId) return;
 
@@ -34,7 +33,7 @@ public class ChatHub : Hub
         if (string.IsNullOrWhiteSpace(text) || text.Length > 1000) return;
 
         var userId = _um.GetUserId(Context.User!);
-        var exchange = await _ctx.ExchangeRequests.FindAsync(exchangeId);
+        var exchange = await _uow.Exchanges.GetByIdAsync(exchangeId);
         if (exchange == null) return;
         if (exchange.SenderId != userId && exchange.ReceiverId != userId) return;
 
@@ -47,8 +46,8 @@ public class ChatHub : Hub
             Text = text.Trim(),
             SentAt = DateTime.UtcNow
         };
-        _ctx.Messages.Add(msg);
-        await _ctx.SaveChangesAsync();
+        await _uow.Messages.AddAsync(msg);
+        await _uow.SaveChangesAsync();
 
         await Clients.Group($"exchange-{exchangeId}").SendAsync("ReceiveMessage", new
         {

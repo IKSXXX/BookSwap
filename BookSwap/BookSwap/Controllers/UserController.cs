@@ -91,15 +91,19 @@ public class UserController : Controller
                 OtherUserName = (e.SenderId == user.Id ? e.Receiver?.UserName : e.Sender?.UserName) ?? "",
                 OtherUserAvatar = (e.SenderId == user.Id ? e.Receiver?.AvatarPath : e.Sender?.AvatarPath) ?? "",
                 BookRequestedTitle = e.BookRequested?.Title ?? "",
-                BookOfferedTitle = e.BookOffered?.Title
+                BookRequestedCover = e.BookRequested?.CoverImagePath,
+                BookOfferedTitle = e.BookOffered?.Title,
+                BookOfferedCover = e.BookOffered?.CoverImagePath
             }).ToList(),
             Favorites = favorites.Select(_mapper.Map<BookCardViewModel>).ToList(),
             ReviewsReceived = reviewsReceived.Select(r => new ReviewDisplayViewModel
             {
                 FromUserId = r.FromUserId,
                 FromUserName = r.FromUser?.UserName ?? "",
+                FromUserAvatar = r.FromUser?.AvatarPath,
                 ToUserId = r.ToUserId,
                 ToUserName = r.ToUser?.UserName ?? "",
+                ToUserAvatar = r.ToUser?.AvatarPath,
                 Rating = r.Rating ?? 0,
                 Comment = r.Comment,
                 CreatedAt = r.CreatedAt
@@ -108,8 +112,10 @@ public class UserController : Controller
             {
                 FromUserId = r.FromUserId,
                 FromUserName = r.FromUser?.UserName ?? "",
+                FromUserAvatar = r.FromUser?.AvatarPath,
                 ToUserId = r.ToUserId,
                 ToUserName = r.ToUser?.UserName ?? "",
+                ToUserAvatar = r.ToUser?.AvatarPath,
                 Rating = r.Rating ?? 0,
                 Comment = r.Comment,
                 CreatedAt = r.CreatedAt

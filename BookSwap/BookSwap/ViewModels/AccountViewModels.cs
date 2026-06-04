@@ -86,8 +86,10 @@ public class ReviewDisplayViewModel
 {
     public string FromUserId { get; set; } = string.Empty;
     public string FromUserName { get; set; } = string.Empty;
+    public string? FromUserAvatar { get; set; }
     public string ToUserId { get; set; } = string.Empty;
     public string ToUserName { get; set; } = string.Empty;
+    public string? ToUserAvatar { get; set; }
     public int Rating { get; set; }
     public string? Comment { get; set; }
     public DateTime CreatedAt { get; set; }

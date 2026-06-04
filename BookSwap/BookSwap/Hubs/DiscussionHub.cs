@@ -1,5 +1,5 @@
-using BookExchange.Db.Data;
 using BookExchange.Db.Entities;
+using BookExchange.Db.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
@@ -9,12 +9,12 @@ namespace BookExchange.Web.Hubs;
 [Authorize]
 public class DiscussionHub : Hub
 {
-    readonly BookExchangeDbContext _ctx;
+    readonly IUnitOfWork _uow;
     readonly UserManager<User> _um;
 
-    public DiscussionHub(BookExchangeDbContext ctx, UserManager<User> um)
+    public DiscussionHub(IUnitOfWork uow, UserManager<User> um)
     {
-        _ctx = ctx;
+        _uow = uow;
         _um = um;
     }
 
@@ -36,8 +36,8 @@ public class DiscussionHub : Hub
             UserId = userId!,
             Text = text.Trim()
         };
-        _ctx.DiscussionMessages.Add(msg);
-        await _ctx.SaveChangesAsync();
+        await _uow.DiscussionMessages.AddAsync(msg);
+        await _uow.SaveChangesAsync();
 
         await Clients.Group($"discussion-{discussionId}").SendAsync("ReceiveMessage", new
         {
