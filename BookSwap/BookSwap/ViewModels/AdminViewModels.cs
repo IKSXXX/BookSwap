@@ -65,4 +65,9 @@ public class SetBookOfDayViewModel
     public int BookId { get; set; }
     public List<BookCardViewModel> AvailableBooks { get; set; } = new();
     public int? CurrentBookOfDayId { get; set; }
+    // Current book display info (populated on GET)
+    public string? CurrentBookTitle { get; set; }
+    public string? CurrentBookAuthor { get; set; }
+    public string? CurrentBookCover { get; set; }
+    public string? CurrentBookGenre { get; set; }
 }

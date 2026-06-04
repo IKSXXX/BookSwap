@@ -8,152 +8,137 @@
     string conditionClass = Model.ConditionLabel switch
     {
         "Отличное" or "Новое" => "badge--green",
-        "Хорошее" => "badge--blue",
-        "Удовлетворительное" => "badge--yellow",
-        _ => "badge--secondary"
+        "Хорошее"             => "badge--blue",
+        "Удовлетворительное"  => "badge--yellow",
+        _                     => "badge--secondary"
     };
+    var hasCover = !string.IsNullOrEmpty(Model.CoverImagePath);
 }
 
-<div class="section--gray" style="padding:2rem 0; min-height:calc(100vh - 64px);">
-    <div class="container">
-        <a asp-controller="Book" asp-action="Index" class="btn btn-ghost btn-sm mb-6">
+@* ───────────────────── HERO ───────────────────── *@
+<div class="bd-hero">
+    @if (hasCover)
+    {
+        <div class="bd-hero__bg" style="background-image:url('@Model.CoverImagePath')"></div>
+    }
+    <div class="bd-hero__overlay"></div>
+
+    <div class="container bd-hero__inner">
+        <a asp-controller="Book" asp-action="Index" class="bd-back-link">
             <svg class="icon"><use href="#i-arrow-left"/></svg>
             Назад к каталогу
         </a>
 
-        <div class="book-detail-layout mb-6">
-            @* Cover *@
-            <div class="book-cover-card">
-                <div class="book-cover-card__img">
-                    @if (!string.IsNullOrEmpty(Model.CoverImagePath))
+        <div class="bd-hero__layout">
+            @* Обложка *@
+            <div class="bd-cover-wrap">
+                @if (hasCover)
+                {
+                    <img src="@Model.CoverImagePath" alt="@Model.Title" class="bd-cover" />
+                }
+                else
+                {
+                    <div class="bd-cover bd-cover--placeholder">
+                        <svg class="icon" style="width:3rem;height:3rem;opacity:.4"><use href="#i-book"/></svg>
+                    </div>
+                }
+            </div>
+
+            @* Информация *@
+            <div class="bd-hero__info">
+                <div class="bd-badges mb-3">
+                    <span class="badge @conditionClass">@Model.ConditionLabel</span>
+                    <span class="badge badge--secondary">@Model.Genre</span>
+                    @if (Model.IsAvailable)
                     {
-                        <img src="@Model.CoverImagePath" alt="@Model.Title" />
+                        <span class="badge badge--green">Доступна</span>
                     }
                     else
                     {
-                        <div class="book-card__placeholder" style="height:100%;">
-                            <svg class="icon icon-2xl"><use href="#i-book"/></svg>
-                        </div>
+                        <span class="badge badge--red">Недоступна</span>
                     }
                 </div>
-            </div>
 
-            @* Info *@
-            <div class="book-detail-main">
-                <div class="card">
-                    <div class="card-body card-body--top">
-                        <div class="book-title-block">
-                            <div class="book-meta-row">
-                                <span class="badge @conditionClass">@Model.ConditionLabel</span>
-                                <span class="badge badge--secondary">@Model.Genre</span>
-                                @if (Model.IsAvailable)
-                                {
-                                    <span class="badge badge--green">Доступна</span>
-                                }
-                                else
-                                {
-                                    <span class="badge badge--red">Недоступна</span>
-                                }
-                            </div>
-                            <h1>@Model.Title</h1>
-                            <p class="book-title-block__author">@Model.Author</p>
+                <h1 class="bd-title">@Model.Title</h1>
+                <p class="bd-author">@Model.Author</p>
 
-                            <div class="book-attrs mb-4">
-                                @if (Model.Year.HasValue)
-                                {
-                                    <div>
-                                        <svg class="icon"><use href="#i-calendar"/></svg>
-                                        <span>@Model.Year</span>
-                                    </div>
-                                }
-                                @if (!string.IsNullOrEmpty(Model.Language))
-                                {
-                                    <div>
-                                        <svg class="icon"><use href="#i-book"/></svg>
-                                        <span>@Model.Language</span>
-                                    </div>
-                                }
-                            </div>
-
-                            @if (!string.IsNullOrWhiteSpace(Model.Description))
-                            {
-                                <h3 class="mb-2">Описание</h3>
-                                <p style="line-height:1.65;">@Model.Description</p>
-                            }
-                        </div>
+                @if (Model.Year.HasValue || !string.IsNullOrEmpty(Model.Language))
+                {
+                    <div class="bd-attrs">
+                        @if (Model.Year.HasValue)
+                        {
+                            <span><svg class="icon"><use href="#i-calendar"/></svg>@Model.Year</span>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Language))
+                        {
+                            <span><svg class="icon"><use href="#i-book"/></svg>@Model.Language</span>
+                        }
                     </div>
-                </div>
+                }
 
-                @* Owner card *@
-                <div class="card">
-                    <div class="card-body">
-                        <h3 class="mb-4">@(Model.Owners.Count > 1 ? "Владельцы" : "Владелец")</h3>
-                        <div class="stack-sm">
-                            @foreach (var owner in Model.Owners)
-                            {
-                                <div class="owner-card-row__user">
-                                    @if (!string.IsNullOrEmpty(owner.Avatar))
-                                    {
-                                        <img src="@owner.Avatar" alt="@owner.Name" class="owner-avatar" />
-                                    }
-                                    else
-                                    {
-                                        <img src="/images/avatars/profile_icon.png" alt="@owner.Name" class="owner-avatar" />
-                                    }
-                                    <div>
-                                        <div class="owner-meta">
-                                            <a asp-controller="User" asp-action="Details" asp-route-id="@owner.Id">@owner.Name</a>
-                                        </div>
-                                        <div class="owner-meta__row">
-                                            <svg class="icon rating-star icon--fill"><use href="#i-star"/></svg>
-                                            <span>@owner.Rating.ToString("0.0")</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    </div>
-                </div>
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                    <p class="bd-desc">@Model.Description</p>
+                }
 
-                @* Actions *@
-                <div class="flex gap-3" style="flex-wrap:wrap;margin-top:1rem;">
+                @* Действия *@
+                <div class="bd-actions">
                     @if (SignInManager.IsSignedIn(User) && !isOwner && Model.IsAvailable)
                     {
-                        <a asp-controller="Exchange" asp-action="Create" asp-route-bookId="@Model.Id" class="btn btn-add btn-xl">
+                        <a asp-controller="Exchange" asp-action="Create" asp-route-bookId="@Model.Id"
+                           class="btn btn-primary">
                             <svg class="icon"><use href="#i-swap"/></svg>
                             Предложить обмен
                         </a>
                     }
+                    else if (!SignInManager.IsSignedIn(User) && Model.IsAvailable)
+                    {
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-primary">
+                            <svg class="icon"><use href="#i-swap"/></svg>
+                            Войти и предложить обмен
+                        </a>
+                    }
+                    else if (!Model.IsAvailable && !isOwner)
+                    {
+                        <span class="bd-unavailable">
+                            <svg class="icon"><use href="#i-x"/></svg>
+                            Недоступна для обмена
+                        </span>
+                    }
+
                     @if (SignInManager.IsSignedIn(User) && !isOwner)
                     {
-                        <form asp-controller="Favorite" asp-action="Toggle" method="post" style="margin:0;">
+                        <form asp-controller="Favorite" asp-action="Toggle" method="post">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="bookId" value="@Model.Id" />
-                            <button type="submit" class="btn @(Model.IsFavorite ? "btn-accept" : "btn-outline")" style="font-size:.8125rem;padding:.5rem 1rem;">
-                                <svg class="icon" style="width:.875rem;height:.875rem;"><use href="#i-heart"/></svg>
+                            <button type="submit" class="bd-fav-btn @(Model.IsFavorite ? "is-active" : "")">
+                                <svg class="icon"><use href="#i-heart"/></svg>
                                 @(Model.IsFavorite ? "В избранном" : "В избранное")
                             </button>
                         </form>
-                        <form asp-controller="Favorite" asp-action="Toggle" method="post" style="margin:0;">
+                        <form asp-controller="Favorite" asp-action="Toggle" method="post">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="bookId" value="@Model.Id" />
                             <input type="hidden" name="isWishlist" value="true" />
-                            <button type="submit" class="btn @(Model.IsInWishlist ? "btn-add" : "btn-outline")" style="font-size:.8125rem;padding:.5rem 1rem;">
-                                <svg class="icon" style="width:.875rem;height:.875rem;"><use href="#i-bookmark"/></svg>
+                            <button type="submit" class="bd-fav-btn @(Model.IsInWishlist ? "is-active" : "")">
+                                <svg class="icon"><use href="#i-bookmark"/></svg>
                                 @(Model.IsInWishlist ? "В вишлисте" : "В вишлист")
                             </button>
                         </form>
                     }
+
                     @if (isOwner)
                     {
-                        <a asp-controller="Book" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline btn-lg">
+                        <a asp-controller="Book" asp-action="Edit" asp-route-id="@Model.Id"
+                           class="btn btn-outline bd-btn-light">
                             <svg class="icon"><use href="#i-edit"/></svg>
                             Редактировать
                         </a>
-                        <form asp-controller="Book" asp-action="Delete" method="post" style="margin:0;" onsubmit="return confirm('Удалить книгу?');">
+                        <form asp-controller="Book" asp-action="Delete" method="post"
+                              onsubmit="return confirm('Удалить книгу?');">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@Model.Id" />
-                            <button class="btn btn-reject btn-lg">
+                            <button class="btn btn-reject">
                                 <svg class="icon"><use href="#i-trash"/></svg>
                                 Удалить
                             </button>
@@ -161,67 +146,99 @@
                     }
                 </div>
             </div>
-        </div>
 
-        @* Tabs: discussions + similar *@
+            @* Владельцы *@
+            <div class="bd-owners">
+                <p class="bd-owners__label">@(Model.Owners.Count > 1 ? "Владельцы" : "Владелец")</p>
+                @foreach (var owner in Model.Owners)
+                {
+                    <a asp-controller="User" asp-action="Details" asp-route-id="@owner.Id" class="bd-owner-row">
+                        <img src="@(string.IsNullOrEmpty(owner.Avatar) ? "/images/avatars/profile_icon.png" : owner.Avatar)"
+                             alt="@owner.Name" class="bd-owner-avatar" />
+                        <div>
+                            <div class="bd-owner-name">@owner.Name</div>
+                            <div class="bd-owner-rating">
+                                <svg class="icon rating-star" style="width:.75rem;height:.75rem"><use href="#i-star"/></svg>
+                                @owner.Rating.ToString("0.0")
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ───────────────────── BODY ───────────────────── *@
+<div class="section--gray" style="padding:2.5rem 0;">
+    <div class="container">
         <div class="tabs">
             <div class="tabs-list">
-                <button type="button" class="tab-btn active" data-tab="discussions">Обсуждения (@Model.Discussions.Count)</button>
-                <button type="button" class="tab-btn" data-tab="similar">Похожие книги (@Model.Similar.Count)</button>
+                <button type="button" class="tab-btn active" data-tab="discussions">
+                    <svg class="icon"><use href="#i-chat"/></svg>
+                    Обсуждения (@Model.Discussions.Count)
+                </button>
+                <button type="button" class="tab-btn" data-tab="similar">
+                    <svg class="icon"><use href="#i-book"/></svg>
+                    Похожие книги (@Model.Similar.Count)
+                </button>
             </div>
 
             <div class="tab-content" id="tab-discussions">
-                <div class="card">
-                    <div class="card-body">
-                        @if (SignInManager.IsSignedIn(User))
-                        {
-                            <form asp-controller="Discussion" asp-action="Create" method="post" class="flex gap-2 mb-4">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="bookId" value="@Model.Id" />
-                                <input type="text" name="title" placeholder="Название темы..." required maxlength="300" />
-                                <button type="submit" class="btn btn-primary">
-                                    <svg class="icon"><use href="#i-plus"/></svg>
-                                    Создать
-                                </button>
-                            </form>
-                        }
-                        else
-                        {
-                            <p class="text-muted mb-4">Чтобы создать тему, <a asp-controller="Account" asp-action="Login" class="text-primary">войдите</a>.</p>
-                        }
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    <form asp-controller="Discussion" asp-action="Create" method="post" class="disc-create-form mb-4">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="bookId" value="@Model.Id" />
+                        <input type="text" name="title" class="form-input"
+                               placeholder="Новая тема обсуждения…" required maxlength="300" />
+                        <button type="submit" class="btn btn-primary">
+                            <svg class="icon"><use href="#i-plus"/></svg>
+                            Создать
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <p class="text-muted mb-4 text-sm">
+                        Чтобы создать тему, <a asp-controller="Account" asp-action="Login" class="text-primary">войдите</a>.
+                    </p>
+                }
 
-                        @if (Model.Discussions.Count == 0)
+                @if (Model.Discussions.Count == 0)
+                {
+                    <div class="empty-state">
+                        <svg class="icon"><use href="#i-chat"/></svg>
+                        <p>Пока нет обсуждений — будьте первым!</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="stack">
+                        @foreach (var d in Model.Discussions)
                         {
-                            <div class="empty-state">
-                                <svg class="icon"><use href="#i-chat"/></svg>
-                                <p>Пока нет обсуждений — будьте первым!</p>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="stack">
-                                @foreach (var d in Model.Discussions)
-                                {
-                                    <a asp-controller="Discussion" asp-action="Details" asp-route-id="@d.Id" class="exchange-row">
-                                        <div class="exchange-row__main">
-                                            <div class="exchange-row__body">
-                                                <div class="exchange-row__title">@d.Title</div>
-                                                <div class="exchange-row__sub">@d.AuthorName · @d.MessagesCount сообщений · @d.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
-                                            </div>
+                            <a asp-controller="Discussion" asp-action="Details" asp-route-id="@d.Id"
+                               class="exchange-row">
+                                <div class="exchange-row__main">
+                                    <div class="exchange-row__body">
+                                        <div class="exchange-row__name-link">@d.Title</div>
+                                        <div class="exchange-row__sub">
+                                            @d.AuthorName · @d.MessagesCount сообщений ·
+                                            @d.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")
                                         </div>
-                                        <svg class="icon text-muted"><use href="#i-arrow-right"/></svg>
-                                    </a>
-                                }
-                            </div>
+                                    </div>
+                                </div>
+                                <svg class="icon text-muted"><use href="#i-arrow-right"/></svg>
+                            </a>
                         }
                     </div>
-                </div>
+                }
             </div>
 
             <div class="tab-content" id="tab-similar" hidden>
                 @if (Model.Similar.Count == 0)
                 {
-                    <div class="empty-state card">
+                    <div class="empty-state">
                         <svg class="icon"><use href="#i-book"/></svg>
                         <p>Похожих книг пока нет.</p>
                     </div>

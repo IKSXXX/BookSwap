@@ -27,7 +27,7 @@ public class MockUnitOfWork : IUnitOfWork
     public IRepository<DiscussionMessage> DiscussionMessages => _discussionMessages ??= new MockRepository<DiscussionMessage>(MockDataStore.DiscussionMessages);
     public IRepository<QuizQuestion> QuizQuestions => _quiz ??= new MockRepository<QuizQuestion>(MockDataStore.QuizQuestions);
     public IRepository<BookOfTheDay> BooksOfTheDay => _bookOfDay ??= new MockRepository<BookOfTheDay>(MockDataStore.BooksOfTheDay);
-    public IRepository<Notification> Notifications => _notifications ??= new MockRepository<Notification>(new List<Notification>());
+    public IRepository<Notification> Notifications => _notifications ??= new MockRepository<Notification>(MockDataStore.Notifications);
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => Task.FromResult(0);
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;

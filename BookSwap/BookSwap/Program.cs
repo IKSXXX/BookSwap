@@ -4,7 +4,6 @@ using BookExchange.Web.Data;
 using BookExchange.Web.Hubs;
 using BookExchange.Db.Interfaces;
 using BookExchange.Db.Repositories;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
@@ -77,32 +76,6 @@ try
     app.UseStaticFiles();
     app.UseRouting();
     app.UseAuthentication();
-
-    if (useMockData && app.Environment.IsDevelopment())
-    {
-        app.Use(async (ctx, next) =>
-        {
-            if (ctx.User.Identity?.IsAuthenticated != true)
-            {
-                var um = ctx.RequestServices.GetRequiredService<UserManager<User>>();
-                var admin = await um.FindByEmailAsync(DbSeeder.AdminEmail);
-                if (admin != null)
-                {
-                    var claims = new List<System.Security.Claims.Claim>
-                    {
-                        new(System.Security.Claims.ClaimTypes.NameIdentifier, admin.Id),
-                        new(System.Security.Claims.ClaimTypes.Name, admin.UserName ?? "admin"),
-                    };
-                    var roles = await um.GetRolesAsync(admin);
-                    foreach (var role in roles)
-                        claims.Add(new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, role));
-                    var identity = new System.Security.Claims.ClaimsIdentity(claims, IdentityConstants.ApplicationScheme);
-                    await ctx.SignInAsync(IdentityConstants.ApplicationScheme, new System.Security.Claims.ClaimsPrincipal(identity));
-                }
-            }
-            await next();
-        });
-    }
 
     app.UseAuthorization();
 

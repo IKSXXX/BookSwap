@@ -1,31 +1,131 @@
 @model SetBookOfDayViewModel
-@{ ViewData["Title"] = "Книга дня"; }
+@{
+    ViewData["Title"] = "Книга дня";
+}
 
 <div class="section--gray" style="padding:2rem 0; min-height:calc(100vh - 64px);">
-    <div class="container" style="max-width:600px;">
-        <a asp-action="Index" class="btn btn-ghost btn-sm mb-4">← В админку</a>
-        <h1 class="mb-4">Книга дня</h1>
+    <div class="container">
+        <a asp-action="Index" class="btn btn-ghost mb-4">
+            <svg class="icon" style="width:1.125rem;height:1.125rem"><use href="#i-arrow-left"/></svg>
+            В админку
+        </a>
+        <h1 class="mb-1">Книга дня</h1>
+        <p class="text-muted mb-6">Выберите книгу, которая будет отображаться на главной странице сегодня</p>
 
-        <form asp-action="BookOfTheDay" method="post">
-            @Html.AntiForgeryToken()
-            <div class="card mb-4">
-                <div class="card-body">
-                    <div class="form-group">
-                        <label>Дата</label>
-                        <input type="date" name="date" value="@Model.Date.ToString("yyyy-MM-dd")" class="form-input" />
+        @* Current book of the day preview *@
+        @if (Model.CurrentBookOfDayId.HasValue && Model.CurrentBookTitle != null)
+        {
+            <div class="card mb-6" style="border-color:var(--green-300);background:var(--green-50);">
+                <div class="card-body" style="display:flex;align-items:center;gap:1.25rem;">
+                    <div style="width:80px;height:106px;border-radius:var(--radius-sm);overflow:hidden;flex-shrink:0;background:var(--gray-100);">
+                        @if (!string.IsNullOrEmpty(Model.CurrentBookCover))
+                        {
+                            <img src="@Model.CurrentBookCover" alt="" style="width:100%;height:100%;object-fit:cover;" />
+                        }
+                        else
+                        {
+                            <div style="width:100%;height:100%;display:grid;place-items:center;"><svg class="icon" style="width:1.5rem;height:1.5rem;color:var(--gray-400);"><use href="#i-book"/></svg></div>
+                        }
                     </div>
-                    <div class="form-group">
-                        <label>Книга</label>
-                        <select name="bookId" class="form-input">
-                            @foreach (var b in Model.AvailableBooks)
-                            {
-                                <option value="@b.Id" selected="@(Model.CurrentBookOfDayId == b.Id)">@b.Title — @b.Author</option>
-                            }
-                        </select>
+                    <div style="flex:1;">
+                        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem;">
+                            <span class="badge badge--green" style="display:inline-flex;align-items:center;gap:.25rem;">
+                                <svg class="icon"><use href="#i-check"/></svg>
+                                Текущая книга дня
+                            </span>
+                            <span style="font-size:.75rem;color:var(--gray-500);">@Model.Date.ToString("dd.MM.yyyy")</span>
+                        </div>
+                        <strong style="font-size:1.125rem;color:var(--gray-900);">@Model.CurrentBookTitle</strong>
+                        <span style="display:block;font-size:.875rem;color:var(--gray-600);">@Model.CurrentBookAuthor</span>
                     </div>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">Сохранить</button>
+        }
+        else
+        {
+            <div class="card mb-6" style="border:2px dashed var(--gray-200);background:var(--gray-50);">
+                <div class="card-body" style="text-align:center;padding:2rem;">
+                    <svg class="icon" style="width:2.5rem;height:2.5rem;color:var(--gray-300);margin-bottom:.75rem;"><use href="#i-sparkles"/></svg>
+                    <p style="color:var(--gray-500);margin:0;">Книга дня на @Model.Date.ToString("dd.MM.yyyy") ещё не выбрана</p>
+                </div>
+            </div>
+        }
+
+        @* Book selection form *@
+        <form asp-action="BookOfTheDay" method="post" id="botdForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="date" value="@Model.Date.ToString("yyyy-MM-dd")" />
+            <input type="hidden" name="bookId" id="selectedBookId" value="@(Model.CurrentBookOfDayId ?? 0)" />
+
+            <div class="mb-4" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+                <h2 class="admin-section-title" style="margin-bottom:0;">Выберите книгу</h2>
+                <input type="text" id="botdSearch" class="form-input" placeholder="Поиск по названию или автору…" style="max-width:320px;padding:.5rem .75rem;font-size:.875rem;" />
+            </div>
+
+            <div class="botd-grid">
+                @foreach (var b in Model.AvailableBooks)
+                {
+                    var isSelected = Model.CurrentBookOfDayId == b.Id;
+                    <button type="button"
+                            class="botd-card @(isSelected ? "is-selected" : "")"
+                            data-id="@b.Id"
+                            onclick="selectBook(this)">
+                        <div class="botd-card__cover">
+                            @if (!string.IsNullOrEmpty(b.CoverImagePath))
+                            {
+                                <img src="@b.CoverImagePath" alt="@b.Title" />
+                            }
+                            else
+                            {
+                                <div class="book-card__placeholder"><svg class="icon"><use href="#i-book"/></svg></div>
+                            }
+                        </div>
+                        <div class="botd-card__info">
+                            <strong>@b.Title</strong>
+                            <span class="text-muted text-sm">@b.Author</span>
+                            <span class="badge badge--secondary" style="align-self:flex-start;">@b.Genre</span>
+                        </div>
+                        <div class="botd-card__check">
+                            <svg class="icon"><use href="#i-check"/></svg>
+                        </div>
+                    </button>
+                }
+            </div>
+
+            <div style="display:flex;gap:.75rem;align-items:center;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--line);">
+                <button type="submit" class="btn btn-primary" id="botdSubmit">
+                    <svg class="icon"><use href="#i-check"/></svg>
+                    Сохранить
+                </button>
+                <span id="botdSelected" class="text-muted text-sm" style="flex:1;">
+                    @if (Model.CurrentBookOfDayId.HasValue && Model.CurrentBookTitle != null)
+                    {
+                        @:Выбрано: <strong>@Model.CurrentBookTitle</strong>
+                    }
+                    else
+                    {
+                        @:Книга не выбрана
+                    }
+                </span>
+            </div>
         </form>
     </div>
 </div>
+
+<script>
+    function selectBook(el) {
+        document.querySelectorAll('.botd-card').forEach(c => c.classList.remove('is-selected'));
+        el.classList.add('is-selected');
+        document.getElementById('selectedBookId').value = el.dataset.id;
+        const title = el.querySelector('strong')?.textContent || '';
+        document.getElementById('botdSelected').innerHTML = 'Выбрано: <strong>' + title + '</strong>';
+    }
+
+    document.getElementById('botdSearch')?.addEventListener('input', function () {
+        const q = this.value.toLowerCase().trim();
+        document.querySelectorAll('.botd-card').forEach(c => {
+            const text = c.textContent.toLowerCase();
+            c.style.display = !q || text.includes(q) ? '' : 'none';
+        });
+    });
+</script>

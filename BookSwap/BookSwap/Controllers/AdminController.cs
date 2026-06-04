@@ -148,11 +148,16 @@ public class AdminController : Controller
             .ToListAsync();
         var today = DateTime.Now.Date;
         var current = (await _uow.BooksOfTheDay.FindAsync(b => b.Date == today)).FirstOrDefault();
+        var currentBook = current != null ? books.FirstOrDefault(b => b.Id == current.BookId) : null;
         return View(new SetBookOfDayViewModel
         {
             Date = today,
             AvailableBooks = books.Select(_mapper.Map<BookCardViewModel>).ToList(),
-            CurrentBookOfDayId = current?.BookId
+            CurrentBookOfDayId = current?.BookId,
+            CurrentBookTitle = currentBook?.Title,
+            CurrentBookAuthor = currentBook?.Author,
+            CurrentBookCover = currentBook?.CoverImagePath,
+            CurrentBookGenre = currentBook?.Genre
         });
     }
 
