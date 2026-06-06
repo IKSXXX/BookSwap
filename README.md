@@ -44,6 +44,20 @@ dotnet run --project BookSwap/BookSwap
 
 | Ключ | Описание |
 |------|----------|
-| `UseMockData` | `true` — InMemory, `false` — SQL Server |
-| `GigaChat:ApiKey` | Ключ для GigaChat API (AI-рекомендации) |
-| `GigaChat:Scope` | Scope для GigaChat API |
+| `UseMockData` | `true` — InMemory, `false` — PostgreSQL |
+| `ConnectionStrings:DefaultConnection` | Строка подключения к PostgreSQL (при `UseMockData: false`) |
+| `GigaChat:AcceptAnyServerCertificate` | `true` — пропускать проверку TLS-сертификата GigaChat (по умолчанию включено только в Development) |
+
+### Секреты
+
+`GigaChat:AuthorizationKey` **не хранится в репозитории**. Задайте его через User Secrets (для локальной разработки):
+
+```bash
+dotnet user-secrets --project BookSwap/BookSwap set "GigaChat:AuthorizationKey" "<ваш-ключ>"
+```
+
+или через переменную окружения:
+
+```bash
+export GigaChat__AuthorizationKey="<ваш-ключ>"
+```

@@ -17,12 +17,17 @@ public class GigaChatService
     private const string AuthUrl = "https://ngw.devices.sberbank.ru:9443/api/v2/oauth";
     private const string ChatUrl = "https://gigachat.devices.sberbank.ru/api/v1/chat/completions";
 
-    public GigaChatService(IConfiguration config, ILogger<GigaChatService> logger)
+    public GigaChatService(IConfiguration config, ILogger<GigaChatService> logger, IHostEnvironment env)
     {
-        var handler = new HttpClientHandler
+        var handler = new HttpClientHandler();
+        var acceptAnyCert = env.IsDevelopment() || config.GetValue<bool>("GigaChat:AcceptAnyServerCertificate");
+        if (acceptAnyCert)
         {
-            ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-        };
+            logger.LogWarning("GigaChat: проверка TLS-сертификата сервера отключена ({Reason}).",
+                env.IsDevelopment() ? "Development" : "GigaChat:AcceptAnyServerCertificate=true");
+            handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+        }
+
         _http = new HttpClient(handler);
         _config = config;
         _logger = logger;
