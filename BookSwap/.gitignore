@@ -1,0 +1,21 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.log
+*.tmp
+.DS_Store
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.swp
+
+# Docker
+pgdata/
+
+# OS
+Thumbs.db
