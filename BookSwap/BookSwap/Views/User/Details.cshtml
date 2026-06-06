@@ -1,4 +1,5 @@
 @model UserProfileViewModel
+@inject SignInManager<User> SignInManager
 @{ ViewData["Title"] = Model.UserName; }
 @using BookExchange.Db.Entities
 
@@ -96,6 +97,13 @@
                     <button type="button" class="tab-btn" data-tab="favorites">
                         <svg class="icon"><use href="#i-heart"/></svg>
                         Избранное (@Model.Favorites.Count)
+                    </button>
+                }
+                @if (Model.Wishlist.Count > 0 || Model.IsCurrent)
+                {
+                    <button type="button" class="tab-btn" data-tab="wishlist">
+                        <svg class="icon"><use href="#i-bookmark"/></svg>
+                        Вишлист (@Model.Wishlist.Count)
                     </button>
                 }
                 <button type="button" class="tab-btn" data-tab="reviews">
@@ -231,6 +239,44 @@
                 else
                 {
                     <div class="profile-grid">@foreach (var b in Model.Favorites) { <partial name="_BookCard" model="b" /> }</div>
+                }
+            </div>
+
+            @* --- Wishlist tab --- *@
+            <div class="tab-content" id="tab-wishlist" hidden>
+                @if (Model.Wishlist.Count == 0)
+                {
+                    <div class="empty-state">
+                        <svg class="icon"><use href="#i-bookmark"/></svg>
+                        @if (Model.IsCurrent)
+                        {
+                            <p>В вишлисте пусто.</p>
+                            <a asp-controller="Book" asp-action="Index" class="empty-state__link">Перейти в каталог →</a>
+                        }
+                        else
+                        {
+                            <p>У пользователя пока нет книг в вишлисте.</p>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="profile-grid">
+                        @foreach (var b in Model.Wishlist)
+                        {
+                            <div class="book-card-wishlist">
+                                <partial name="_BookCard" model="b" />
+                                @if (!Model.IsCurrent && SignInManager.IsSignedIn(User))
+                                {
+                                    <a asp-controller="Exchange" asp-action="Create" asp-route-bookId="@b.Id"
+                                       class="btn btn-primary btn-sm" style="margin-top:-.25rem;">
+                                        <svg class="icon"><use href="#i-swap"/></svg>
+                                        Предложить обмен
+                                    </a>
+                                }
+                            </div>
+                        }
+                    </div>
                 }
             </div>
 

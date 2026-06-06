@@ -61,7 +61,7 @@ public class QuizQuestionFormViewModel
 
 public class SetBookOfDayViewModel
 {
-    public DateTime Date { get; set; } = DateTime.Now.Date;
+    public DateTime Date { get; set; } = DateTime.UtcNow.Date;
     public int BookId { get; set; }
     public List<BookCardViewModel> AvailableBooks { get; set; } = new();
     public int? CurrentBookOfDayId { get; set; }

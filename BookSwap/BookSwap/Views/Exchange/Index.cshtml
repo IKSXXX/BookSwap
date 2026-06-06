@@ -1,0 +1,98 @@
+@model List<ExchangeListItemViewModel>
+@{
+    ViewData["Title"] = "Мои обмены";
+    var current = ViewBag.CurrentStatus as string ?? "all";
+}
+
+<div class="section--gray" style="padding:2rem 0; min-height:calc(100vh - 64px);">
+    <div class="container">
+        <h1 class="mb-4">Мои обмены</h1>
+
+        @* Filter tabs *@
+        <div class="tabs-list mb-6" role="tablist">
+            @foreach (var (key, label) in new[] {
+                ("all", "Все"),
+                ("Pending", "Ожидают"),
+                ("Accepted", "Принятые"),
+                ("Completed", "Завершённые"),
+                ("Rejected", "Отклонённые"),
+                ("Cancelled", "Отменённые")
+            })
+            {
+                <a asp-action="Index" asp-route-status="@(key == "all" ? null : key)"
+                   class="tab-btn @(current == key ? "active" : "")"
+                   role="tab">
+                    @label
+                </a>
+            }
+        </div>
+
+        @if (Model.Count == 0)
+        {
+            <div class="empty-state">
+                <svg class="icon"><use href="#i-swap"/></svg>
+                <p>Обменов пока нет</p>
+                @if (current != "all")
+                {
+                    <a asp-action="Index" class="btn btn-ghost btn-sm mt-2">Показать все</a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="stack">
+                @foreach (var ex in Model)
+                {
+                    <a asp-action="Details" asp-route-id="@ex.Id" class="exchange-row">
+                        <div class="exchange-row__main">
+                            @* Book covers *@
+                            <div class="exchange-row__book-covers">
+                                <div class="exchange-row__cover">
+                                    @if (!string.IsNullOrEmpty(ex.BookRequestedCover))
+                                    {
+                                        <img src="@ex.BookRequestedCover" alt="@ex.BookRequestedTitle" />
+                                    }
+                                    else
+                                    {
+                                        <svg class="icon" style="width:1.25rem;height:1.25rem;"><use href="#i-book"/></svg>
+                                    }
+                                </div>
+                                @if (!string.IsNullOrEmpty(ex.BookOfferedCover))
+                                {
+                                    <div class="exchange-row__cover exchange-row__cover--offered">
+                                        <img src="@ex.BookOfferedCover" alt="@ex.BookOfferedTitle" />
+                                    </div>
+                                }
+                            </div>
+
+                            @* Info *@
+                            <div class="exchange-row__body" style="min-width:0;">
+                                <div class="exchange-row__name-link">@ex.BookRequestedTitle</div>
+                                <div class="exchange-row__sub">
+                                    @if (!string.IsNullOrEmpty(ex.BookOfferedTitle))
+                                    {
+                                        <span>@ex.BookOfferedTitle · </span>
+                                    }
+                                    @ex.OtherUserName
+                                </div>
+                            </div>
+                        </div>
+
+                        @* Status + arrow *@
+                        <div style="display:flex;align-items:center;gap:.75rem;flex-shrink:0;">
+                            <span class="badge @(ex.Status switch {
+                                ExchangeStatus.Pending => "badge--yellow",
+                                ExchangeStatus.Accepted => "badge--blue",
+                                ExchangeStatus.Completed => "badge--green",
+                                ExchangeStatus.Rejected => "badge--red",
+                                ExchangeStatus.Cancelled => "badge--secondary",
+                                _ => ""
+                            })">@ex.StatusLabel</span>
+                            <svg class="icon text-muted"><use href="#i-arrow-right"/></svg>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</div>

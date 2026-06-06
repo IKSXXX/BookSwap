@@ -43,7 +43,13 @@ public class UserController : Controller
             .ToListAsync();
 
         var favorites = await _uow.Favorites.Query()
-            .Where(f => f.UserId == user.Id)
+            .Where(f => f.UserId == user.Id && !f.IsWishlist)
+            .Include(f => f.Book!).ThenInclude(b => b.BookOwners).ThenInclude(bo => bo.User)
+            .Select(f => f.Book!)
+            .ToListAsync();
+
+        var wishlist = await _uow.Favorites.Query()
+            .Where(f => f.UserId == user.Id && f.IsWishlist)
             .Include(f => f.Book!).ThenInclude(b => b.BookOwners).ThenInclude(bo => bo.User)
             .Select(f => f.Book!)
             .ToListAsync();
@@ -96,6 +102,7 @@ public class UserController : Controller
                 BookOfferedCover = e.BookOffered?.CoverImagePath
             }).ToList(),
             Favorites = favorites.Select(_mapper.Map<BookCardViewModel>).ToList(),
+            Wishlist = wishlist.Select(_mapper.Map<BookCardViewModel>).ToList(),
             ReviewsReceived = reviewsReceived.Select(r => new ReviewDisplayViewModel
             {
                 FromUserId = r.FromUserId,

@@ -151,7 +151,7 @@ public static class DbSeeder
             }
             await ctx.SaveChangesAsync();
 
-            ctx.BooksOfTheDay.Add(new BookOfTheDay { BookId = books[1].Id, Date = DateTime.Now.Date });
+            ctx.BooksOfTheDay.Add(new BookOfTheDay { BookId = books[1].Id, Date = DateTime.UtcNow.Date });
 
             ctx.QuizQuestions.AddRange(
                 new QuizQuestion { BookId = books[0].Id, Quote = "Тварь я дрожащая или право имею?", CorrectAnswer = "Преступление и наказание", Option2 = "Война и мир", Option3 = "Мастер и Маргарита", Option4 = "1984" },

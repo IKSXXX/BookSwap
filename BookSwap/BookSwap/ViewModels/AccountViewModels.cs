@@ -78,6 +78,7 @@ public class UserProfileViewModel
     public List<BookCardViewModel> MyBooks { get; set; } = new();
     public List<ExchangeListItemViewModel> Exchanges { get; set; } = new();
     public List<BookCardViewModel> Favorites { get; set; } = new();
+    public List<BookCardViewModel> Wishlist { get; set; } = new();
     public List<ReviewDisplayViewModel> ReviewsReceived { get; set; } = new();
     public List<ReviewDisplayViewModel> ReviewsGiven { get; set; } = new();
 }

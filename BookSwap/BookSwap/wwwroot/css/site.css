@@ -1694,6 +1694,12 @@ input[type="radio"] {
     gap: 1rem;
 }
 @media (max-width: 600px) { .profile-grid { grid-template-columns: repeat(2, 1fr); } }
+.book-card-wishlist {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+.book-card-wishlist .btn { width: 100%; }
 
 .profile-stats-grid {
     display: grid;

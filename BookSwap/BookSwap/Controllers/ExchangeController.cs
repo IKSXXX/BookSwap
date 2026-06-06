@@ -28,6 +28,40 @@ public class ExchangeController : Controller
         _hub = hub;
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Index(string? status)
+    {
+        var userId = _um.GetUserId(User)!;
+        var query = _uow.Exchanges.Query()
+            .Include(e => e.Sender).Include(e => e.Receiver)
+            .Include(e => e.BookRequested).Include(e => e.BookOffered)
+            .Where(e => e.SenderId == userId || e.ReceiverId == userId);
+
+        if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<ExchangeStatus>(status, true, out var st))
+            query = query.Where(e => e.Status == st);
+
+        var exchanges = await query.OrderByDescending(e => e.CreatedAt).ToListAsync();
+
+        var vms = exchanges.Select(e => new ExchangeListItemViewModel
+        {
+            Id = e.Id,
+            Status = e.Status,
+            StatusLabel = MappingProfile.StatusToLabel(e.Status),
+            CreatedAt = e.CreatedAt,
+            IsSender = e.SenderId == userId,
+            OtherUserId = (e.SenderId == userId ? e.ReceiverId : e.SenderId) ?? "",
+            OtherUserName = (e.SenderId == userId ? e.Receiver?.UserName : e.Sender?.UserName) ?? "",
+            OtherUserAvatar = (e.SenderId == userId ? e.Receiver?.AvatarPath : e.Sender?.AvatarPath) ?? "",
+            BookRequestedTitle = e.BookRequested?.Title ?? "",
+            BookRequestedCover = e.BookRequested?.CoverImagePath,
+            BookOfferedTitle = e.BookOffered?.Title,
+            BookOfferedCover = e.BookOffered?.CoverImagePath
+        }).ToList();
+
+        ViewBag.CurrentStatus = status ?? "all";
+        return View(vms);
+    }
+
     [HttpGet("Exchange/Create/{bookId:int}")]
     public async Task<IActionResult> Create(int bookId)
     {

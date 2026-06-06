@@ -1,13 +1,20 @@
 @model QuizQuestionFormViewModel
-@{ ViewData["Title"] = "Новый вопрос"; }
+@{
+    var isEdit = Model.Id.HasValue && Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Редактировать вопрос" : "Новый вопрос";
+}
 
 <div class="section--gray" style="padding:2rem 0; min-height:calc(100vh - 64px);">
     <div class="container" style="max-width:600px;">
-        <a asp-action="Quiz" class="btn btn-ghost btn-sm mb-4">← К списку</a>
-        <h1 class="mb-4">Новый вопрос</h1>
+        <a asp-action="Quiz" class="btn btn-ghost btn-sm mb-4">
+            <svg class="icon" style="width:1.125rem;height:1.125rem"><use href="#i-arrow-left"/></svg>
+            К списку
+        </a>
+        <h1 class="mb-4">@(isEdit ? "Редактировать вопрос" : "Новый вопрос")</h1>
 
-        <form asp-action="CreateQuiz" method="post">
+        <form asp-action="@(isEdit ? "EditQuiz" : "CreateQuiz")" method="post">
             @Html.AntiForgeryToken()
+            @if (isEdit) { <input type="hidden" asp-for="Id" /> }
             <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
             <div class="card mb-4">
@@ -43,7 +50,7 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <button type="submit" class="btn btn-primary">@(isEdit ? "Сохранить изменения" : "Сохранить")</button>
         </form>
     </div>
 </div>

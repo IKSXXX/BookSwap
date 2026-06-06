@@ -5,7 +5,10 @@
     <div class="container">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;">
             <div>
-                <a asp-action="Index" class="btn btn-ghost btn-sm mb-2">← В админку</a>
+                <a asp-action="Index" class="btn btn-ghost btn-sm mb-2">
+                    <svg class="icon" style="width:1.125rem;height:1.125rem"><use href="#i-arrow-left"/></svg>
+                    В админку
+                </a>
                 <h1>Вопросы викторины</h1>
                 <p class="text-muted" style="font-size:.875rem;">Всего: @Model.Count</p>
             </div>
@@ -33,11 +36,14 @@
                             <td style="font-weight:600;">@q.CorrectAnswer</td>
                             <td class="text-muted">@(q.Book?.Title ?? "—")</td>
                             <td>
-                                <form asp-action="DeleteQuiz" method="post" onsubmit="return confirm('Удалить?');">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@q.Id" />
-                                    <button class="btn btn-ghost btn-sm" style="color:var(--red-600);">Удалить</button>
-                                </form>
+                                <div style="display:flex;gap:.5rem;">
+                                    <a asp-action="EditQuiz" asp-route-id="@q.Id" class="btn btn-ghost btn-sm">Редактировать</a>
+                                    <form asp-action="DeleteQuiz" method="post" onsubmit="return confirm('Удалить?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@q.Id" />
+                                        <button class="btn btn-ghost btn-sm" style="color:var(--red-600);">Удалить</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     }

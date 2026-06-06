@@ -146,7 +146,7 @@ public class AdminController : Controller
             .Include(b => b.BookOwners).ThenInclude(bo => bo.User)
             .Where(b => !b.IsHidden)
             .ToListAsync();
-        var today = DateTime.Now.Date;
+        var today = DateTime.UtcNow.Date;
         var current = (await _uow.BooksOfTheDay.FindAsync(b => b.Date == today)).FirstOrDefault();
         var currentBook = current != null ? books.FirstOrDefault(b => b.Id == current.BookId) : null;
         return View(new SetBookOfDayViewModel
@@ -164,7 +164,8 @@ public class AdminController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> BookOfTheDay(DateTime date, int bookId)
     {
-        var existing = (await _uow.BooksOfTheDay.FindAsync(b => b.Date == date.Date)).FirstOrDefault();
+        var day = DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
+        var existing = (await _uow.BooksOfTheDay.FindAsync(b => b.Date == day)).FirstOrDefault();
         if (existing != null)
         {
             existing.BookId = bookId;
@@ -172,7 +173,7 @@ public class AdminController : Controller
         }
         else
         {
-            await _uow.BooksOfTheDay.AddAsync(new BookOfTheDay { BookId = bookId, Date = date.Date });
+            await _uow.BooksOfTheDay.AddAsync(new BookOfTheDay { BookId = bookId, Date = day });
         }
         await _uow.SaveChangesAsync();
         TempData["Success"] = "Книга дня обновлена.";
@@ -203,10 +204,10 @@ public class AdminController : Controller
     {
         if (!ModelState.IsValid)
         {
-            var books = await _uow.Books.Query()
+        var books = await _uow.Books.Query()
                 .Include(b => b.BookOwners).ThenInclude(bo => bo.User)
-                .Where(b => !b.IsHidden)
-                .ToListAsync();
+            .Where(b => !b.IsHidden)
+            .ToListAsync();
             model.AvailableBooks = books.Select(_mapper.Map<BookCardViewModel>).ToList();
             return View("QuizForm", model);
         }
@@ -220,6 +221,54 @@ public class AdminController : Controller
             Option4 = model.Option4
         });
         await _uow.SaveChangesAsync();
+        return RedirectToAction(nameof(Quiz));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> EditQuiz(int id)
+    {
+        var q = await _uow.QuizQuestions.GetByIdAsync(id);
+        if (q == null) return NotFound();
+        var books = await _uow.Books.Query()
+            .Include(b => b.BookOwners).ThenInclude(bo => bo.User)
+            .Where(b => !b.IsHidden)
+            .ToListAsync();
+        return View("QuizForm", new QuizQuestionFormViewModel
+        {
+            Id = q.Id,
+            BookId = q.BookId,
+            Quote = q.Quote,
+            CorrectAnswer = q.CorrectAnswer,
+            Option2 = q.Option2,
+            Option3 = q.Option3,
+            Option4 = q.Option4,
+            AvailableBooks = books.Select(_mapper.Map<BookCardViewModel>).ToList()
+        });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditQuiz(QuizQuestionFormViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+        var books = await _uow.Books.Query()
+                .Include(b => b.BookOwners).ThenInclude(bo => bo.User)
+                .Where(b => !b.IsHidden)
+                .ToListAsync();
+            model.AvailableBooks = books.Select(_mapper.Map<BookCardViewModel>).ToList();
+            return View("QuizForm", model);
+        }
+        var q = await _uow.QuizQuestions.GetByIdAsync(model.Id ?? 0);
+        if (q == null) return NotFound();
+        q.BookId = model.BookId;
+        q.Quote = model.Quote;
+        q.CorrectAnswer = model.CorrectAnswer;
+        q.Option2 = model.Option2;
+        q.Option3 = model.Option3;
+        q.Option4 = model.Option4;
+        _uow.QuizQuestions.Update(q);
+        await _uow.SaveChangesAsync();
+        TempData["Success"] = "Вопрос обновлён.";
         return RedirectToAction(nameof(Quiz));
     }
 
