@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using BookExchange.Db.Data;
 using BookExchange.Db.Entities;
 using BookExchange.Web.Data;
@@ -6,6 +7,7 @@ using BookExchange.Db.Interfaces;
 using BookExchange.Db.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -64,6 +66,21 @@ try
     builder.Services.AddAutoMapper(cfg => { }, typeof(BookExchange.Web.Helpers.MappingProfile).Assembly);
     builder.Services.AddControllersWithViews();
     builder.Services.AddSignalR();
+
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        options.AddPolicy("ai", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                httpContext.User.Identity?.Name
+                    ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                    ?? "anonymous",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 10,
+                    Window = TimeSpan.FromMinutes(1)
+                }));
+    });
 
     var app = builder.Build();
 

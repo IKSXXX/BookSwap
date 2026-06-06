@@ -15,3 +15,8 @@ x86/
 *.snupkg
 *.sqlite
 *.sqlite3
+
+appsettings.Development.json
+appsettings.*.Local.json
+*.env
+.env

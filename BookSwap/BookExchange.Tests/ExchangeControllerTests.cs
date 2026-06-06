@@ -14,11 +14,6 @@ using Xunit;
 
 namespace BookExchange.Tests;
 
-/// <summary>
-/// Юнит-тесты сценария обмена. Работают на готовом MockUnitOfWork/MockDataStore
-/// (тот же режим, что UseMockData), без реальной БД и сети.
-/// MockDataStore статичен, поэтому каждый тест очищает его в конструкторе.
-/// </summary>
 public class ExchangeControllerTests
 {
     public ExchangeControllerTests() => ResetStore();
@@ -128,7 +123,7 @@ public class ExchangeControllerTests
         AddOwner(bookId: 1, userId: "user-1");
 
         var controller = BuildController(currentUserId: "user-1");
-        var result = await controller.Create(bookId: 1); // обмен с самим собой запрещён
+        var result = await controller.Create(bookId: 1);
 
         Assert.IsType<BadRequestObjectResult>(result);
     }
