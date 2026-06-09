@@ -1,13 +1,13 @@
 using AutoMapper;
-using BookExchange.Db.Entities;
-using BookExchange.Web.Helpers;
-using BookExchange.Db.Interfaces;
-using BookExchange.Web.Services;
-using BookExchange.Web.ViewModels;
+using BookSwap.Db.Entities;
+using BookSwap.Web.Helpers;
+using BookSwap.Db.Interfaces;
+using BookSwap.Web.Services;
+using BookSwap.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace BookExchange.Web.Controllers;
+namespace BookSwap.Web.Controllers;
 
 public class HomeController : Controller
 {

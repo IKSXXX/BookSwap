@@ -1,8 +1,8 @@
-using BookExchange.Db.Data;
-using BookExchange.Db.Entities;
-using BookExchange.Db.Interfaces;
+using BookSwap.Db.Data;
+using BookSwap.Db.Entities;
+using BookSwap.Db.Interfaces;
 
-namespace BookExchange.Db.Repositories;
+namespace BookSwap.Db.Repositories;
 
 public class UnitOfWork : IUnitOfWork
 {

@@ -1,11 +1,11 @@
-using BookExchange.Db.Entities;
-using BookExchange.Db.Interfaces;
+using BookSwap.Db.Entities;
+using BookSwap.Db.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace BookExchange.Web.Controllers;
+namespace BookSwap.Web.Controllers;
 
 [Authorize]
 [Route("notifications")]

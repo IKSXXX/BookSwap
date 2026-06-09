@@ -1,5 +1,5 @@
 <Solution>
-  <Project Path="BookExchange.Db/BookExchange.Db.csproj" />
-  <Project Path="BookSwap/BookExchange.Web.csproj" />
-  <Project Path="BookExchange.Tests/BookExchange.Tests.csproj" />
+  <Project Path="BookExchange.Db/BookSwap.Db.csproj" />
+  <Project Path="BookExchange.Tests/BookSwap.Tests.csproj" />
+  <Project Path="BookSwap/BookSwap.Web.csproj" />
 </Solution>

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace BookExchange.Db.Entities;
+namespace BookSwap.Db.Entities;
 
 public class Book : BaseEntity
 {

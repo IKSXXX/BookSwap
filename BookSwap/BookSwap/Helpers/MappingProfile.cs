@@ -1,8 +1,8 @@
 using AutoMapper;
-using BookExchange.Db.Entities;
-using BookExchange.Web.ViewModels;
+using BookSwap.Db.Entities;
+using BookSwap.Web.ViewModels;
 
-namespace BookExchange.Web.Helpers;
+namespace BookSwap.Web.Helpers;
 
 public class MappingProfile : Profile
 {

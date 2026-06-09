@@ -1,10 +1,10 @@
-using BookExchange.Db.Entities;
-using BookExchange.Db.Interfaces;
+using BookSwap.Db.Entities;
+using BookSwap.Db.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 
-namespace BookExchange.Web.Hubs;
+namespace BookSwap.Web.Hubs;
 
 [Authorize]
 public class ChatHub : Hub

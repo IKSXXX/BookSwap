@@ -1,4 +1,4 @@
-namespace BookExchange.Web.Helpers;
+namespace BookSwap.Web.Helpers;
 
 public record GoogleBookResult(string Title, string Author, string? Description, string? CoverImageUrl, int? Year);
 

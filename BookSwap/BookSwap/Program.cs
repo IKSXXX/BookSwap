@@ -1,15 +1,16 @@
-using System.Threading.RateLimiting;
-using BookExchange.Db.Data;
-using BookExchange.Db.Entities;
-using BookExchange.Web.Data;
-using BookExchange.Web.Hubs;
-using BookExchange.Db.Interfaces;
-using BookExchange.Db.Repositories;
+using BookSwap.Db.Data;
+using BookSwap.Db.Entities;
+using BookSwap.Db.Interfaces;
+using BookSwap.Db.Repositories;
+using BookSwap.Web.Data;
+using BookSwap.Web.Helpers;
+using BookSwap.Web.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using System.Threading.RateLimiting;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -55,15 +56,15 @@ try
     });
 
     if (useMockData)
-        builder.Services.AddScoped<IUnitOfWork, BookExchange.Web.Mocks.MockUnitOfWork>();
+        builder.Services.AddScoped<IUnitOfWork, BookSwap.Web.Mocks.MockUnitOfWork>();
     else
     {
         builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
         builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
     }
-    builder.Services.AddTransient<IEmailSender, BookExchange.Web.Helpers.ConsoleEmailSender>();
-    builder.Services.AddSingleton<BookExchange.Web.Services.GigaChatService>();
-    builder.Services.AddAutoMapper(cfg => { }, typeof(BookExchange.Web.Helpers.MappingProfile).Assembly);
+    builder.Services.AddTransient<IEmailSender, BookSwap.Web.Helpers.ConsoleEmailSender>();
+    builder.Services.AddSingleton<BookSwap.Web.Services.GigaChatService>();
+    builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
     builder.Services.AddControllersWithViews();
     builder.Services.AddSignalR();
 
@@ -108,7 +109,7 @@ try
     {
         using var scope = app.Services.CreateScope();
         var ctx = scope.ServiceProvider.GetRequiredService<BookExchangeDbContext>();
-        await BookExchange.Web.Mocks.MockDataStore.LoadFromDbContextAsync(ctx);
+        await BookSwap.Web.Mocks.MockDataStore.LoadFromDbContextAsync(ctx);
     }
 
     app.Run();

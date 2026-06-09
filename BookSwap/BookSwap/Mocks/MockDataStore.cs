@@ -1,8 +1,8 @@
-using BookExchange.Db.Entities;
-using BookExchange.Db.Data;
+using BookSwap.Db.Entities;
+using BookSwap.Db.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace BookExchange.Web.Mocks;
+namespace BookSwap.Web.Mocks;
 
 public static class MockDataStore
 {

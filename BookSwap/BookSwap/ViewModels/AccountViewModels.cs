@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace BookExchange.Web.ViewModels;
+namespace BookSwap.Web.ViewModels;
 
 public class LoginViewModel
 {

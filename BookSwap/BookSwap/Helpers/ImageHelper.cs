@@ -1,4 +1,4 @@
-namespace BookExchange.Web.Helpers;
+namespace BookSwap.Web.Helpers;
 
 public static class ImageHelper
 {

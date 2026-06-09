@@ -1,13 +1,13 @@
-using BookExchange.Db.Data;
-using BookExchange.Db.Entities;
-using BookExchange.Web.Data;
-using BookExchange.Web.Helpers;
-using BookExchange.Web.ViewModels;
+using BookSwap.Db.Data;
+using BookSwap.Db.Entities;
+using BookSwap.Web.Data;
+using BookSwap.Web.Helpers;
+using BookSwap.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BookExchange.Web.Controllers;
+namespace BookSwap.Web.Controllers;
 
 public class AccountController : Controller
 {

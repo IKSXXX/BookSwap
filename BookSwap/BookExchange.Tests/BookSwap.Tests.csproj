@@ -19,8 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BookSwap\BookExchange.Web.csproj" />
-    <ProjectReference Include="..\BookExchange.Db\BookExchange.Db.csproj" />
+    <ProjectReference Include="..\BookSwap\BookSwap.Web.csproj" />
+    <ProjectReference Include="..\BookExchange.Db\BookSwap.Db.csproj" />
   </ItemGroup>
 
 </Project>

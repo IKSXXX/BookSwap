@@ -2,7 +2,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 
-namespace BookExchange.Web.Services;
+namespace BookSwap.Web.Services;
 
 public class GigaChatService
 {

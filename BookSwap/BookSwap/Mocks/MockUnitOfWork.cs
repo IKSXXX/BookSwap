@@ -1,7 +1,7 @@
-using BookExchange.Db.Entities;
-using BookExchange.Db.Interfaces;
+using BookSwap.Db.Entities;
+using BookSwap.Db.Interfaces;
 
-namespace BookExchange.Web.Mocks;
+namespace BookSwap.Web.Mocks;
 
 public class MockUnitOfWork : IUnitOfWork
 {

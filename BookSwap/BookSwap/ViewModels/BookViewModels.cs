@@ -1,6 +1,6 @@
-using BookExchange.Db.Entities;
+using BookSwap.Db.Entities;
 
-namespace BookExchange.Web.ViewModels;
+namespace BookSwap.Web.ViewModels;
 
 public class BookCardViewModel
 {

@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore.Query;
 
-namespace BookExchange.Web.Mocks;
+namespace BookSwap.Web.Mocks;
 
 public class MockQueryable<T> : IQueryable<T>, IAsyncEnumerable<T>, IOrderedQueryable<T>
 {

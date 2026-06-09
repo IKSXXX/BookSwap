@@ -1,15 +1,15 @@
 using AutoMapper;
-using BookExchange.Db.Data;
-using BookExchange.Db.Entities;
-using BookExchange.Db.Interfaces;
-using BookExchange.Web.Data;
-using BookExchange.Web.ViewModels;
+using BookSwap.Db.Data;
+using BookSwap.Db.Entities;
+using BookSwap.Db.Interfaces;
+using BookSwap.Web.Data;
+using BookSwap.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace BookExchange.Web.Controllers;
+namespace BookSwap.Web.Controllers;
 
 [Authorize(Roles = "Admin")]
 public class AdminController : Controller
@@ -164,6 +164,17 @@ public class AdminController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> BookOfTheDay(DateTime date, int bookId)
     {
+        if (bookId <= 0)
+        {
+            TempData["Error"] = "Выберите книгу перед сохранением.";
+            return RedirectToAction(nameof(BookOfTheDay));
+        }
+        var book = await _uow.Books.GetByIdAsync(bookId);
+        if (book == null || book.IsHidden)
+        {
+            TempData["Error"] = "Указанная книга не найдена или скрыта.";
+            return RedirectToAction(nameof(BookOfTheDay));
+        }
         var day = DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
         var existing = (await _uow.BooksOfTheDay.FindAsync(b => b.Date == day)).FirstOrDefault();
         if (existing != null)

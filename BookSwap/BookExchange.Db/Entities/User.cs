@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace BookExchange.Db.Entities;
+namespace BookSwap.Db.Entities;
 
 public class User : Microsoft.AspNetCore.Identity.IdentityUser
 {

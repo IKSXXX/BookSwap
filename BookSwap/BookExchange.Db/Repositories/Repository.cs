@@ -1,9 +1,9 @@
 using System.Linq.Expressions;
-using BookExchange.Db.Data;
-using BookExchange.Db.Interfaces;
+using BookSwap.Db.Data;
+using BookSwap.Db.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace BookExchange.Db.Repositories;
+namespace BookSwap.Db.Repositories;
 
 public class Repository<T> : IRepository<T> where T : class
 {

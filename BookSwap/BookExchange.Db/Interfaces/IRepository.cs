@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-namespace BookExchange.Db.Interfaces;
+namespace BookSwap.Db.Interfaces;
 
 public interface IRepository<T> where T : class
 {

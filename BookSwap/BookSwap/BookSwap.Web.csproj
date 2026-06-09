@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BookExchange.Db\BookExchange.Db.csproj" />
+    <ProjectReference Include="..\BookExchange.Db\BookSwap.Db.csproj" />
   </ItemGroup>
 
   <ItemGroup>

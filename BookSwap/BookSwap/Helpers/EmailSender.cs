@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity.UI.Services;
 
-namespace BookExchange.Web.Helpers;
+namespace BookSwap.Web.Helpers;
 
 public class ConsoleEmailSender : IEmailSender
 {

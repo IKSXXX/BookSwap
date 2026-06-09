@@ -1,10 +1,10 @@
 using System.Security.Claims;
 using AutoMapper;
-using BookExchange.Db.Entities;
-using BookExchange.Web.Controllers;
-using BookExchange.Web.Hubs;
-using BookExchange.Web.Mocks;
-using BookExchange.Web.ViewModels;
+using BookSwap.Db.Entities;
+using BookSwap.Web.Controllers;
+using BookSwap.Web.Hubs;
+using BookSwap.Web.Mocks;
+using BookSwap.Web.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.SignalR;
 using Moq;
 using Xunit;
 
-namespace BookExchange.Tests;
+namespace BookSwap.Tests;
 
 public class ExchangeControllerTests
 {

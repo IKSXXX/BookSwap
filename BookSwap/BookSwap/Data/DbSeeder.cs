@@ -1,9 +1,9 @@
-using BookExchange.Db.Data;
-using BookExchange.Db.Entities;
+using BookSwap.Db.Data;
+using BookSwap.Db.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace BookExchange.Web.Data;
+namespace BookSwap.Web.Data;
 
 public static class DbSeeder
 {

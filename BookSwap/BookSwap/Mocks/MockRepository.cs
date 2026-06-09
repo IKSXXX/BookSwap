@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
-using BookExchange.Db.Interfaces;
+using BookSwap.Db.Interfaces;
 
-namespace BookExchange.Web.Mocks;
+namespace BookSwap.Web.Mocks;
 
 public class MockRepository<T> : IRepository<T> where T : class
 {

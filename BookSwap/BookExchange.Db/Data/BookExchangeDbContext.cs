@@ -1,8 +1,8 @@
-using BookExchange.Db.Entities;
+using BookSwap.Db.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace BookExchange.Db.Data;
+namespace BookSwap.Db.Data;
 
 public class BookExchangeDbContext : IdentityDbContext<User>
 {

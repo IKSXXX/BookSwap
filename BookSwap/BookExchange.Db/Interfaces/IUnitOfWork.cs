@@ -1,6 +1,6 @@
-using BookExchange.Db.Entities;
+using BookSwap.Db.Entities;
 
-namespace BookExchange.Db.Interfaces;
+namespace BookSwap.Db.Interfaces;
 
 public interface IUnitOfWork : IAsyncDisposable
 {
