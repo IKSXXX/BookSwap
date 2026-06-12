@@ -6,8 +6,6 @@ public class AdminStatsViewModel
     public int BooksCount { get; set; }
     public int ExchangesCount { get; set; }
     public int ReviewsCount { get; set; }
-
-    // Дополнительные метрики
     public int BlockedUsersCount { get; set; }
     public int HiddenBooksCount { get; set; }
     public int PendingExchangesCount { get; set; }
@@ -65,7 +63,6 @@ public class SetBookOfDayViewModel
     public int BookId { get; set; }
     public List<BookCardViewModel> AvailableBooks { get; set; } = new();
     public int? CurrentBookOfDayId { get; set; }
-    // Current book display info (populated on GET)
     public string? CurrentBookTitle { get; set; }
     public string? CurrentBookAuthor { get; set; }
     public string? CurrentBookCover { get; set; }
