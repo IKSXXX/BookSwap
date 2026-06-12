@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BookSwap.Db.Data;
 
-public class BookExchangeDbContext : IdentityDbContext<User>
+public class BookSwapDbContext : IdentityDbContext<User>
 {
-    public BookExchangeDbContext(DbContextOptions<BookExchangeDbContext> options)
+    public BookSwapDbContext(DbContextOptions<BookSwapDbContext> options)
         : base(options)
     {
     }

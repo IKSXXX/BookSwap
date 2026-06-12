@@ -27,12 +27,12 @@ try
     var useMockData = builder.Configuration.GetValue<bool>("UseMockData");
 
     if (useMockData)
-        builder.Services.AddDbContext<BookExchangeDbContext>(options => options.UseInMemoryDatabase("BookSwap"));
+        builder.Services.AddDbContext<BookSwapDbContext>(options => options.UseInMemoryDatabase("BookSwap"));
     else
     {
         var connStr = builder.Configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found");
-        builder.Services.AddDbContext<BookExchangeDbContext>(options => options.UseNpgsql(connStr));
+        builder.Services.AddDbContext<BookSwapDbContext>(options => options.UseNpgsql(connStr));
     }
 
     builder.Services.AddIdentity<User, IdentityRole>(options =>
@@ -44,7 +44,7 @@ try
         options.User.RequireUniqueEmail = true;
         options.SignIn.RequireConfirmedAccount = false;
     })
-    .AddEntityFrameworkStores<BookExchangeDbContext>()
+    .AddEntityFrameworkStores<BookSwapDbContext>()
     .AddDefaultTokenProviders();
 
     builder.Services.ConfigureApplicationCookie(options =>
@@ -108,7 +108,7 @@ try
     if (useMockData)
     {
         using var scope = app.Services.CreateScope();
-        var ctx = scope.ServiceProvider.GetRequiredService<BookExchangeDbContext>();
+        var ctx = scope.ServiceProvider.GetRequiredService<BookSwapDbContext>();
         await BookSwap.Web.Mocks.MockDataStore.LoadFromDbContextAsync(ctx);
     }
 

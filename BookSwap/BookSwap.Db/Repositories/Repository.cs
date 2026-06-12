@@ -7,10 +7,10 @@ namespace BookSwap.Db.Repositories;
 
 public class Repository<T> : IRepository<T> where T : class
 {
-    protected readonly BookExchangeDbContext Context;
+    protected readonly BookSwapDbContext Context;
     protected readonly DbSet<T> DbSet;
 
-    public Repository(BookExchangeDbContext context)
+    public Repository(BookSwapDbContext context)
     {
         Context = context;
         DbSet = context.Set<T>();

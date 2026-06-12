@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BookSwap\BookSwap.Web.csproj" />
-    <ProjectReference Include="..\BookExchange.Db\BookSwap.Db.csproj" />
+    <ProjectReference Include="..\BookSwap.Db\BookSwap.Db.csproj" />
   </ItemGroup>
 
 </Project>

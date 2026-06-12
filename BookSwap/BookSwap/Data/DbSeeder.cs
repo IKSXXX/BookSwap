@@ -15,7 +15,7 @@ public static class DbSeeder
     public static async Task SeedAsync(IServiceProvider services)
     {
         using var scope = services.CreateScope();
-        var ctx = scope.ServiceProvider.GetRequiredService<BookExchangeDbContext>();
+        var ctx = scope.ServiceProvider.GetRequiredService<BookSwapDbContext>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
 

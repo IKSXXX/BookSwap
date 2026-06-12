@@ -6,7 +6,7 @@ namespace BookSwap.Db.Repositories;
 
 public class UnitOfWork : IUnitOfWork
 {
-    private readonly BookExchangeDbContext _context;
+    private readonly BookSwapDbContext _context;
 
     private IRepository<Book>? _books;
     private IRepository<BookOwner>? _bookOwners;
@@ -20,7 +20,7 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<BookOfTheDay>? _booksOfTheDay;
     private IRepository<Notification>? _notifications;
 
-    public UnitOfWork(BookExchangeDbContext context) => _context = context;
+    public UnitOfWork(BookSwapDbContext context) => _context = context;
 
     public IRepository<Book> Books => _books ??= new Repository<Book>(_context);
     public IRepository<BookOwner> BookOwners => _bookOwners ??= new Repository<BookOwner>(_context);
