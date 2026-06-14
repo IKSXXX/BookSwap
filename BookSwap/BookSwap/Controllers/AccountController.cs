@@ -15,10 +15,10 @@ public class AccountController : Controller
     private readonly SignInManager<User> _signInManager;
     private readonly IWebHostEnvironment _env;
 
-    public AccountController(UserManager<User> um, SignInManager<User> sm, IWebHostEnvironment env)
+    public AccountController(UserManager<User> userManager, SignInManager<User> signInManager, IWebHostEnvironment env)
     {
-        _userManager = um;
-        _signInManager = sm;
+        _userManager = userManager;
+        _signInManager = signInManager;
         _env = env;
     }
 
@@ -132,7 +132,7 @@ public class AccountController : Controller
         var result = await _userManager.UpdateAsync(user);
         if (!result.Succeeded)
         {
-            foreach (var e in result.Errors) ModelState.AddModelError(string.Empty, e.Description);
+            foreach (var error in result.Errors) ModelState.AddModelError(string.Empty, error.Description);
             model.ExistingAvatarPath = user.AvatarPath;
             return View(model);
         }
@@ -145,10 +145,10 @@ public class AccountController : Controller
                 model.ExistingAvatarPath = user.AvatarPath;
                 return View(model);
             }
-            var pw = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
-            if (!pw.Succeeded)
+            var passwordResult = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+            if (!passwordResult.Succeeded)
             {
-                foreach (var e in pw.Errors) ModelState.AddModelError(string.Empty, e.Description);
+                foreach (var error in passwordResult.Errors) ModelState.AddModelError(string.Empty, error.Description);
                 model.ExistingAvatarPath = user.AvatarPath;
                 return View(model);
             }

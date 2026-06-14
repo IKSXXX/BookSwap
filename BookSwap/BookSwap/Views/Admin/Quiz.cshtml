@@ -29,18 +29,18 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var q in Model)
+                    @foreach (var question in Model)
                     {
                         <tr>
-                            <td style="max-width:400px;font-style:italic;color:var(--gray-600);">«@q.Quote»</td>
-                            <td style="font-weight:600;">@q.CorrectAnswer</td>
-                            <td class="text-muted">@(q.Book?.Title ?? "—")</td>
+                            <td style="max-width:400px;font-style:italic;color:var(--gray-600);">«@question.Quote»</td>
+                            <td style="font-weight:600;">@question.CorrectAnswer</td>
+                            <td class="text-muted">@(question.Book?.Title ?? "—")</td>
                             <td>
                                 <div style="display:flex;gap:.5rem;">
-                                    <a asp-action="EditQuiz" asp-route-id="@q.Id" class="btn btn-ghost btn-sm">Редактировать</a>
+                                    <a asp-action="EditQuiz" asp-route-id="@question.Id" class="btn btn-ghost btn-sm">Редактировать</a>
                                     <form asp-action="DeleteQuiz" method="post" onsubmit="return confirm('Удалить?');">
                                         @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@q.Id" />
+                                        <input type="hidden" name="id" value="@question.Id" />
                                         <button class="btn btn-ghost btn-sm" style="color:var(--red-600);">Удалить</button>
                                     </form>
                                 </div>

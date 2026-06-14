@@ -66,5 +66,4 @@ public class SetBookOfDayViewModel
     public string? CurrentBookTitle { get; set; }
     public string? CurrentBookAuthor { get; set; }
     public string? CurrentBookCover { get; set; }
-    public string? CurrentBookGenre { get; set; }
 }

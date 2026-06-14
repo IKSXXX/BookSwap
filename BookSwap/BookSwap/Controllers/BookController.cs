@@ -19,13 +19,18 @@ public class BookController : Controller
     private readonly UserManager<User> _userManager;
     private readonly IWebHostEnvironment _env;
 
-    public BookController(IUnitOfWork uow, IMapper mapper, UserManager<User> um, IWebHostEnvironment env)
+    public BookController(IUnitOfWork uow, IMapper mapper, UserManager<User> userManager, IWebHostEnvironment env)
     {
         _uow = uow;
         _mapper = mapper;
-        _userManager = um;
+        _userManager = userManager;
         _env = env;
     }
+
+    private string CurrentUserId => _userManager.GetUserId(User)!;
+
+    private Task<bool> IsOwnerAsync(int bookId, string userId)
+        => _uow.BookOwners.AnyAsync(bo => bo.BookId == bookId && bo.UserId == userId);
 
     [HttpGet]
     [Route("Book")]
@@ -40,34 +45,34 @@ public class BookController : Controller
     {
         page = page < 1 ? 1 : page;
 
-        var q = _uow.Books.Query()
+        var query = _uow.Books.Query()
             .Where(b => !b.IsHidden)
             .Include(b => b.BookOwners).ThenInclude(bo => bo.User)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var s = search.Trim().ToLower();
-            q = q.Where(b => b.Title.ToLower().Contains(s) || b.Author.ToLower().Contains(s));
+            var searchTerm = search.Trim().ToLower();
+            query = query.Where(b => b.Title.ToLower().Contains(searchTerm) || b.Author.ToLower().Contains(searchTerm));
         }
 
         var selectedGenres = genres?.Split(',', StringSplitOptions.RemoveEmptyEntries)
             .Select(x => x.Trim()).Where(x => x.Length > 0).ToList() ?? new();
         if (selectedGenres.Count > 0)
-            q = q.Where(b => selectedGenres.Contains(b.Genre));
+            query = query.Where(b => selectedGenres.Contains(b.Genre));
 
         var selectedConditions = (conditions?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>())
             .Select(x => Enum.TryParse<BookCondition>(x, out var c) ? (BookCondition?)c : null)
             .Where(x => x != null).Select(x => x!.Value).ToList();
         if (selectedConditions.Count > 0)
-            q = q.Where(b => selectedConditions.Contains(b.Condition));
+            query = query.Where(b => selectedConditions.Contains(b.Condition));
 
         if (onlyAvailable)
-            q = q.Where(b => b.IsAvailable);
+            query = query.Where(b => b.IsAvailable);
 
-        var total = await q.CountAsync();
+        var total = await query.CountAsync();
 
-        var books = await q
+        var books = await query
             .OrderByDescending(b => b.CreatedAt)
             .Skip((page - 1) * PageSize)
             .Take(PageSize)
@@ -114,36 +119,24 @@ public class BookController : Controller
             .ToListAsync();
 
         var currentId = _userManager.GetUserId(User);
-        var isFav = currentId != null && await _uow.Favorites.AnyAsync(f => f.UserId == currentId && f.BookId == id && !f.IsWishlist);
-        var isWish = currentId != null && await _uow.Favorites.AnyAsync(f => f.UserId == currentId && f.BookId == id && f.IsWishlist);
+        var favorites = currentId == null
+            ? new List<Favorite>()
+            : (await _uow.Favorites.FindAsync(f => f.UserId == currentId && f.BookId == id)).ToList();
+        var isFav = favorites.Any(f => !f.IsWishlist);
+        var isWish = favorites.Any(f => f.IsWishlist);
 
-        var vm = new BookDetailsViewModel
+        var vm = _mapper.Map<BookDetailsViewModel>(book);
+        vm.Similar = similar.Select(_mapper.Map<BookCardViewModel>).ToList();
+        vm.Discussions = discussions.Select(d => new DiscussionListItemViewModel
         {
-            Id = book.Id,
-            Title = book.Title,
-            Author = book.Author,
-            ISBN = book.ISBN,
-            Description = book.Description,
-            CoverImagePath = book.CoverImagePath,
-            Genre = book.Genre,
-            ConditionLabel = MappingProfile.ConditionToLabel(book.Condition),
-            Year = book.Year,
-            Language = book.Language,
-            IsAvailable = book.IsAvailable,
-            Owner = _mapper.Map<OwnerSummaryViewModel>(book.PrimaryOwner ?? new User()),
-            Owners = book.BookOwners.Select(bo => _mapper.Map<OwnerSummaryViewModel>(bo.User ?? new User())).ToList(),
-            Similar = similar.Select(_mapper.Map<BookCardViewModel>).ToList(),
-            Discussions = discussions.Select(d => new DiscussionListItemViewModel
-            {
-                Id = d.Id,
-                Title = d.Title,
-                AuthorName = d.User?.UserName ?? "",
-                MessagesCount = d.Messages.Count,
-                CreatedAt = d.CreatedAt
-            }).ToList(),
-            IsFavorite = isFav,
-            IsInWishlist = isWish
-        };
+            Id = d.Id,
+            Title = d.Title,
+            AuthorName = d.User?.UserName ?? "",
+            MessagesCount = d.Messages.Count,
+            CreatedAt = d.CreatedAt
+        }).ToList();
+        vm.IsFavorite = isFav;
+        vm.IsInWishlist = isWish;
 
         return View(vm);
     }
@@ -156,7 +149,7 @@ public class BookController : Controller
     {
         if (!ModelState.IsValid) return View("Form", model);
 
-        var userId = _userManager.GetUserId(User)!;
+        var userId = CurrentUserId;
         var book = _mapper.Map<Book>(model);
 
         var path = await ImageHelper.SaveAsync(model.CoverImage, _env, "images/books");
@@ -175,10 +168,10 @@ public class BookController : Controller
     [Authorize, HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
-        var userId = _userManager.GetUserId(User)!;
+        var userId = CurrentUserId;
         var book = await _uow.Books.GetByIdAsync(id);
         if (book == null) return Forbid();
-        if (!await _uow.BookOwners.AnyAsync(bo => bo.BookId == id && bo.UserId == userId)) return Forbid();
+        if (!await IsOwnerAsync(id, userId)) return Forbid();
 
         return View("Form", new BookFormViewModel
         {
@@ -195,13 +188,11 @@ public class BookController : Controller
     {
         if (!ModelState.IsValid) return View("Form", model);
 
-        var userId = _userManager.GetUserId(User)!;
+        var userId = CurrentUserId;
         if (model.Id == null) return BadRequest();
         var book = await _uow.Books.GetByIdAsync(model.Id.Value);
         if (book == null) return Forbid();
-
-        var isOwner = await _uow.BookOwners.AnyAsync(bo => bo.BookId == model.Id && bo.UserId == userId);
-        if (!isOwner) return Forbid();
+        if (!await IsOwnerAsync(model.Id.Value, userId)) return Forbid();
 
         book.Title = model.Title;
         book.Author = model.Author;
@@ -225,12 +216,10 @@ public class BookController : Controller
     [Authorize, HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
-        var userId = _userManager.GetUserId(User)!;
+        var userId = CurrentUserId;
         var book = await _uow.Books.GetByIdAsync(id);
         if (book == null) return Forbid();
-
-        var isOwner = await _uow.BookOwners.AnyAsync(bo => bo.BookId == id && bo.UserId == userId);
-        if (!isOwner) return Forbid();
+        if (!await IsOwnerAsync(id, userId)) return Forbid();
 
         _uow.Books.Remove(book);
         await _uow.SaveChangesAsync();
@@ -240,8 +229,8 @@ public class BookController : Controller
     [Authorize, HttpGet]
     public async Task<IActionResult> FetchByIsbn(string isbn)
     {
-        var r = await GoogleBooksHelper.FetchByISBNAsync(isbn);
-        if (r == null) return Json(new { found = false });
-        return Json(new { found = true, r.Title, r.Author, r.Description, Cover = r.CoverImageUrl, r.Year });
+        var result = await GoogleBooksHelper.FetchByISBNAsync(isbn);
+        if (result == null) return Json(new { found = false });
+        return Json(new { found = true, result.Title, result.Author, result.Description, Cover = result.CoverImageUrl, result.Year });
     }
 }

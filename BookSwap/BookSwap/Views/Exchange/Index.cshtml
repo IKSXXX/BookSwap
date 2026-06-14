@@ -41,53 +41,53 @@
         else
         {
             <div class="stack">
-                @foreach (var ex in Model)
+                @foreach (var exchange in Model)
                 {
-                    <a asp-action="Details" asp-route-id="@ex.Id" class="exchange-row">
+                    <a asp-action="Details" asp-route-id="@exchange.Id" class="exchange-row">
                         <div class="exchange-row__main">
                             @* Book covers *@
                             <div class="exchange-row__book-covers">
                                 <div class="exchange-row__cover">
-                                    @if (!string.IsNullOrEmpty(ex.BookRequestedCover))
+                                    @if (!string.IsNullOrEmpty(exchange.BookRequestedCover))
                                     {
-                                        <img src="@ex.BookRequestedCover" alt="@ex.BookRequestedTitle" />
+                                        <img src="@exchange.BookRequestedCover" alt="@exchange.BookRequestedTitle" />
                                     }
                                     else
                                     {
                                         <svg class="icon" style="width:1.25rem;height:1.25rem;"><use href="#i-book"/></svg>
                                     }
                                 </div>
-                                @if (!string.IsNullOrEmpty(ex.BookOfferedCover))
+                                @if (!string.IsNullOrEmpty(exchange.BookOfferedCover))
                                 {
                                     <div class="exchange-row__cover exchange-row__cover--offered">
-                                        <img src="@ex.BookOfferedCover" alt="@ex.BookOfferedTitle" />
+                                        <img src="@exchange.BookOfferedCover" alt="@exchange.BookOfferedTitle" />
                                     </div>
                                 }
                             </div>
 
                             @* Info *@
                             <div class="exchange-row__body" style="min-width:0;">
-                                <div class="exchange-row__name-link">@ex.BookRequestedTitle</div>
+                                <div class="exchange-row__name-link">@exchange.BookRequestedTitle</div>
                                 <div class="exchange-row__sub">
-                                    @if (!string.IsNullOrEmpty(ex.BookOfferedTitle))
+                                    @if (!string.IsNullOrEmpty(exchange.BookOfferedTitle))
                                     {
-                                        <span>@ex.BookOfferedTitle · </span>
+                                        <span>@exchange.BookOfferedTitle · </span>
                                     }
-                                    @ex.OtherUserName
+                                    @exchange.OtherUserName
                                 </div>
                             </div>
                         </div>
 
                         @* Status + arrow *@
                         <div style="display:flex;align-items:center;gap:.75rem;flex-shrink:0;">
-                            <span class="badge @(ex.Status switch {
+                            <span class="badge @(exchange.Status switch {
                                 ExchangeStatus.Pending => "badge--yellow",
                                 ExchangeStatus.Accepted => "badge--blue",
                                 ExchangeStatus.Completed => "badge--green",
                                 ExchangeStatus.Rejected => "badge--red",
                                 ExchangeStatus.Cancelled => "badge--secondary",
                                 _ => ""
-                            })">@ex.StatusLabel</span>
+                            })">@exchange.StatusLabel</span>
                             <svg class="icon text-muted"><use href="#i-arrow-right"/></svg>
                         </div>
                     </a>

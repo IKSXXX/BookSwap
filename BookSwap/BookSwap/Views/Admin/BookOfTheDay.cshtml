@@ -78,17 +78,17 @@
             </div>
 
             <div class="botd-grid">
-                @foreach (var b in Model.AvailableBooks)
+                @foreach (var book in Model.AvailableBooks)
                 {
-                    var isSelected = Model.CurrentBookOfDayId == b.Id;
+                    var isSelected = Model.CurrentBookOfDayId == book.Id;
                     <button type="button"
                             class="botd-card @(isSelected ? "is-selected" : "")"
-                            data-id="@b.Id"
+                            data-id="@book.Id"
                             onclick="selectBook(this)">
                         <div class="botd-card__cover">
-                            @if (!string.IsNullOrEmpty(b.CoverImagePath))
+                            @if (!string.IsNullOrEmpty(book.CoverImagePath))
                             {
-                                <img src="@b.CoverImagePath" alt="@b.Title" />
+                                <img src="@book.CoverImagePath" alt="@book.Title" />
                             }
                             else
                             {
@@ -96,9 +96,9 @@
                             }
                         </div>
                         <div class="botd-card__info">
-                            <strong>@b.Title</strong>
-                            <span class="text-muted text-sm">@b.Author</span>
-                            <span class="badge badge--secondary" style="align-self:flex-start;">@b.Genre</span>
+                            <strong>@book.Title</strong>
+                            <span class="text-muted text-sm">@book.Author</span>
+                            <span class="badge badge--secondary" style="align-self:flex-start;">@book.Genre</span>
                         </div>
                         <div class="botd-card__check">
                             <svg class="icon"><use href="#i-check"/></svg>

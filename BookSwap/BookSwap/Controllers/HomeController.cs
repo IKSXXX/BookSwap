@@ -27,7 +27,7 @@ public class HomeController : Controller
     [HttpGet("/")]
     public async Task<IActionResult> Index()
     {
-        var bod = await _uow.BooksOfTheDay.Query()
+        var bookOfTheDay = await _uow.BooksOfTheDay.Query()
             .OrderByDescending(b => b.Date)
             .Include(b => b.Book!).ThenInclude(bk => bk.BookOwners).ThenInclude(bo => bo.User)
             .FirstOrDefaultAsync();
@@ -43,42 +43,30 @@ public class HomeController : Controller
 
         var vm = new HomeViewModel
         {
-            BookOfTheDay = bod?.Book != null ? _mapper.Map<BookCardViewModel>(bod.Book) : null,
+            BookOfTheDay = bookOfTheDay?.Book != null ? _mapper.Map<BookCardViewModel>(bookOfTheDay.Book) : null,
             RecentBooks = recent.Select(_mapper.Map<BookCardViewModel>).ToList(),
             QuizQuestion = quiz
         };
         return View(vm);
     }
 
-    //[HttpGet("/book/random")]
-    //public async Task<IActionResult> RandomBook()
-    //{
-    //    var ids = await _uow.Books.Query()
-    //        .Where(b => !b.IsHidden && b.IsAvailable)
-    //        .Select(b => b.Id)
-    //        .ToListAsync();
-    //    if (ids.Count == 0) return RedirectToAction(nameof(Index));
-    //    var id = ids[Random.Shared.Next(ids.Count)];
-    //    return RedirectToAction("Details", "Book", new { id });
-    //}
-
     [HttpGet("/quiz/next")]
     public async Task<IActionResult> QuizNext()
     {
-        var q = await GetRandomQuizAsync();
-        return Json(q);
+        var quiz = await GetRandomQuizAsync();
+        return Json(quiz);
     }
 
     [HttpPost("/quiz/answer")]
     public async Task<IActionResult> QuizAnswer([FromForm] int questionId, [FromForm] string answer)
     {
-        var q = await _uow.QuizQuestions.GetByIdAsync(questionId);
-        if (q == null) return NotFound();
+        var question = await _uow.QuizQuestions.GetByIdAsync(questionId);
+        if (question == null) return NotFound();
         return Json(new QuizAnswerResultViewModel
         {
-            IsCorrect = string.Equals(answer?.Trim(), q.CorrectAnswer.Trim(), StringComparison.OrdinalIgnoreCase),
-            CorrectAnswer = q.CorrectAnswer,
-            BookId = q.BookId
+            IsCorrect = string.Equals(answer?.Trim(), question.CorrectAnswer.Trim(), StringComparison.OrdinalIgnoreCase),
+            CorrectAnswer = question.CorrectAnswer,
+            BookId = question.BookId
         });
     }
 
@@ -169,9 +157,9 @@ public class HomeController : Controller
         return false;
     }
 
-    static int ScoreBook(Book b, string[] keywords)
+    static int ScoreBook(Book book, string[] keywords)
     {
-        var haystack = $"{b.Title} {b.Author} {b.Description} {b.Genre}".ToLowerInvariant();
+        var haystack = $"{book.Title} {book.Author} {book.Description} {book.Genre}".ToLowerInvariant();
         return keywords.Count(k => haystack.Contains(k));
     }
 
@@ -180,10 +168,10 @@ public class HomeController : Controller
         var count = await _uow.QuizQuestions.Query().CountAsync();
         if (count == 0) return null;
         var skip = Random.Shared.Next(count);
-        var q = await _uow.QuizQuestions.Query().Skip(skip).Take(1).FirstAsync();
-        var opts = new List<string> { q.CorrectAnswer, q.Option2, q.Option3, q.Option4 };
-        opts = opts.OrderBy(_ => Random.Shared.Next()).ToList();
-        return new QuizQuestionViewModel { Id = q.Id, Quote = q.Quote, Options = opts, BookId = q.BookId };
+        var question = await _uow.QuizQuestions.Query().Skip(skip).Take(1).FirstAsync();
+        var options = new List<string> { question.CorrectAnswer, question.Option2, question.Option3, question.Option4 };
+        options = options.OrderBy(_ => Random.Shared.Next()).ToList();
+        return new QuizQuestionViewModel { Id = question.Id, Quote = question.Quote, Options = options, BookId = question.BookId };
     }
 
     [HttpGet("/privacy")]

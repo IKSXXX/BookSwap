@@ -215,16 +215,16 @@
                 else
                 {
                     <div class="stack">
-                        @foreach (var d in Model.Discussions)
+                        @foreach (var discussion in Model.Discussions)
                         {
-                            <a asp-controller="Discussion" asp-action="Details" asp-route-id="@d.Id"
+                            <a asp-controller="Discussion" asp-action="Details" asp-route-id="@discussion.Id"
                                class="exchange-row">
                                 <div class="exchange-row__main">
                                     <div class="exchange-row__body">
-                                        <div class="exchange-row__name-link">@d.Title</div>
+                                        <div class="exchange-row__name-link">@discussion.Title</div>
                                         <div class="exchange-row__sub">
-                                            @d.AuthorName · @d.MessagesCount сообщений ·
-                                            @d.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")
+                                            @discussion.AuthorName · @discussion.MessagesCount сообщений ·
+                                            @discussion.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")
                                         </div>
                                     </div>
                                 </div>
@@ -246,9 +246,9 @@
                 else
                 {
                     <div class="book-grid">
-                        @foreach (var s in Model.Similar)
+                        @foreach (var similarBook in Model.Similar)
                         {
-                            <partial name="_BookCard" model="s" />
+                            <partial name="_BookCard" model="similarBook" />
                         }
                     </div>
                 }

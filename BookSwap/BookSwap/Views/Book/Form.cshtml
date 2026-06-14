@@ -76,9 +76,9 @@
                             <div class="form-group">
                                 <label asp-for="Condition" class="form-label">Состояние</label>
                                 <select asp-for="Condition" class="form-input form-select">
-                                    @foreach (var c in Enum.GetValues<BookCondition>())
+                                    @foreach (var condition in Enum.GetValues<BookCondition>())
                                     {
-                                        <option value="@c">@MappingProfile.ConditionToLabel(c)</option>
+                                        <option value="@condition">@MappingProfile.ConditionToLabel(condition)</option>
                                     }
                                 </select>
                             </div>

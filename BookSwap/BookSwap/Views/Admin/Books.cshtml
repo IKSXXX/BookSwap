@@ -23,18 +23,18 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var b in Model)
+                    @foreach (var book in Model)
                     {
-                        <tr class="@(b.IsHidden ? "row-hidden" : "")">
-                            <td><a asp-controller="Book" asp-action="Details" asp-route-id="@b.Id" style="font-weight:600;color:var(--gray-900);">@b.Title</a></td>
-                            <td class="text-muted">@b.Author</td>
-                            <td><span class="badge badge--secondary">@b.Genre</span></td>
+                        <tr class="@(book.IsHidden ? "row-hidden" : "")">
+                            <td><a asp-controller="Book" asp-action="Details" asp-route-id="@book.Id" style="font-weight:600;color:var(--gray-900);">@book.Title</a></td>
+                            <td class="text-muted">@book.Author</td>
+                            <td><span class="badge badge--secondary">@book.Genre</span></td>
                             <td>
-                                @if (b.IsHidden)
+                                @if (book.IsHidden)
                                 {
                                     <span class="badge badge--red">Скрыта</span>
                                 }
-                                else if (!b.IsAvailable)
+                                else if (!book.IsAvailable)
                                 {
                                     <span class="badge badge--yellow">Недоступна</span>
                                 }
@@ -47,12 +47,12 @@
                                 <div style="display:flex;gap:.5rem;">
                                     <form asp-action="ToggleHidden" method="post">
                                         @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@b.Id" />
-                                        <button class="btn btn-ghost btn-sm">@(b.IsHidden ? "Показать" : "Скрыть")</button>
+                                        <input type="hidden" name="id" value="@book.Id" />
+                                        <button class="btn btn-ghost btn-sm">@(book.IsHidden ? "Показать" : "Скрыть")</button>
                                     </form>
                                     <form asp-action="DeleteBook" method="post">
                                         @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@b.Id" />
+                                        <input type="hidden" name="id" value="@book.Id" />
                                         <button class="btn btn-ghost btn-sm" style="color:var(--red-600);">Удалить</button>
                                     </form>
                                 </div>

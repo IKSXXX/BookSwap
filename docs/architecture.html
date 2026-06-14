@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookSwap — как работают ChatHub, DiscussionHub и GigaChat</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1d212b; --border:#2a2f3a;
+    --text:#e6e9ef; --muted:#9aa3b2; --accent:#6ea8fe; --accent2:#7ee787;
+    --warn:#ffb454; --err:#ff7b72; --code:#0b0d12; --kw:#ff7b72; --str:#7ee787;
+    --num:#79c0ff; --com:#8b949e; --type:#ffa657; --fn:#d2a8ff;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+  nav{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;
+    background:var(--panel);border-right:1px solid var(--border);padding:24px 18px}
+  nav h1{font-size:18px;margin:0 0 4px}
+  nav .sub{color:var(--muted);font-size:12px;margin-bottom:20px}
+  nav a{display:block;color:var(--muted);padding:6px 10px;border-radius:7px;font-size:13.5px}
+  nav a:hover{background:var(--panel2);color:var(--text);text-decoration:none}
+  nav a.group{color:var(--text);font-weight:600;margin-top:14px}
+  main{padding:40px 48px;max-width:1000px}
+  section{margin-bottom:64px;scroll-margin-top:20px}
+  h2{font-size:26px;border-bottom:1px solid var(--border);padding-bottom:10px;margin-top:0}
+  h3{font-size:19px;margin-top:36px;color:var(--accent)}
+  h4{font-size:15.5px;margin-top:26px;color:var(--accent2)}
+  p{color:#cdd3dd}
+  .lead{font-size:16.5px;color:var(--text)}
+  .pill{display:inline-block;font-size:11.5px;padding:2px 9px;border-radius:20px;
+    background:var(--panel2);border:1px solid var(--border);color:var(--muted);margin-right:6px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin:18px 0}
+  .card.q{border-left:3px solid var(--accent)}
+  .card.why{border-left:3px solid var(--accent2)}
+  .card.warn{border-left:3px solid var(--warn)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}.layout{grid-template-columns:1fr}nav{position:static;height:auto}}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px}
+  th,td{border:1px solid var(--border);padding:8px 11px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--text)}
+  td code,p code,li code{background:var(--code);padding:1px 6px;border-radius:5px;
+    font-family:"SF Mono",Consolas,monospace;font-size:12.5px;color:var(--type)}
+  /* code block with per-line explanation */
+  .code{background:var(--code);border:1px solid var(--border);border-radius:10px;
+    overflow:hidden;margin:18px 0;font-family:"SF Mono",Consolas,"Courier New",monospace;font-size:13px}
+  .code .filebar{background:var(--panel2);padding:8px 14px;color:var(--muted);
+    font-size:12px;border-bottom:1px solid var(--border);font-family:inherit}
+  .ln{display:grid;grid-template-columns:46px 1fr;border-bottom:1px solid #14171d}
+  .ln:last-child{border-bottom:0}
+  .ln .num{color:#4b5263;text-align:right;padding:7px 12px 7px 0;user-select:none;background:#0a0c10}
+  .ln .src{padding:7px 14px;white-space:pre-wrap;line-height:1.5}
+  .ln.exp{grid-template-columns:46px 1fr}
+  .ln.exp .src{color:var(--muted);font-style:italic;background:#11141a;border-left:2px solid var(--accent)}
+  .ln.exp .num{background:#11141a}
+  .kw{color:var(--kw)} .str{color:var(--str)} .num2{color:var(--num)}
+  .com{color:var(--com)} .typ{color:var(--type)} .fn{color:var(--fn)}
+  .flow{background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    padding:22px;margin:18px 0;font-family:"SF Mono",Consolas,monospace;font-size:12.5px;
+    color:var(--text);overflow:auto;white-space:pre;line-height:1.5}
+  .tag{font-size:11px;padding:1px 7px;border-radius:5px;background:#243; color:var(--accent2);margin-left:8px}
+  .tag.c{background:#234;color:var(--accent)}
+  ol li,ul li{margin:5px 0}
+  hr{border:0;border-top:1px solid var(--border);margin:40px 0}
+  .toc-top{color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <h1>BookSwap</h1>
+  <div class="sub">Архитектура реального времени и ИИ</div>
+  <a href="#intro">Введение</a>
+  <a href="#concepts">Базовые понятия: SignalR, Hub, токены</a>
+
+  <a class="group" href="#chathub">1. ChatHub</a>
+  <a href="#chathub-why">— Зачем и что решает</a>
+  <a href="#chathub-flow">— Поток данных</a>
+  <a href="#chathub-code">— Разбор по строкам</a>
+  <a href="#chathub-client">— Клиент (браузер)</a>
+
+  <a class="group" href="#dischub">2. DiscussionHub</a>
+  <a href="#dischub-why">— Зачем и отличия от чата</a>
+  <a href="#dischub-code">— Разбор по строкам</a>
+
+  <a class="group" href="#giga">3. GigaChatService</a>
+  <a href="#giga-why">— Зачем и что решает</a>
+  <a href="#giga-flow">— Поток данных</a>
+  <a href="#giga-token">— Получение токена</a>
+  <a href="#giga-ask">— Запрос к модели</a>
+  <a href="#giga-reco">— Рекомендации книг</a>
+  <a href="#giga-ctrl">— Контроллер /ai/recommend</a>
+
+  <a class="group" href="#wiring">4. Подключение (Program.cs)</a>
+  <a class="group" href="#setup">5. Настройка</a>
+</nav>
+
+<main>
+
+<!-- ============ INTRO ============ -->
+<section id="intro">
+  <h2>Введение</h2>
+  <p class="lead">Это документация трёх ключевых подсистем учебного проекта <b>BookSwap</b> (книгообмен на ASP.NET Core). Все три отвечают за «живое» взаимодействие пользователя с сервером.</p>
+  <div class="grid">
+    <div class="card">
+      <span class="pill">SignalR</span><b>ChatHub</b>
+      <p>Личный чат двух пользователей внутри конкретного обмена книгами. Сообщения летят мгновенно, без перезагрузки страницы.</p>
+    </div>
+    <div class="card">
+      <span class="pill">SignalR</span><b>DiscussionHub</b>
+      <p>Публичное обсуждение (комната-тред). То же реальное время, но открыто для всех участников обсуждения.</p>
+    </div>
+    <div class="card">
+      <span class="pill">HTTP + ИИ</span><b>GigaChatService</b>
+      <p>Обёртка над облачным ИИ Сбера. Подбирает книги из каталога по свободному запросу пользователя.</p>
+    </div>
+    <div class="card why">
+      <b>Общая идея</b>
+      <p>Два хаба — это <b>двусторонний</b> канал (сервер сам шлёт данные в браузер). GigaChat — <b>односторонний</b> запрос-ответ к внешнему API. Ниже каждая строка разобрана отдельно.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONCEPTS ============ -->
+<section id="concepts">
+  <h2>Базовые понятия (нужно для всего ниже)</h2>
+
+  <h4>Что такое SignalR и зачем он</h4>
+  <p>Обычный HTTP работает по схеме «браузер спросил — сервер ответил». Сервер <b>не может сам</b> разбудить браузер и что-то прислать. Для чата это плохо: пришлось бы каждую секунду опрашивать сервер («есть новые сообщения?»).</p>
+  <p><b>SignalR</b> — библиотека ASP.NET Core, которая держит <b>постоянное соединение</b> (по возможности WebSocket) между браузером и сервером. По нему сервер может в любой момент <b>сам</b> отправить сообщение в браузер. Это решает задачу мгновенной доставки.</p>
+
+  <h4>Что такое Hub</h4>
+  <p><b>Hub</b> — это класс на сервере, методы которого браузер вызывает напрямую (RPC, удалённый вызов процедур). А внутри хаба сервер может вызвать JS-функции в браузере. То есть Hub — это «телефонная станция» между фронтом и бэком.</p>
+  <table>
+    <tr><th>Направление</th><th>Как выглядит в коде</th><th>Смысл</th></tr>
+    <tr><td>Браузер → Сервер</td><td><code>conn.invoke('SendMessage', ...)</code></td><td>JS вызывает метод <code>SendMessage</code> в C#-хабе</td></tr>
+    <tr><td>Сервер → Браузер</td><td><code>Clients.Group(...).SendAsync("ReceiveMessage", ...)</code></td><td>C# вызывает JS-обработчик <code>conn.on('ReceiveMessage')</code></td></tr>
+  </table>
+
+  <h4>Группы (Groups)</h4>
+  <p>В хабе много подключений сразу (все онлайн-пользователи). <b>Группа</b> — это именованный набор подключений. Отправив сообщение в группу <code>exchange-42</code>, мы доставим его только тем, кто состоит в этой группе, а не всем подряд. Так чат обмена №42 не «течёт» в чат обмена №43.</p>
+
+  <h4>OAuth-токен (для GigaChat)</h4>
+  <p>GigaChat не пускает по логину/паролю на каждый запрос. Сначала ты обмениваешь свой постоянный <b>ключ авторизации</b> на временный <b>access token</b> (живёт ~30 мин), и уже этим токеном подписываешь запросы к модели. Это стандарт OAuth 2.0: краткоживущий токен безопаснее постоянного секрета.</p>
+</section>
+
+<!-- ============ CHATHUB ============ -->
+<section id="chathub">
+  <h2>1. ChatHub — личный чат обмена</h2>
+  <p class="toc-top">Файл: <code>BookSwap/Hubs/ChatHub.cs</code></p>
+
+  <div id="chathub-why" class="card q">
+    <h4 style="margin-top:0">Зачем эта технология / что она решает</h4>
+    <p>Когда два пользователя договариваются об обмене книгами, им нужен <b>приватный чат</b>. Требования: сообщения видят <b>только</b> отправитель и получатель этого обмена; доставка мгновенная; история сохраняется в БД. ChatHub решает всё это одним классом — он и проверяет права, и пишет в базу, и рассылает сообщение в реальном времени.</p>
+  </div>
+
+  <h3 id="chathub-flow">Поток данных: откуда, куда, что идёт</h3>
+  <div class="flow">Браузер A (отправитель)                  СЕРВЕР (ChatHub)                     База данных
+─────────────────────                  ────────────────                     ───────────
+ 1. conn.invoke('SendMessage', 42,──────►  SendMessage(42, "Привет")
+        "Привет")                            │
+                                             ├─ проверка: длина текста ок?
+                                             ├─ проверка: я участник обмена 42?
+                                             ├─ создать Message ───────────────────►  INSERT INTO Messages
+                                             │                                        (сохранено)
+                                             └─ Clients.Group("exchange-42")
+                                                   .SendAsync("ReceiveMessage", {...})
+                                                        │
+        ┌────────────────────────────────────────────┴───────────────┐
+        ▼                                                              ▼
+ Браузер A: conn.on('ReceiveMessage')                  Браузер B: conn.on('ReceiveMessage')
+   рисует пузырь справа (моё)                             рисует пузырь слева (чужое)</div>
+  <p>Ключевой момент: сообщение возвращается <b>обоим</b> участникам группы, включая самого автора. Поэтому браузер не дорисовывает сообщение сам при отправке — он ждёт, пока сервер его «вернёт». Это гарантирует, что на экране ровно то, что попало в базу.</p>
+
+  <h3 id="chathub-code">Разбор по строкам</h3>
+
+  <div class="code">
+    <div class="filebar">ChatHub.cs — заголовок и зависимости</div>
+    <div class="ln"><span class="num">1</span><span class="src"><span class="kw">using</span> BookExchange.Db.Entities;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Подключаем сущности БД — отсюда берётся класс Message и User.</span></div>
+    <div class="ln"><span class="num">2</span><span class="src"><span class="kw">using</span> BookExchange.Db.Interfaces;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Интерфейс IUnitOfWork — единая точка доступа к репозиториям БД.</span></div>
+    <div class="ln"><span class="num">3</span><span class="src"><span class="kw">using</span> Microsoft.AspNetCore.Authorization;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Даёт атрибут [Authorize] — требование «только вошедшие пользователи».</span></div>
+    <div class="ln"><span class="num">4</span><span class="src"><span class="kw">using</span> Microsoft.AspNetCore.Identity;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">UserManager&lt;User&gt; — сервис Identity для работы с текущим пользователем.</span></div>
+    <div class="ln"><span class="num">5</span><span class="src"><span class="kw">using</span> Microsoft.AspNetCore.SignalR;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Сам SignalR — базовый класс Hub, Clients, Groups, Context.</span></div>
+    <div class="ln"><span class="num">9</span><span class="src"><span class="typ">[Authorize]</span></span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Запрещает анонимам подключаться к хабу. Аноним даже не установит соединение.</span></div>
+    <div class="ln"><span class="num">10</span><span class="src"><span class="kw">public class</span> <span class="typ">ChatHub</span> : <span class="typ">Hub</span></span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Наследуемся от Hub — так класс получает доступ к Clients/Groups/Context.</span></div>
+  </div>
+
+  <div class="code">
+    <div class="filebar">ChatHub.cs — внедрение зависимостей (DI)</div>
+    <div class="ln"><span class="num">12</span><span class="src"><span class="kw">readonly</span> <span class="typ">IUnitOfWork</span> _uow;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Поле для доступа к БД (репозитории Exchanges, Messages).</span></div>
+    <div class="ln"><span class="num">13</span><span class="src"><span class="kw">readonly</span> <span class="typ">UserManager</span>&lt;<span class="typ">User</span>&gt; _um;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Поле для определения, кто сейчас пишет (его Id, имя).</span></div>
+    <div class="ln"><span class="num">15</span><span class="src"><span class="kw">public</span> <span class="fn">ChatHub</span>(<span class="typ">IUnitOfWork</span> uow, <span class="typ">UserManager</span>&lt;<span class="typ">User</span>&gt; um)</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Конструктор. ASP.NET сам подставит сюда uow и um (Dependency Injection).</span></div>
+    <div class="ln"><span class="num">17-18</span><span class="src">    _uow = uow; _um = um;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Сохраняем переданные сервисы в поля, чтобы пользоваться ниже.</span></div>
+  </div>
+
+  <h4>Метод JoinGroup — вход в комнату чата</h4>
+  <div class="code">
+    <div class="filebar">ChatHub.cs — JoinGroup</div>
+    <div class="ln"><span class="num">21</span><span class="src"><span class="kw">public async</span> <span class="typ">Task</span> <span class="fn">JoinGroup</span>(<span class="kw">int</span> exchangeId)</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Метод вызывается из браузера. Аргумент exchangeId — номер обмена, в чат которого хотят войти.</span></div>
+    <div class="ln"><span class="num">23</span><span class="src"><span class="kw">var</span> userId = _um.<span class="fn">GetUserId</span>(Context.User!);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Context.User — личность подключённого. Берём его Id. Так сервер знает, КТО пишет (нельзя подделать с фронта).</span></div>
+    <div class="ln"><span class="num">24</span><span class="src"><span class="kw">var</span> exchange = <span class="kw">await</span> _uow.Exchanges.<span class="fn">GetByIdAsync</span>(exchangeId);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Загружаем обмен из БД, чтобы проверить, существует ли он и кто его участники.</span></div>
+    <div class="ln"><span class="num">25</span><span class="src"><span class="kw">if</span> (exchange == <span class="kw">null</span>) <span class="kw">return</span>;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Нет такого обмена — молча выходим, в группу не добавляем.</span></div>
+    <div class="ln"><span class="num">26</span><span class="src"><span class="kw">if</span> (exchange.SenderId != userId &amp;&amp; exchange.ReceiverId != userId) <span class="kw">return</span>;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">ГЛАВНАЯ проверка прав: если ты не отправитель и не получатель — тебя в чужой чат не пустят.</span></div>
+    <div class="ln"><span class="num">28</span><span class="src"><span class="kw">await</span> Groups.<span class="fn">AddToGroupAsync</span>(Context.ConnectionId, $<span class="str">"exchange-{exchangeId}"</span>);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Добавляем ЭТО подключение в группу с именем «exchange-42». Теперь все рассылки в эту группу дойдут до данного браузера.</span></div>
+  </div>
+
+  <h4>Метод SendMessage — отправка сообщения</h4>
+  <div class="code">
+    <div class="filebar">ChatHub.cs — SendMessage</div>
+    <div class="ln"><span class="num">31</span><span class="src"><span class="kw">public async</span> <span class="typ">Task</span> <span class="fn">SendMessage</span>(<span class="kw">int</span> exchangeId, <span class="kw">string</span> text)</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Браузер передаёт номер обмена и текст сообщения.</span></div>
+    <div class="ln"><span class="num">33</span><span class="src"><span class="kw">if</span> (<span class="kw">string</span>.<span class="fn">IsNullOrWhiteSpace</span>(text) || text.Length &gt; 1000) <span class="kw">return</span>;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Валидация: пустые сообщения и длиннее 1000 символов отбрасываем (защита от мусора и перегрузки).</span></div>
+    <div class="ln"><span class="num">35-38</span><span class="src">  userId = ...; exchange = ...; <span class="kw">if</span> (...) <span class="kw">return</span>;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Повторно проверяем права прямо при отправке. Нельзя доверять только JoinGroup — отправку проверяем заново.</span></div>
+    <div class="ln"><span class="num">40</span><span class="src"><span class="kw">var</span> user = <span class="kw">await</span> _um.<span class="fn">FindByIdAsync</span>(userId!);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Берём полные данные автора, чтобы показать его имя получателю.</span></div>
+    <div class="ln"><span class="num">42-48</span><span class="src"><span class="kw">var</span> msg = <span class="kw">new</span> <span class="typ">Message</span> { ExchangeRequestId=..., SenderId=..., Text=text.Trim(), SentAt=<span class="typ">DateTime</span>.UtcNow };</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Собираем объект сообщения: к какому обмену, от кого, очищенный текст, метка времени в UTC.</span></div>
+    <div class="ln"><span class="num">49-50</span><span class="src"><span class="kw">await</span> _uow.Messages.<span class="fn">AddAsync</span>(msg); <span class="kw">await</span> _uow.<span class="fn">SaveChangesAsync</span>();</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Сохраняем в БД. Сначала сохранить, ПОТОМ рассылать — чтобы доставленное совпадало с сохранённым.</span></div>
+    <div class="ln"><span class="num">52</span><span class="src"><span class="kw">await</span> Clients.<span class="fn">Group</span>($<span class="str">"exchange-{exchangeId}"</span>).<span class="fn">SendAsync</span>(<span class="str">"ReceiveMessage"</span>, <span class="kw">new</span></span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Сервер САМ вызывает JS-функцию «ReceiveMessage» у всех в группе. Это и есть push в реальном времени.</span></div>
+    <div class="ln"><span class="num">54-57</span><span class="src">{ senderId, senderName, text, sentAt }</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Полезная нагрузка: кто прислал (Id и имя), текст и время. Браузер по senderId решит — слева или справа рисовать пузырь.</span></div>
+  </div>
+
+  <h3 id="chathub-client">Клиентская часть (браузер)</h3>
+  <p class="toc-top">Файл: <code>Views/Exchange/Details.cshtml</code></p>
+  <div class="code">
+    <div class="filebar">Details.cshtml — JS клиента чата</div>
+    <div class="ln"><span class="num">253</span><span class="src"><span class="kw">const</span> exchangeId = <span class="fn">parseInt</span>(box.dataset.exchangeId);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Берём номер обмена из data-атрибута HTML-блока сообщений.</span></div>
+    <div class="ln"><span class="num">257</span><span class="src"><span class="kw">const</span> conn = <span class="kw">new</span> signalR.<span class="fn">HubConnectionBuilder</span>().<span class="fn">withUrl</span>(<span class="str">'/hubs/chat'</span>).<span class="fn">withAutomaticReconnect</span>().<span class="fn">build</span>();</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Создаём соединение к хабу по адресу /hubs/chat. withAutomaticReconnect — авто-переподключение при обрыве.</span></div>
+    <div class="ln"><span class="num">259</span><span class="src">conn.<span class="fn">on</span>(<span class="str">'ReceiveMessage'</span>, m =&gt; {</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Регистрируем обработчик: что делать, когда СЕРВЕР пришлёт сообщение. m — тот объект из строки 52-57.</span></div>
+    <div class="ln"><span class="num">262</span><span class="src"><span class="kw">const</span> mine = m.senderId === currentUserId;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Сравниваем автора с собой → решаем, моё сообщение или чужое (для выравнивания пузыря).</span></div>
+    <div class="ln"><span class="num">268</span><span class="src">row.<span class="fn">querySelector</span>(<span class="str">'.chat-text'</span>).textContent = m.text;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Вставляем текст через textContent (не innerHTML) — защита от XSS, теги не выполнятся.</span></div>
+    <div class="ln"><span class="num">274-275</span><span class="src"><span class="kw">await</span> conn.<span class="fn">start</span>(); <span class="kw">await</span> conn.<span class="fn">invoke</span>(<span class="str">'JoinGroup'</span>, exchangeId);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Открываем соединение, затем вызываем серверный JoinGroup — входим в свою комнату.</span></div>
+    <div class="ln"><span class="num">285</span><span class="src"><span class="kw">await</span> conn.<span class="fn">invoke</span>(<span class="str">'SendMessage'</span>, exchangeId, text);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">При отправке формы вызываем серверный SendMessage. Сами в DOM ничего не дорисовываем — ждём ответный push (строка 259).</span></div>
+  </div>
+</section>
+
+<hr>
+
+<!-- ============ DISCUSSIONHUB ============ -->
+<section id="dischub">
+  <h2>2. DiscussionHub — публичные обсуждения</h2>
+  <p class="toc-top">Файл: <code>BookSwap/Hubs/DiscussionHub.cs</code></p>
+
+  <div id="dischub-why" class="card q">
+    <h4 style="margin-top:0">Зачем и чем отличается от ChatHub</h4>
+    <p>DiscussionHub — это <b>тот же механизм</b> SignalR, но для <b>открытых тредов</b>, а не приватной переписки. Поэтому код почти идентичен ChatHub, но с двумя отличиями:</p>
+    <ul>
+      <li><b>Нет проверки участников.</b> Обсуждение публичное — любой вошедший пользователь может присоединиться к комнате <code>discussion-{id}</code> и писать.</li>
+      <li><b>Лимит длины 2000</b> (а не 1000), так как в обсуждениях пишут более развёрнуто.</li>
+    </ul>
+    <p>Это иллюстрирует мысль: SignalR-хаб — переиспользуемый шаблон. Меняется только бизнес-логика прав и сохраняемая сущность (<code>DiscussionMessage</code> вместо <code>Message</code>).</p>
+  </div>
+
+  <h3 id="dischub-code">Разбор по строкам (только отличия)</h3>
+  <div class="code">
+    <div class="filebar">DiscussionHub.cs</div>
+    <div class="ln"><span class="num">21</span><span class="src"><span class="kw">public async</span> <span class="typ">Task</span> <span class="fn">JoinDiscussion</span>(<span class="kw">int</span> discussionId)</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Вход в комнату обсуждения по его id.</span></div>
+    <div class="ln"><span class="num">23</span><span class="src"><span class="kw">await</span> Groups.<span class="fn">AddToGroupAsync</span>(Context.ConnectionId, $<span class="str">"discussion-{discussionId}"</span>);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Сразу добавляем в группу БЕЗ проверки прав — обсуждение открыто для всех.</span></div>
+    <div class="ln"><span class="num">26</span><span class="src"><span class="kw">public async</span> <span class="typ">Task</span> <span class="fn">SendMessage</span>(<span class="kw">int</span> discussionId, <span class="kw">string</span> text)</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Отправка в обсуждение.</span></div>
+    <div class="ln"><span class="num">28</span><span class="src"><span class="kw">if</span> (... || text.Length &gt; 2000) <span class="kw">return</span>;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Тот же контроль, но лимит 2000 символов.</span></div>
+    <div class="ln"><span class="num">33-38</span><span class="src"><span class="kw">var</span> msg = <span class="kw">new</span> <span class="typ">DiscussionMessage</span> { DiscussionId=..., UserId=..., Text=text.Trim() };</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Другая сущность БД — DiscussionMessage. Время (CreatedAt) проставляется самой сущностью по умолчанию.</span></div>
+    <div class="ln"><span class="num">42-47</span><span class="src"><span class="kw">await</span> Clients.<span class="fn">Group</span>($<span class="str">"discussion-{discussionId}"</span>).<span class="fn">SendAsync</span>(<span class="str">"ReceiveMessage"</span>, { userName, text, createdAt });</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Рассылаем всем в комнате обсуждения. senderId не нужен — в публичном треде все сообщения рисуются одинаково (слева).</span></div>
+  </div>
+
+  <h4>Клиент обсуждения (Views/Discussion/Details.cshtml)</h4>
+  <div class="code">
+    <div class="filebar">Discussion/Details.cshtml — JS</div>
+    <div class="ln"><span class="num">67</span><span class="src"><span class="kw">const</span> conn = <span class="kw">new</span> signalR.<span class="fn">HubConnectionBuilder</span>().<span class="fn">withUrl</span>(<span class="str">'/hubs/discussion'</span>)...<span class="fn">build</span>();</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">То же, но адрес другого хаба — /hubs/discussion.</span></div>
+    <div class="ln"><span class="num">86</span><span class="src"><span class="kw">await</span> conn.<span class="fn">invoke</span>(<span class="str">'JoinDiscussion'</span>, discussionId);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Вызываем JoinDiscussion вместо JoinGroup.</span></div>
+    <div class="ln"><span class="num">96</span><span class="src"><span class="kw">await</span> conn.<span class="fn">invoke</span>(<span class="str">'SendMessage'</span>, discussionId, text);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Отправка идентична чату по структуре.</span></div>
+  </div>
+</section>
+
+<hr>
+
+<!-- ============ GIGACHAT ============ -->
+<section id="giga">
+  <h2>3. GigaChatService — ИИ-рекомендации книг</h2>
+  <p class="toc-top">Файл: <code>BookSwap/Services/GigaChatService.cs</code></p>
+
+  <div id="giga-why" class="card q">
+    <h4 style="margin-top:0">Зачем эта технология / что решает</h4>
+    <p>Пользователь пишет свободным языком: «хочу что-то мрачное про космос» или «как 1984». Обычный поиск по словам тут бессилен. <b>GigaChat</b> (большая языковая модель Сбера) понимает смысл запроса и выбирает подходящие книги <b>из нашего каталога</b>. Сервис <code>GigaChatService</code> — это обёртка, которая прячет всю возню с авторизацией и HTTP за двумя простыми методами.</p>
+    <p>Важная защита: если ИИ недоступен или сломался, контроллер <b>откатывается на обычный поиск по ключевым словам</b> — сайт не падает.</p>
+  </div>
+
+  <h3 id="giga-flow">Поток данных: откуда, куда, что идёт</h3>
+  <div class="flow">Браузер                Контроллер /ai/recommend        GigaChatService          API Сбербанка
+───────                ────────────────────────        ───────────────          ─────────────
+POST query ──────────► AiRecommend(query)
+"мрачное про космос"     │
+                         ├─ берём список книг из БД
+                         ├─ GetBookRecommendationsAsync(query, list)
+                         │        │
+                         │        ├─ GetAccessTokenAsync()
+                         │        │     токен жив? ──нет──► POST /oauth (ключ) ──► access_token
+                         │        │                          ◄─────────────────── (живёт 30 мин)
+                         │        ├─ AskAsync(systemPrompt, userMessage)
+                         │        │        POST /chat/completions ──────────────► модель GigaChat
+                         │        │        ◄──────────────────────────────────── JSON-ответ
+                         │        └─ парсим JSON ["1984", ...]
+                         ├─ сопоставляем названия с книгами БД (FuzzyMatch)
+                         └─ если пусто → поиск по ключевым словам (fallback)
+        ◄──────────────  Json({ books, source })</div>
+
+  <h3 id="giga-token">Конструктор и получение токена</h3>
+  <div class="card warn">
+    <b>Почему токен кэшируется и блокируется семафором?</b>
+    <p>Получать новый токен на каждый запрос — медленно и Сбер ограничивает частоту. Поэтому токен <b>хранится в поле</b> и переиспользуется ~30 минут. А <code>SemaphoreSlim</code> не даёт двум одновременным запросам обновлять токен дважды (защита от гонки).</p>
+  </div>
+  <div class="code">
+    <div class="filebar">GigaChatService.cs — поля и конструктор</div>
+    <div class="ln"><span class="num">13</span><span class="src"><span class="kw">private string</span>? _accessToken;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Здесь храним текущий токен, чтобы не запрашивать заново каждый раз.</span></div>
+    <div class="ln"><span class="num">14</span><span class="src"><span class="kw">private</span> <span class="typ">DateTime</span> _tokenExpiresAt = <span class="typ">DateTime</span>.MinValue;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Когда токен истекает. MinValue = «токена ещё нет, нужно получить».</span></div>
+    <div class="ln"><span class="num">15</span><span class="src"><span class="kw">private readonly</span> <span class="typ">SemaphoreSlim</span> _tokenLock = <span class="kw">new</span>(1, 1);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Замок «пропускать по одному». Не даёт нескольким потокам обновлять токен одновременно.</span></div>
+    <div class="ln"><span class="num">17</span><span class="src"><span class="kw">const string</span> AuthUrl = <span class="str">"https://ngw.devices.sberbank.ru:9443/api/v2/oauth"</span>;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Адрес, куда шлём ключ, чтобы получить токен.</span></div>
+    <div class="ln"><span class="num">18</span><span class="src"><span class="kw">const string</span> ChatUrl = <span class="str">"https://gigachat.devices.sberbank.ru/api/v1/chat/completions"</span>;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Адрес самой модели, куда шлём вопрос пользователя.</span></div>
+    <div class="ln"><span class="num">22-23</span><span class="src"><span class="kw">var</span> handler = <span class="kw">new</span> <span class="typ">HttpClientHandler</span>(); <span class="kw">var</span> acceptAnyCert = env.<span class="fn">IsDevelopment</span>() || config.<span class="fn">GetValue</span>&lt;<span class="kw">bool</span>&gt;(<span class="str">"GigaChat:AcceptAnyServerCertificate"</span>);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">У Сбера корневой сертификат часто не установлен в системе. В разработке разрешаем «принять любой сертификат».</span></div>
+    <div class="ln"><span class="num">28</span><span class="src">handler.ServerCertificateCustomValidationCallback = <span class="typ">HttpClientHandler</span>.DangerousAcceptAnyServerCertificateValidator;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Отключаем проверку TLS-сертификата. «Dangerous» в названии не зря — только для dev! В проде лучше поставить сертификаты Минцифры.</span></div>
+    <div class="ln"><span class="num">31</span><span class="src">_http = <span class="kw">new</span> <span class="typ">HttpClient</span>(handler);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Создаём HTTP-клиент с этим handler. Один клиент на весь сервис (он Singleton — см. Program.cs).</span></div>
+  </div>
+
+  <div class="code">
+    <div class="filebar">GigaChatService.cs — GetAccessTokenAsync</div>
+    <div class="ln"><span class="num">38-39</span><span class="src"><span class="kw">if</span> (_accessToken != <span class="kw">null</span> &amp;&amp; <span class="typ">DateTime</span>.UtcNow &lt; _tokenExpiresAt.<span class="fn">AddMinutes</span>(-5)) <span class="kw">return</span> _accessToken;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Быстрый путь: если токен есть и до истечения &gt;5 мин — сразу возвращаем его, без обращения к Сберу. (-5 мин — запас, чтобы не использовать почти просроченный.)</span></div>
+    <div class="ln"><span class="num">41</span><span class="src"><span class="kw">await</span> _tokenLock.<span class="fn">WaitAsync</span>();</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Берём замок. Если другой поток уже обновляет токен — ждём здесь.</span></div>
+    <div class="ln"><span class="num">44-45</span><span class="src"><span class="kw">if</span> (_accessToken != <span class="kw">null</span> &amp;&amp; ...) <span class="kw">return</span> _accessToken;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Повторная проверка ВНУТРИ замка («double-check»). Пока мы ждали, другой поток мог уже обновить токен — тогда новый запрос не нужен.</span></div>
+    <div class="ln"><span class="num">47-48</span><span class="src"><span class="kw">var</span> authKey = _config[<span class="str">"GigaChat:AuthorizationKey"</span>] ?? <span class="kw">throw</span> ...;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Читаем секретный ключ из конфигурации. Нет ключа — сразу понятная ошибка.</span></div>
+    <div class="ln"><span class="num">50-52</span><span class="src">request.Headers.<span class="fn">Add</span>(<span class="str">"RqUID"</span>, <span class="typ">Guid</span>.<span class="fn">NewGuid</span>()...); request.Headers.<span class="fn">Add</span>(<span class="str">"Authorization"</span>, $<span class="str">"Basic {authKey}"</span>);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">RqUID — уникальный id запроса (требование Сбера для трассировки). Authorization: Basic + наш ключ.</span></div>
+    <div class="ln"><span class="num">53-56</span><span class="src">request.Content = <span class="kw">new</span> <span class="typ">FormUrlEncodedContent</span>( { [<span class="str">"scope"</span>] = <span class="str">"GIGACHAT_API_PERS"</span> } );</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Тело запроса: scope = персональный доступ (для физлиц). У корпоративных — другой scope.</span></div>
+    <div class="ln"><span class="num">58-59</span><span class="src"><span class="kw">var</span> response = <span class="kw">await</span> _http.<span class="fn">SendAsync</span>(request); response.<span class="fn">EnsureSuccessStatusCode</span>();</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Отправляем запрос и требуем успешный код ответа (иначе исключение).</span></div>
+    <div class="ln"><span class="num">61-65</span><span class="src"><span class="kw">var</span> doc = <span class="typ">JsonDocument</span>.<span class="fn">Parse</span>(json); _accessToken = root.<span class="fn">GetProperty</span>(<span class="str">"access_token"</span>).<span class="fn">GetString</span>();</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Разбираем JSON-ответ и достаём поле access_token — сам токен.</span></div>
+    <div class="ln"><span class="num">68-69</span><span class="src"><span class="kw">var</span> expiresAt = root.<span class="fn">GetProperty</span>(<span class="str">"expires_at"</span>).<span class="fn">GetInt64</span>(); _tokenExpiresAt = <span class="typ">DateTimeOffset</span>.<span class="fn">FromUnixTimeMilliseconds</span>(expiresAt).UtcDateTime;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Сбер возвращает время истечения в Unix-миллисекундах. Переводим в обычный DateTime и запоминаем.</span></div>
+    <div class="ln"><span class="num">75-76</span><span class="src"><span class="kw">finally</span> { _tokenLock.<span class="fn">Release</span>(); }</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">ОБЯЗАТЕЛЬНО освобождаем замок, даже если была ошибка. Иначе все следующие запросы зависнут навсегда.</span></div>
+  </div>
+
+  <h3 id="giga-ask">AskAsync — собственно вопрос к модели</h3>
+  <div class="code">
+    <div class="filebar">GigaChatService.cs — AskAsync</div>
+    <div class="ln"><span class="num">80</span><span class="src"><span class="kw">public async</span> <span class="typ">Task</span>&lt;<span class="kw">string</span>&gt; <span class="fn">AskAsync</span>(<span class="kw">string</span> systemPrompt, <span class="kw">string</span> userMessage)</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Универсальный метод: systemPrompt — «инструкция» модели (роль/правила), userMessage — вопрос пользователя.</span></div>
+    <div class="ln"><span class="num">82</span><span class="src"><span class="kw">var</span> token = <span class="kw">await</span> <span class="fn">GetAccessTokenAsync</span>();</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Сначала получаем (или берём из кэша) токен.</span></div>
+    <div class="ln"><span class="num">84-94</span><span class="src"><span class="kw">var</span> body = <span class="kw">new</span> { model=<span class="str">"GigaChat"</span>, messages=[ {role:<span class="str">"system"</span>,...}, {role:<span class="str">"user"</span>,...} ], temperature=<span class="num2">0.7</span>, max_tokens=<span class="num2">1024</span> };</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Тело запроса к модели. system задаёт правила, user — запрос. temperature 0.7 — умеренная «творческость». max_tokens 1024 — ограничение длины ответа.</span></div>
+    <div class="ln"><span class="num">97</span><span class="src">request.Headers.Authorization = <span class="kw">new</span> <span class="typ">AuthenticationHeaderValue</span>(<span class="str">"Bearer"</span>, token);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Подписываем запрос токеном: заголовок «Bearer <токен>». Это уже не Basic-ключ, а полученный access token.</span></div>
+    <div class="ln"><span class="num">98-101</span><span class="src">request.Content = <span class="kw">new</span> <span class="typ">StringContent</span>(<span class="typ">JsonSerializer</span>.<span class="fn">Serialize</span>(body), Encoding.UTF8, <span class="str">"application/json"</span>);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Сериализуем тело в JSON и отправляем как application/json в кодировке UTF-8.</span></div>
+    <div class="ln"><span class="num">105-110</span><span class="src"><span class="kw">if</span> (!response.IsSuccessStatusCode) { ... _logger.<span class="fn">LogError</span>(...); <span class="kw">throw new</span> <span class="typ">HttpRequestException</span>(...); }</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Если модель вернула ошибку — логируем тело ошибки и бросаем исключение (его поймает контроллер для fallback).</span></div>
+    <div class="ln"><span class="num">112-118</span><span class="src"><span class="kw">var</span> content = doc.RootElement.<span class="fn">GetProperty</span>(<span class="str">"choices"</span>)[<span class="num2">0</span>].<span class="fn">GetProperty</span>(<span class="str">"message"</span>).<span class="fn">GetProperty</span>(<span class="str">"content"</span>).<span class="fn">GetString</span>();</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Достаём текст ответа: choices[0] → message → content. Это стандартная форма ответа chat-completions.</span></div>
+  </div>
+
+  <h3 id="giga-reco">GetBookRecommendationsAsync — рекомендации именно из каталога</h3>
+  <div class="card why">
+    <b>Хитрость промпта.</b> Модели передают <b>весь список доступных книг</b> и жёстко требуют вернуть <b>только JSON-массив названий</b> из этого списка. Так ИИ не выдумывает несуществующие книги, а выбирает из наших.
+  </div>
+  <div class="code">
+    <div class="filebar">GigaChatService.cs — GetBookRecommendationsAsync</div>
+    <div class="ln"><span class="num">125-136</span><span class="src"><span class="kw">var</span> systemPrompt = <span class="str">@"Ты — помощник... Выбирай ТОЛЬКО книги из списка... Отвечай ТОЛЬКО JSON массивом..."</span>;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Инструкция-роль: выбирать строго из списка, учитывать жанр/автора/настроение, вернуть чистый JSON-массив (≤6 названий).</span></div>
+    <div class="ln"><span class="num">138-143</span><span class="src"><span class="kw">var</span> userMessage = $<span class="str">"Запрос пользователя: {userQuery}\n\nДоступные книги:\n{нумерованный список}"</span>;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Собираем сообщение: запрос + пронумерованный список доступных книг (Title — Author (Genre)).</span></div>
+    <div class="ln"><span class="num">147</span><span class="src"><span class="kw">var</span> response = <span class="kw">await</span> <span class="fn">AskAsync</span>(systemPrompt, userMessage);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Отправляем оба сообщения в модель и ждём текстовый ответ.</span></div>
+    <div class="ln"><span class="num">149-154</span><span class="src"><span class="kw">if</span> (cleanJson.<span class="fn">StartsWith</span>(<span class="str">"```"</span>)) { ... убираем обёртку ```json ... }</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Модель иногда оборачивает ответ в markdown-блок ```. Срезаем первую и последнюю строки, чтобы остался чистый JSON.</span></div>
+    <div class="ln"><span class="num">156-157</span><span class="src"><span class="kw">var</span> titles = <span class="typ">JsonSerializer</span>.<span class="fn">Deserialize</span>&lt;<span class="typ">List</span>&lt;<span class="kw">string</span>&gt;&gt;(cleanJson); <span class="kw">return</span> titles ?? <span class="kw">new</span>();</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Превращаем JSON-массив в список строк (названий книг).</span></div>
+    <div class="ln"><span class="num">159-163</span><span class="src"><span class="kw">catch</span> (<span class="typ">Exception</span> ex) { _logger.<span class="fn">LogError</span>(...); <span class="kw">return new</span> <span class="typ">List</span>&lt;<span class="kw">string</span>&gt;(); }</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Любая ошибка (модель недоступна, кривой JSON) → возвращаем пустой список. Контроллер увидит «пусто» и включит fallback.</span></div>
+  </div>
+
+  <h3 id="giga-ctrl">Контроллер /ai/recommend (HomeController.cs)</h3>
+  <div class="code">
+    <div class="filebar">HomeController.cs — AiRecommend</div>
+    <div class="ln"><span class="num">85-86</span><span class="src"><span class="typ">[HttpPost(<span class="str">"/ai/recommend"</span>)]</span> <span class="kw">public async</span> <span class="typ">Task</span>&lt;<span class="typ">IActionResult</span>&gt; <span class="fn">AiRecommend</span>([FromForm] <span class="kw">string</span>? query)</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Эндпоинт POST /ai/recommend. Принимает поле формы query — текст запроса.</span></div>
+    <div class="ln"><span class="num">91-96</span><span class="src"><span class="kw">var</span> books = <span class="kw">await</span> _uow.Books.<span class="fn">Query</span>().<span class="fn">Where</span>(b =&gt; !b.IsHidden &amp;&amp; b.IsAvailable)...; <span class="kw">var</span> bookList = ...;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Берём из БД только видимые и доступные книги, формируем текстовый список для модели.</span></div>
+    <div class="ln"><span class="num">103</span><span class="src"><span class="kw">var</span> recommendedTitles = <span class="kw">await</span> _gigaChat.<span class="fn">GetBookRecommendationsAsync</span>(query, bookList);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Спрашиваем ИИ. Здесь сходятся все предыдущие части.</span></div>
+    <div class="ln"><span class="num">106-114</span><span class="src">result = books.<span class="fn">Where</span>(b =&gt; recommendedTitles.<span class="fn">Any</span>(t =&gt; <span class="fn">FuzzyMatch</span>(t, b.Title) || ...)); <span class="kw">if</span> (result.Count &gt; 0) source = <span class="str">"gigachat"</span>;</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Сопоставляем названия от ИИ с реальными книгами (FuzzyMatch — нестрогое сравнение). Помечаем источник «gigachat».</span></div>
+    <div class="ln"><span class="num">117-119</span><span class="src"><span class="kw">catch</span> (<span class="typ">Exception</span> ex) { _logger.<span class="fn">LogWarning</span>(ex, <span class="str">"GigaChat unavailable, falling back..."</span>); }</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Если ИИ упал — не падаем, идём дальше к запасному варианту.</span></div>
+    <div class="ln"><span class="num">122-148</span><span class="src"><span class="kw">if</span> (result.Count == <span class="num2">0</span>) { ... поиск по ключевым словам, ScoreBook ... source = <span class="str">"keywords"</span>; }</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">FALLBACK: если ИИ ничего не дал — обычный поиск по словам с оценкой релевантности. Источник «keywords».</span></div>
+    <div class="ln"><span class="num">151-158</span><span class="src"><span class="kw">return</span> <span class="fn">Json</span>(<span class="kw">new</span> <span class="typ">AiRecommendationViewModel</span> { Query, Books=result, Source, Message });</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Возвращаем JSON браузеру: книги, источник (gigachat/keywords/none) и сообщение, если ничего не нашлось.</span></div>
+  </div>
+</section>
+
+<hr>
+
+<!-- ============ WIRING ============ -->
+<section id="wiring">
+  <h2>4. Как всё подключено — Program.cs</h2>
+  <p>Все три сервиса нужно зарегистрировать при старте приложения, иначе ASP.NET не будет знать, как их создавать и по каким адресам вызывать.</p>
+  <div class="code">
+    <div class="filebar">Program.cs — ключевые строки</div>
+    <div class="ln"><span class="num">65</span><span class="src">builder.Services.<span class="fn">AddSingleton</span>&lt;...GigaChatService&gt;();</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">GigaChatService регистрируется как Singleton — ОДИН экземпляр на всё приложение. Именно поэтому кэш токена работает: он живёт между запросами.</span></div>
+    <div class="ln"><span class="num">68</span><span class="src">builder.Services.<span class="fn">AddSignalR</span>();</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Включаем поддержку SignalR во всём приложении.</span></div>
+    <div class="ln"><span class="num">70-83</span><span class="src">builder.Services.<span class="fn">AddRateLimiter</span>(... policy <span class="str">"ai"</span>: <span class="num2">10</span> запросов / <span class="num2">1</span> мин на пользователя ...);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Ограничитель частоты для ИИ — не больше 10 запросов в минуту на пользователя (защита от злоупотреблений и счёта за API).</span></div>
+    <div class="ln"><span class="num">102</span><span class="src">app.<span class="fn">MapHub</span>&lt;<span class="typ">ChatHub</span>&gt;(<span class="str">"/hubs/chat"</span>);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Привязываем ChatHub к URL /hubs/chat — именно его указывает браузер в withUrl('/hubs/chat').</span></div>
+    <div class="ln"><span class="num">103</span><span class="src">app.<span class="fn">MapHub</span>&lt;<span class="typ">DiscussionHub</span>&gt;(<span class="str">"/hubs/discussion"</span>);</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">То же для обсуждений — адрес /hubs/discussion.</span></div>
+  </div>
+</section>
+
+<!-- ============ SETUP ============ -->
+<section id="setup">
+  <h2>5. Как настраивается</h2>
+
+  <h4>GigaChat — получить ключ и прописать в конфиг</h4>
+  <ol>
+    <li>Зарегистрироваться на <code>developers.sber.ru</code> и создать проект GigaChat API (для физлиц — тариф <code>GIGACHAT_API_PERS</code>).</li>
+    <li>Получить <b>Authorization Key</b> (это пара client_id:secret в Base64).</li>
+    <li>Положить ключ в <code>appsettings.json</code> или (лучше) в user-secrets:</li>
+  </ol>
+  <div class="code">
+    <div class="filebar">appsettings.json (фрагмент)</div>
+    <div class="ln"><span class="num">1</span><span class="src">{</span></div>
+    <div class="ln"><span class="num">2</span><span class="src">  <span class="str">"GigaChat"</span>: {</span></div>
+    <div class="ln"><span class="num">3</span><span class="src">    <span class="str">"AuthorizationKey"</span>: <span class="str">"ВАШ_BASE64_КЛЮЧ"</span>,</span></div>
+    <div class="ln"><span class="num">4</span><span class="src">    <span class="str">"AcceptAnyServerCertificate"</span>: <span class="kw">false</span></span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">В dev можно true (или просто запускать в Development). В проде — false и установленные сертификаты Минцифры.</span></div>
+    <div class="ln"><span class="num">5</span><span class="src">  }</span></div>
+    <div class="ln"><span class="num">6</span><span class="src">}</span></div>
+  </div>
+  <div class="card warn">Ключ — секрет. Не коммитьте его в git. Используйте <code>dotnet user-secrets</code> или переменные окружения.</div>
+
+  <h4>SignalR — настройки не требуются</h4>
+  <p>Хабы работают сразу после <code>AddSignalR()</code> + <code>MapHub(...)</code>. На клиенте нужна лишь библиотека (подключается с CDN в шаблонах: <code>signalr@8.0.7</code>). Версия клиента и сервера должны совпадать по мажору (здесь — 8).</p>
+
+  <h4>Запуск</h4>
+  <div class="code">
+    <div class="filebar">терминал</div>
+    <div class="ln"><span class="num">$</span><span class="src">dotnet run --project BookSwap/BookSwap</span></div>
+    <div class="ln exp"><span class="num">↳</span><span class="src">Поднимет сайт; чаты и ИИ-поиск заработают, если задан ключ GigaChat и пользователь вошёл в систему.</span></div>
+  </div>
+
+  <hr>
+  <p class="toc-top">Документация сгенерирована по исходникам проекта BookSwap: <code>Hubs/ChatHub.cs</code>, <code>Hubs/DiscussionHub.cs</code>, <code>Services/GigaChatService.cs</code>, <code>Controllers/HomeController.cs</code>, <code>Program.cs</code> и Razor-вью.</p>
+</section>
+
+</main>
+</div>
+</body>
+</html>

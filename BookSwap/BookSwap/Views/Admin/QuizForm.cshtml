@@ -22,7 +22,7 @@
                     <div class="form-group">
                         <label asp-for="BookId">Книга</label>
                         <select asp-for="BookId" class="form-input">
-                            @foreach (var b in Model.AvailableBooks) { <option value="@b.Id">@b.Title — @b.Author</option> }
+                            @foreach (var book in Model.AvailableBooks) { <option value="@book.Id">@book.Title — @book.Author</option> }
                         </select>
                     </div>
                     <div class="form-group">

@@ -4,7 +4,7 @@ public record GoogleBookResult(string Title, string Author, string? Description,
 
 public static class GoogleBooksHelper
 {
-    static readonly Dictionary<string, GoogleBookResult> Mock = new()
+    private static readonly Dictionary<string, GoogleBookResult> Mock = new()
     {
         ["9785170908691"] = new("1984", "Джордж Оруэлл", "Антиутопия о тоталитарном обществе", null, 1949),
         ["9785699801234"] = new("Мастер и Маргарита", "Михаил Булгаков", "Мистический роман", null, 1967),

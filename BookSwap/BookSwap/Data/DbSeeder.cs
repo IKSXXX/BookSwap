@@ -69,14 +69,14 @@ public static class DbSeeder
         var userMap = new Dictionary<string, User>();
         foreach (var (name, email, city) in demoUsers)
         {
-            var u = await userManager.FindByEmailAsync(email);
-            if (u == null)
+            var user = await userManager.FindByEmailAsync(email);
+            if (user == null)
             {
-                u = new User { UserName = name, Email = email, EmailConfirmed = true, Location = city, AvatarPath = $"https://api.dicebear.com/9.x/thumbs/svg?seed={name}&backgroundColor=transparent", RegistrationDate = DateTime.UtcNow.AddDays(-Random.Shared.Next(10, 200)) };
-                await userManager.CreateAsync(u, "Pass123!");
-                await userManager.AddToRoleAsync(u, UserRole);
+                user = new User { UserName = name, Email = email, EmailConfirmed = true, Location = city, AvatarPath = $"https://api.dicebear.com/9.x/thumbs/svg?seed={name}&backgroundColor=transparent", RegistrationDate = DateTime.UtcNow.AddDays(-Random.Shared.Next(10, 200)) };
+                await userManager.CreateAsync(user, "Pass123!");
+                await userManager.AddToRoleAsync(user, UserRole);
             }
-            userMap[name] = u;
+            userMap[name] = user;
         }
 
         if (!await ctx.Books.AnyAsync())
@@ -144,10 +144,10 @@ public static class DbSeeder
             );
             await ctx.SaveChangesAsync();
 
-            foreach (var u in userMap.Values)
+            foreach (var user in userMap.Values)
             {
-                var avg = await ctx.Reviews.Where(r => r.ToUserId == u.Id).Select(r => r.Rating).ToListAsync();
-                u.Rating = avg.Count > 0 ? Math.Round(avg.Average() ?? 0, 2) : 0;
+                var ratings = await ctx.Reviews.Where(r => r.ToUserId == user.Id).Select(r => r.Rating).ToListAsync();
+                user.Rating = ratings.Count > 0 ? Math.Round(ratings.Average() ?? 0, 2) : 0;
             }
             await ctx.SaveChangesAsync();
 
@@ -161,13 +161,13 @@ public static class DbSeeder
                 new QuizQuestion { BookId = books[6].Id, Quote = "Когда играешь в игру престолов — побеждаешь или умираешь.", CorrectAnswer = "Игра престолов", Option2 = "Гарри Поттер и философский камень", Option3 = "Заводной апельсин", Option4 = "Процесс" }
             );
 
-            var disc = new Discussion { BookId = books[1].Id, UserId = userMap["anna"].Id, Title = "Актуальна ли антиутопия сегодня?" };
-            ctx.Discussions.Add(disc);
+            var discussion = new Discussion { BookId = books[1].Id, UserId = userMap["anna"].Id, Title = "Актуальна ли антиутопия сегодня?" };
+            ctx.Discussions.Add(discussion);
             await ctx.SaveChangesAsync();
 
             ctx.DiscussionMessages.AddRange(
-                new DiscussionMessage { DiscussionId = disc.Id, UserId = userMap["anna"].Id, Text = "По-моему, книга как никогда актуальна. Что думаете?" },
-                new DiscussionMessage { DiscussionId = disc.Id, UserId = userMap["igor"].Id, Text = "Согласен! Особенно про новояз и манипуляции языком." }
+                new DiscussionMessage { DiscussionId = discussion.Id, UserId = userMap["anna"].Id, Text = "По-моему, книга как никогда актуальна. Что думаете?" },
+                new DiscussionMessage { DiscussionId = discussion.Id, UserId = userMap["igor"].Id, Text = "Согласен! Особенно про новояз и манипуляции языком." }
             );
 
             await ctx.SaveChangesAsync();

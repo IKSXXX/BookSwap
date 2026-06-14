@@ -77,9 +77,9 @@
                     else
                     {
                         DateTime? lastDay = null;
-                        foreach (var m in Model.Messages)
+                        foreach (var message in Model.Messages)
                         {
-                            var localDay = m.SentAt.ToLocalTime().Date;
+                            var localDay = message.SentAt.ToLocalTime().Date;
                             if (lastDay != localDay)
                             {
                                 lastDay = localDay;
@@ -88,11 +88,11 @@
                                     : localDay.ToString("dd MMMM yyyy");
                                 <div class="chat-date-sep">@label</div>
                             }
-                            var mine = m.SenderId == Model.CurrentUserId;
+                            var mine = message.SenderId == Model.CurrentUserId;
                             <div class="chat-row @(mine ? "chat-row--mine" : "")">
                                 <div class="chat-bubble @(mine ? "chat-bubble--mine" : "chat-bubble--theirs")">
-                                    <div class="chat-text">@m.Text</div>
-                                    <time>@m.SentAt.ToLocalTime().ToString("HH:mm")</time>
+                                    <div class="chat-text">@message.Text</div>
+                                    <time>@message.SentAt.ToLocalTime().ToString("HH:mm")</time>
                                 </div>
                             </div>
                         }

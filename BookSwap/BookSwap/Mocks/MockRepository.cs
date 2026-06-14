@@ -10,9 +10,9 @@ public class MockRepository<T> : IRepository<T> where T : class
 
     public Task<T?> GetByIdAsync(object id)
     {
-        var prop = typeof(T).GetProperty("Id");
-        if (prop == null) return Task.FromResult<T?>(null);
-        var item = Store.FirstOrDefault(x => Equals(prop.GetValue(x), id));
+        var idProperty = typeof(T).GetProperty("Id");
+        if (idProperty == null) return Task.FromResult<T?>(null);
+        var item = Store.FirstOrDefault(x => Equals(idProperty.GetValue(x), id));
         return Task.FromResult(item);
     }
 
@@ -35,11 +35,11 @@ public class MockRepository<T> : IRepository<T> where T : class
 
     public void Update(T entity)
     {
-        var prop = typeof(T).GetProperty("Id");
-        if (prop == null) return;
-        var id = prop.GetValue(entity);
-        var idx = Store.FindIndex(x => Equals(prop.GetValue(x), id));
-        if (idx >= 0) Store[idx] = entity;
+        var idProperty = typeof(T).GetProperty("Id");
+        if (idProperty == null) return;
+        var id = idProperty.GetValue(entity);
+        var index = Store.FindIndex(x => Equals(idProperty.GetValue(x), id));
+        if (index >= 0) Store[index] = entity;
     }
 
     public void Remove(T entity) => Store.Remove(entity);

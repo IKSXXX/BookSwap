@@ -126,7 +126,7 @@
                             </div>
                             <strong>Добавить книгу</strong>
                         </a>
-                        @foreach (var b in Model.MyBooks) { <partial name="_BookCard" model="b" /> }
+                        @foreach (var book in Model.MyBooks) { <partial name="_BookCard" model="book" /> }
                     </div>
                 }
                 else if (Model.MyBooks.Count == 0)
@@ -139,7 +139,7 @@
                 else
                 {
                     <div class="profile-grid">
-                        @foreach (var b in Model.MyBooks) { <partial name="_BookCard" model="b" /> }
+                        @foreach (var book in Model.MyBooks) { <partial name="_BookCard" model="book" /> }
                     </div>
                 }
             </div>
@@ -160,9 +160,9 @@
                 else
                 {
                     <div class="stack">
-                        @foreach (var e in Model.Exchanges)
+                        @foreach (var exchange in Model.Exchanges)
                         {
-                            var statusBadge = e.Status switch
+                            var statusBadge = exchange.Status switch
                             {
                                 ExchangeStatus.Pending => "badge--yellow",
                                 ExchangeStatus.Accepted => "badge--blue",
@@ -171,50 +171,50 @@
                                 ExchangeStatus.Cancelled => "badge--secondary",
                                 _ => "badge--secondary"
                             };
-                            <div class="exchange-row" onclick="window.location='@Url.Action("Details", "Exchange", new { id = e.Id })'" style="cursor:pointer;">
+                            <div class="exchange-row" onclick="window.location='@Url.Action("Details", "Exchange", new { id = exchange.Id })'" style="cursor:pointer;">
                                 <div class="exchange-row__book-covers">
                                     <div class="exchange-row__cover exchange-row__cover--requested">
-                                        @if (!string.IsNullOrEmpty(e.BookRequestedCover))
+                                        @if (!string.IsNullOrEmpty(exchange.BookRequestedCover))
                                         {
-                                            <img src="@e.BookRequestedCover" alt="" />
+                                            <img src="@exchange.BookRequestedCover" alt="" />
                                         }
                                         else
                                         {
                                             <svg class="icon"><use href="#i-book"/></svg>
                                         }
                                     </div>
-                                    @if (!string.IsNullOrEmpty(e.BookOfferedCover))
+                                    @if (!string.IsNullOrEmpty(exchange.BookOfferedCover))
                                     {
                                         <div class="exchange-row__cover exchange-row__cover--offered">
-                                            <img src="@e.BookOfferedCover" alt="" />
+                                            <img src="@exchange.BookOfferedCover" alt="" />
                                         </div>
                                     }
                                 </div>
                                 <div class="exchange-row__main">
                                     <div class="exchange-row__body">
                                         <div class="exchange-row__partner">
-                                            @if (!string.IsNullOrEmpty(e.OtherUserAvatar))
+                                            @if (!string.IsNullOrEmpty(exchange.OtherUserAvatar))
                                             {
-                                                <img src="@e.OtherUserAvatar" alt="" class="exchange-row__avatar" />
+                                                <img src="@exchange.OtherUserAvatar" alt="" class="exchange-row__avatar" />
                                             }
                                             else
                                             {
                                                 <img src="/images/avatars/profile_icon.png" alt="" class="exchange-row__avatar" />
                                             }
-                                            <a asp-controller="User" asp-action="Details" asp-route-id="@e.OtherUserId" class="exchange-row__name-link" onclick="event.stopPropagation()">@e.OtherUserName</a>
+                                            <a asp-controller="User" asp-action="Details" asp-route-id="@exchange.OtherUserId" class="exchange-row__name-link" onclick="event.stopPropagation()">@exchange.OtherUserName</a>
                                         </div>
                                         <div class="exchange-row__sub">
-                                            <span>@e.BookRequestedTitle</span>
-                                            @if (!string.IsNullOrEmpty(e.BookOfferedTitle))
+                                            <span>@exchange.BookRequestedTitle</span>
+                                            @if (!string.IsNullOrEmpty(exchange.BookOfferedTitle))
                                             {
-                                                <span>↔ @e.BookOfferedTitle</span>
+                                                <span>↔ @exchange.BookOfferedTitle</span>
                                             }
                                         </div>
                                     </div>
                                 </div>
                                 <div class="exchange-row__right">
-                                    <span class="badge @statusBadge">@e.StatusLabel</span>
-                                    <span class="exchange-row__date">@e.CreatedAt.ToLocalTime().ToString("dd.MM.yy")</span>
+                                    <span class="badge @statusBadge">@exchange.StatusLabel</span>
+                                    <span class="exchange-row__date">@exchange.CreatedAt.ToLocalTime().ToString("dd.MM.yy")</span>
                                 </div>
                             </div>
                         }
@@ -241,7 +241,7 @@
                 }
                 else
                 {
-                    <div class="profile-grid">@foreach (var b in Model.Favorites) { <partial name="_BookCard" model="b" /> }</div>
+                    <div class="profile-grid">@foreach (var book in Model.Favorites) { <partial name="_BookCard" model="book" /> }</div>
                 }
             </div>
 
@@ -265,13 +265,13 @@
                 else
                 {
                     <div class="profile-grid">
-                        @foreach (var b in Model.Wishlist)
+                        @foreach (var book in Model.Wishlist)
                         {
                             <div class="book-card-wishlist">
-                                <partial name="_BookCard" model="b" />
+                                <partial name="_BookCard" model="book" />
                                 @if (!Model.IsCurrent && SignInManager.IsSignedIn(User))
                                 {
-                                    <a asp-controller="Exchange" asp-action="Create" asp-route-bookId="@b.Id"
+                                    <a asp-controller="Exchange" asp-action="Create" asp-route-bookId="@book.Id"
                                        class="btn btn-primary btn-sm" style="margin-top:-.25rem;">
                                         <svg class="icon"><use href="#i-swap"/></svg>
                                         Предложить обмен
@@ -299,33 +299,33 @@
                         else
                         {
                             <div class="reviews-card__body">
-                                @foreach (var r in Model.ReviewsReceived)
+                                @foreach (var review in Model.ReviewsReceived)
                                 {
                                     <article class="review-item">
                                         <div class="review-item__head">
                                             <div class="review-item__author">
-                                                @if (!string.IsNullOrEmpty(r.FromUserAvatar))
+                                                @if (!string.IsNullOrEmpty(review.FromUserAvatar))
                                                 {
-                                                    <img src="@r.FromUserAvatar" alt="" class="review-item__avatar" />
+                                                    <img src="@review.FromUserAvatar" alt="" class="review-item__avatar" />
                                                 }
                                                 else
                                                 {
                                                     <img src="/images/avatars/profile_icon.png" alt="" class="review-item__avatar" />
                                                 }
-                                                <a asp-controller="User" asp-action="Details" asp-route-id="@r.FromUserId" class="review-item__name-link">@r.FromUserName</a>
+                                                <a asp-controller="User" asp-action="Details" asp-route-id="@review.FromUserId" class="review-item__name-link">@review.FromUserName</a>
                                             </div>
-                                            <span class="review-item__stars" title="@r.Rating из 5">
+                                            <span class="review-item__stars" title="@review.Rating из 5">
                                                 @for (int i = 1; i <= 5; i++)
                                                 {
-                                                    <svg class="icon @(i <= r.Rating ? "icon--fill" : "")"><use href="#i-star"/></svg>
+                                                    <svg class="icon @(i <= review.Rating ? "icon--fill" : "")"><use href="#i-star"/></svg>
                                                 }
                                             </span>
                                         </div>
-                                        @if (!string.IsNullOrEmpty(r.Comment))
+                                        @if (!string.IsNullOrEmpty(review.Comment))
                                         {
-                                            <p class="review-item__comment">@r.Comment</p>
+                                            <p class="review-item__comment">@review.Comment</p>
                                         }
-                                        <div class="review-item__foot">@r.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</div>
+                                        <div class="review-item__foot">@review.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</div>
                                     </article>
                                 }
                             </div>
@@ -344,33 +344,33 @@
                         else
                         {
                             <div class="reviews-card__body">
-                                @foreach (var r in Model.ReviewsGiven)
+                                @foreach (var review in Model.ReviewsGiven)
                                 {
                                     <article class="review-item">
                                         <div class="review-item__head">
                                             <div class="review-item__author">
-                                                @if (!string.IsNullOrEmpty(r.ToUserAvatar))
+                                                @if (!string.IsNullOrEmpty(review.ToUserAvatar))
                                                 {
-                                                    <img src="@r.ToUserAvatar" alt="" class="review-item__avatar" />
+                                                    <img src="@review.ToUserAvatar" alt="" class="review-item__avatar" />
                                                 }
                                                 else
                                                 {
                                                     <img src="/images/avatars/profile_icon.png" alt="" class="review-item__avatar" />
                                                 }
-                                                <span>Для <a asp-controller="User" asp-action="Details" asp-route-id="@r.ToUserId" class="review-item__name-link">@r.ToUserName</a></span>
+                                                <span>Для <a asp-controller="User" asp-action="Details" asp-route-id="@review.ToUserId" class="review-item__name-link">@review.ToUserName</a></span>
                                             </div>
-                                            <span class="review-item__stars" title="@r.Rating из 5">
+                                            <span class="review-item__stars" title="@review.Rating из 5">
                                                 @for (int i = 1; i <= 5; i++)
                                                 {
-                                                    <svg class="icon @(i <= r.Rating ? "icon--fill" : "")"><use href="#i-star"/></svg>
+                                                    <svg class="icon @(i <= review.Rating ? "icon--fill" : "")"><use href="#i-star"/></svg>
                                                 }
                                             </span>
                                         </div>
-                                        @if (!string.IsNullOrEmpty(r.Comment))
+                                        @if (!string.IsNullOrEmpty(review.Comment))
                                         {
-                                            <p class="review-item__comment">@r.Comment</p>
+                                            <p class="review-item__comment">@review.Comment</p>
                                         }
-                                        <div class="review-item__foot">@r.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</div>
+                                        <div class="review-item__foot">@review.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</div>
                                     </article>
                                 }
                             </div>

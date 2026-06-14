@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookSwap — построчный разбор Exchange</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --border:#2b3340;
+    --text:#e6edf3; --muted:#9aa6b2; --accent:#58a6ff;
+    --green:#3fb950; --yellow:#d29922;
+    --num:#5b6675; --kw:#ff7b72; --str:#a5d6ff; --type:#7ee787; --cmt:#7d8794;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;}
+
+  header{position:sticky;top:0;z-index:20;background:rgba(13,17,23,.92);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--border);
+    padding:.7rem 1.4rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+  header h1{font-size:1.05rem;margin:0;font-weight:600;}
+  header h1 .a{color:var(--accent);}
+  .tabs{display:flex;gap:.4rem;margin-left:auto;}
+  .tab{background:transparent;border:1px solid var(--border);color:var(--muted);
+    padding:.45rem 1rem;border-radius:8px;cursor:pointer;font-size:.9rem;
+    font-family:"SF Mono","Cascadia Code",Consolas,monospace;transition:.15s;}
+  .tab:hover{color:var(--text);border-color:var(--accent);}
+  .tab.active{background:var(--accent);color:#0d1117;border-color:var(--accent);font-weight:600;}
+
+  main{max-width:1260px;margin:0 auto;padding:1.6rem 1.4rem 4rem;}
+
+  .intro{background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    padding:1.2rem 1.5rem;margin-bottom:1.2rem;}
+  .intro h2{margin:0 0 .6rem;font-size:1.15rem;}
+  .intro p{margin:.45rem 0;color:var(--muted);font-size:.95rem;}
+  .intro b{color:var(--text);}
+
+  .changes{background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--green);
+    border-radius:12px;padding:1.1rem 1.5rem;margin-bottom:1.6rem;}
+  .changes h3{margin:0 0 .7rem;color:var(--green);font-size:1.02rem;}
+  .changes ul{margin:0;padding-left:1.2rem;}
+  .changes li{margin:.45rem 0;font-size:.93rem;color:var(--muted);}
+  .changes li b{color:var(--text);}
+  code.inl{background:#0d1117;border:1px solid var(--border);padding:.05rem .4rem;border-radius:5px;
+    color:var(--type);font-size:.88em;font-family:"SF Mono","Cascadia Code",Consolas,monospace;}
+
+  .file{display:none;}
+  .file.active{display:block;}
+  .file-title{font-family:"SF Mono","Cascadia Code",Consolas,monospace;font-size:.95rem;
+    color:var(--muted);margin:0 0 1.1rem;}
+  .file-title b{color:var(--accent);}
+
+  .block{margin:0 0 1.5rem;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  .block-head{background:#1b2430;padding:.7rem 1.1rem;border-bottom:1px solid var(--border);}
+  .block-head h4{margin:0;font-size:1rem;color:var(--accent);}
+  .block-head p{margin:.25rem 0 0;font-size:.88rem;color:var(--muted);}
+
+  .grid{display:grid;grid-template-columns:3rem minmax(0,1.15fr) minmax(0,1fr);}
+  .colhead{display:contents;}
+  .colhead .ch{position:sticky;top:54px;background:#10161e;color:var(--num);
+    font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;
+    padding:.4rem .9rem;border-bottom:1px solid var(--border);}
+  .colhead .ch.cn{text-align:right;}
+
+  .ln{display:contents;}
+  .ln > div{padding:.32rem .9rem;border-bottom:1px solid #1a2029;}
+  .ln:last-child > div{border-bottom:none;}
+  .ln .n{grid-column:1;text-align:right;color:var(--num);
+    font-family:"SF Mono","Cascadia Code",Consolas,monospace;font-size:.8rem;
+    user-select:none;background:#0b0f15;}
+  .ln .c{grid-column:2;font-family:"SF Mono","Cascadia Code",Consolas,monospace;
+    font-size:.86rem;line-height:1.65;white-space:pre;overflow-x:auto;color:var(--text);}
+  .ln .e{grid-column:3;font-size:.9rem;color:#b9c3cf;border-left:1px solid var(--border);
+    background:#10151c;}
+  .ln .e:empty{background:#0d1217;}
+  .ln.noted .c{background:#0f1620;}
+  .ln .e b{color:var(--accent);font-weight:600;}
+  .ln .e code{background:#0d1117;border:1px solid var(--border);padding:.02rem .32rem;
+    border-radius:5px;color:var(--type);font-size:.86em;
+    font-family:"SF Mono","Cascadia Code",Consolas,monospace;}
+
+  .tag{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:.03em;
+    padding:.05rem .42rem;border-radius:5px;margin-right:.45rem;vertical-align:.08em;}
+  .tag.clean{background:#10311c;color:#56d364;border:1px solid #2ea04355;}
+  .tag.warn{background:#3a2d10;color:#e3b341;border:1px solid #bb8b2e55;}
+  .ln.clean .e{border-left-color:var(--green);}
+  .ln.warn .e{border-left-color:var(--yellow);}
+
+  .k{color:var(--kw);} .s{color:var(--str);} .t{color:var(--type);} .cm{color:var(--cmt);font-style:italic;}
+
+  footer{text-align:center;color:var(--num);font-size:.82rem;padding:1rem 0 0;}
+  a.up{color:var(--accent);text-decoration:none;}
+
+  @media(max-width:880px){
+    .grid{grid-template-columns:2.6rem 1fr;}
+    .colhead .ch.ce{display:none;}
+    .ln .e{grid-column:2;border-left:none;border-top:1px dashed var(--border);
+      background:#0f151d;font-size:.88rem;}
+    .ln .e:empty{display:none;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>📚 BookSwap — построчный разбор <span class="a">Exchange</span></h1>
+  <div class="tabs">
+    <button class="tab active" data-file="service">ExchangeService</button>
+    <button class="tab" data-file="controller">ExchangeController</button>
+  </div>
+</header>
+
+<main>
+  <div class="intro">
+    <h2>О чём этот код</h2>
+    <p><b>ExchangeService</b> — сервисный слой: вся бизнес-логика обмена книгами (создание заявки, смена статусов, передача владения, отзывы, пересчёт рейтинга).</p>
+    <p><b>ExchangeController</b> — слой представления: принимает HTTP-запросы, готовит ViewModel для страниц и делегирует все изменения данных сервису.</p>
+  </div>
+
+  <div class="changes">
+    <h3>Что было почищено в этой ревизии</h3>
+    <ul>
+      <li><b>ExchangeService.CreateAsync</b> — убраны лишние запросы: проверка владельца шла отдельным <code class="inl">BookOwners.AnyAsync</code>, хотя книга уже загружена с <code class="inl">Include(BookOwners)</code>. Предлагаемая книга грузится одним запросом с <code class="inl">Include</code> вместо двух.</li>
+      <li><b>ExchangeController.Details</b> — вместо ~7 отдельных запросов один запрос с <code class="inl">Include</code>.</li>
+      <li><b>ExchangeController.Create (GET)</b> — два запроса объединены в один; проверка владельца берётся из загруженных <code class="inl">BookOwners</code>.</li>
+      <li><b>Свойство <code class="inl">IsSender</code></b> удалено из <code class="inl">ExchangeListItemViewModel</code> — оно нигде не читалось во вьюхах.</li>
+    </ul>
+  </div>
+
+  <section class="file active" id="file-service">
+    <div class="file-title">BookSwap.Web/Services/<b>ExchangeService.cs</b></div>
+    <div id="service-body"></div>
+  </section>
+
+  <section class="file" id="file-controller">
+    <div class="file-title">BookSwap.Web/Controllers/<b>ExchangeController.cs</b></div>
+    <div id="controller-body"></div>
+  </section>
+
+  <footer><a class="up" href="#">↑ наверх</a></footer>
+</main>
+
+<script>
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+const KW="using|namespace|public|private|protected|internal|class|interface|readonly|return|await|async|var|if|else|null|true|false|static|void|this|enum|new|switch|bool|int|string|Task";
+const RE=new RegExp("(\\/\\/[^\\n]*)|(&quot;(?:[^&]|&(?!quot;))*?&quot;)|\\b("+KW+")\\b|\\b([A-Z][A-Za-z0-9_]*)\\b","g");
+function hl(line){
+  return esc(line).replace(RE,(m,cm,st,kw,tp)=>{
+    if(cm)return '<span class="cm">'+cm+'</span>';
+    if(st)return '<span class="s">'+st+'</span>';
+    if(kw)return '<span class="k">'+kw+'</span>';
+    if(tp)return '<span class="t">'+tp+'</span>';
+    return m;
+  });
+}
+function render(id,rows){
+  let h="";
+  for(const r of rows){
+    if(r.head!==undefined){
+      if(h)h+="</div></div>";
+      h+='<div class="block"><div class="block-head"><h4>'+r.head+'</h4>'+
+         (r.desc?'<p>'+r.desc+'</p>':'')+'</div>'+
+         '<div class="grid"><div class="colhead"><div class="ch cn">#</div>'+
+         '<div class="ch">код</div><div class="ch ce">пояснение</div></div>';
+      continue;
+    }
+    const noteCls=r.t?(' noted'+(r.cls?' '+r.cls:'')):'';
+    let tag=r.cls==='clean'?'<span class="tag clean">почищено</span>':
+            r.cls==='warn'?'<span class="tag warn">нюанс</span>':'';
+    h+='<div class="ln'+noteCls+'">'+
+       '<div class="n">'+r.n+'</div>'+
+       '<div class="c">'+hl(r.c)+'</div>'+
+       '<div class="e">'+(r.t?tag+r.t:'')+'</div>'+
+       '</div>';
+  }
+  if(h)h+="</div></div>";
+  document.getElementById(id).innerHTML=h;
+}
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.file').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  document.getElementById('file-'+t.dataset.file).classList.add('active');
+  window.scrollTo({top:0});
+}));
+
+const service=[
+  {head:"Заголовок и зависимости",desc:"Подключение пространств имён и объявление сервиса."},
+  {n:1,c:'using BookSwap.Db.Entities;'},
+  {n:2,c:'using BookSwap.Db.Interfaces;'},
+  {n:3,c:'using BookSwap.Web.ViewModels;'},
+  {n:4,c:'using Microsoft.AspNetCore.Identity;'},
+  {n:5,c:'using Microsoft.EntityFrameworkCore;',t:"Даёт методы EF Core: <code>Include</code>, <code>FirstOrDefaultAsync</code>, <code>ToListAsync</code>."},
+  {n:6,c:''},
+  {n:7,c:'namespace BookSwap.Web.Services;'},
+  {n:8,c:''},
+  {n:9,c:'public class ExchangeService : IExchangeService',t:"Реализует интерфейс — контроллер зависит от абстракции, а не от конкретного класса."},
+  {n:10,c:'{'},
+  {n:11,c:'    readonly IUnitOfWork _uow;',t:"Unit of Work: доступ ко всем репозиториям + единый <code>SaveChangesAsync</code> (одна транзакция)."},
+  {n:12,c:'    readonly UserManager<User> _um;',t:"Identity: поиск и обновление пользователя (например, рейтинга)."},
+  {n:13,c:'    readonly INotificationService _notifications;',t:"Отправка уведомлений вынесена в отдельный сервис."},
+  {n:14,c:''},
+  {n:15,c:'    public ExchangeService(IUnitOfWork uow, UserManager<User> um, INotificationService notifications)',t:"Внедрение зависимостей через конструктор."},
+  {n:16,c:'    {'},
+  {n:17,c:'        _uow = uow;'},
+  {n:18,c:'        _um = um;'},
+  {n:19,c:'        _notifications = notifications;'},
+  {n:20,c:'    }'},
+  {n:21,c:''},
+  {head:"CreateAsync — создание заявки на обмен",desc:"Возвращает ServiceResult<int>: Id новой заявки либо код ошибки. Здесь убраны лишние запросы."},
+  {n:22,c:'    public async Task<ServiceResult<int>> CreateAsync(int bookId, string userId, int? offeredBookId, Func<int, string?> detailsUrl)',t:"<code>detailsUrl</code> — делегат: контроллер передаёт способ построить URL, сервис не зависит от MVC."},
+  {n:23,c:'    {'},
+  {n:24,c:'        var book = await _uow.Books.Query()'},
+  {n:25,c:'            .Include(b => b.BookOwners)',t:"Сразу подгружаем владельцев — ключ к оптимизации: проверки ниже идут по этой коллекции."},
+  {n:26,c:'            .FirstOrDefaultAsync(b => b.Id == bookId);'},
+  {n:27,c:''},
+  {n:28,c:'        if (book == null || !book.IsAvailable) return ServiceResult<int>.Fail(ServiceError.NotFound);',t:"Книги нет или недоступна. Ошибки — через enum, а не исключения."},
+  {n:29,c:''},
+  {n:30,c:'        if (book.BookOwners.Any(bo => bo.UserId == userId))',t:"Раньше тут был отдельный запрос <code>BookOwners.AnyAsync</code>. Теперь проверка в памяти — минус один запрос к БД.",cls:'clean'},
+  {n:31,c:'            return ServiceResult<int>.Fail(ServiceError.Invalid, "Нельзя обменяться с самим собой.");'},
+  {n:32,c:''},
+  {n:33,c:'        if (offeredBookId.HasValue)',t:"Книга в обмен необязательна — обмен может быть «в дар»."},
+  {n:34,c:'        {'},
+  {n:35,c:'            var offered = await _uow.Books.Query()'},
+  {n:36,c:'                .Include(b => b.BookOwners)',t:"Раньше было два запроса: <code>GetByIdAsync</code> + <code>AnyAsync</code>. Теперь один с Include.",cls:'clean'},
+  {n:37,c:'                .FirstOrDefaultAsync(b => b.Id == offeredBookId.Value);'},
+  {n:38,c:'            if (offered == null || !offered.IsAvailable) return ServiceResult<int>.Fail(ServiceError.Invalid);'},
+  {n:39,c:'            if (!offered.BookOwners.Any(bo => bo.UserId == userId)) return ServiceResult<int>.Fail(ServiceError.Invalid);',t:"Проверяем в памяти, что предлагаемая книга принадлежит инициатору."},
+  {n:40,c:'        }'},
+  {n:41,c:''},
+  {n:42,c:'        var receiverId = book.PrimaryOwnerId;',t:"Получатель = текущий владелец запрашиваемой книги. Считается из загруженных BookOwners, без запроса."},
+  {n:43,c:'        var request = new ExchangeRequest'},
+  {n:44,c:'        {'},
+  {n:45,c:'            BookRequestedId = book.Id,'},
+  {n:46,c:'            BookOfferedId = offeredBookId,'},
+  {n:47,c:'            SenderId = userId,'},
+  {n:48,c:'            ReceiverId = receiverId,'},
+  {n:49,c:'            Status = ExchangeStatus.Pending',t:"Новая заявка всегда стартует в статусе «ожидает ответа»."},
+  {n:50,c:'        };'},
+  {n:51,c:'        await _uow.Exchanges.AddAsync(request);'},
+  {n:52,c:'        await _uow.SaveChangesAsync();',t:"После сохранения <code>request.Id</code> получает реальное значение из БД."},
+  {n:53,c:''},
+  {n:54,c:'        var sender = await _um.FindByIdAsync(userId);',t:"Отправитель нужен только чтобы подставить имя в текст уведомления."},
+  {n:55,c:'        await _notifications.NotifyAsync(receiverId, "exchange",'},
+  {n:56,c:'            $"{sender?.UserName ?? "Пользователь"} хочет обменяться с вами книгой «{book.Title}»",'},
+  {n:57,c:'            detailsUrl(request.Id));',t:"URL строится переданным делегатом — ссылка ведёт на новую заявку."},
+  {n:58,c:''},
+  {n:59,c:'        return ServiceResult<int>.Success(request.Id);',t:"Успех: возвращаем Id, контроллер сделает по нему redirect."},
+  {n:60,c:'    }'},
+  {n:61,c:''},
+  {head:"Переходы статуса: Accept / Reject / Cancel / Complete",desc:"Четыре публичных действия — тонкие обёртки над общим TransitionAsync (принцип DRY)."},
+  {n:62,c:'    public Task<ServiceResult> AcceptAsync(int id, string userId)'},
+  {n:63,c:'        => TransitionAsync(id, userId, ExchangeStatus.Pending, ExchangeStatus.Accepted, receiverOnly: true, onTransition: async ex =>',t:"Принять может только получатель. Переход Pending → Accepted."},
+  {n:64,c:'        {'},
+  {n:65,c:'            var reqBook = await _uow.Books.GetByIdAsync(ex.BookRequestedId);'},
+  {n:66,c:'            if (reqBook != null) { reqBook.IsAvailable = false; _uow.Books.Update(reqBook); }',t:"При принятии книги «замораживаются», чтобы их нельзя было предложить в другом обмене."},
+  {n:67,c:'            if (ex.BookOfferedId.HasValue)'},
+  {n:68,c:'            {'},
+  {n:69,c:'                var offBook = await _uow.Books.GetByIdAsync(ex.BookOfferedId.Value);'},
+  {n:70,c:'                if (offBook != null) { offBook.IsAvailable = false; _uow.Books.Update(offBook); }'},
+  {n:71,c:'            }'},
+  {n:72,c:'        });'},
+  {n:73,c:''},
+  {n:74,c:'    public Task<ServiceResult> RejectAsync(int id, string userId)'},
+  {n:75,c:'        => TransitionAsync(id, userId, ExchangeStatus.Pending, ExchangeStatus.Rejected, receiverOnly: true);',t:"Отклонить может только получатель. Без побочных действий."},
+  {n:76,c:''},
+  {n:77,c:'    public Task<ServiceResult> CancelAsync(int id, string userId)'},
+  {n:78,c:'        => TransitionAsync(id, userId, ExchangeStatus.Pending, ExchangeStatus.Cancelled, senderOnly: true);',t:"Отменить — право только отправителя."},
+  {n:79,c:''},
+  {n:80,c:'    public Task<ServiceResult> CompleteAsync(int id, string userId)'},
+  {n:81,c:'        => TransitionAsync(id, userId, ExchangeStatus.Accepted, ExchangeStatus.Completed, onTransition: async ex =>',t:"Завершить можно из Accepted; вправе любая из сторон."},
+  {n:82,c:'        {'},
+  {n:83,c:'            await TransferBook(ex.BookRequestedId, ex.SenderId);',t:"Главное при завершении — фактическая передача владения книгами."},
+  {n:84,c:'            if (ex.BookOfferedId.HasValue)'},
+  {n:85,c:'                await TransferBook(ex.BookOfferedId.Value, ex.ReceiverId);'},
+  {n:86,c:'        });'},
+  {n:87,c:''},
+  {head:"LeaveReviewAsync — отзыв после обмена",desc:"Добавление отзыва с проверками и пересчётом рейтинга."},
+  {n:88,c:'    public async Task<ServiceResult> LeaveReviewAsync(ReviewFormViewModel model, string userId)'},
+  {n:89,c:'    {'},
+  {n:90,c:'        var ex = await _uow.Exchanges.GetByIdAsync(model.ExchangeRequestId);'},
+  {n:91,c:'        if (ex == null || ex.Status != ExchangeStatus.Completed) return ServiceResult.Fail(ServiceError.NotFound);',t:"Отзыв — только по завершённому обмену."},
+  {n:92,c:'        if (ex.SenderId != userId && ex.ReceiverId != userId) return ServiceResult.Fail(ServiceError.Forbidden);',t:"Оставить отзыв вправе только участник обмена."},
+  {n:93,c:''},
+  {n:94,c:'        if (await _uow.Reviews.AnyAsync(r => r.ExchangeRequestId == ex.Id && r.FromUserId == userId))'},
+  {n:95,c:'            return ServiceResult.Fail(ServiceError.Invalid, "Отзыв уже оставлен.");',t:"Защита от повторного отзыва от того же пользователя."},
+  {n:96,c:''},
+  {n:97,c:'        await _uow.Reviews.AddAsync(new Review'},
+  {n:98,c:'        {'},
+  {n:99,c:'            FromUserId = userId,'},
+  {n:100,c:'            ToUserId = model.ToUserId,'},
+  {n:101,c:'            ExchangeRequestId = ex.Id,'},
+  {n:102,c:'            Rating = model.Rating,'},
+  {n:103,c:'            Comment = model.Comment'},
+  {n:104,c:'        });'},
+  {n:105,c:'        await _uow.SaveChangesAsync();'},
+  {n:106,c:''},
+  {n:107,c:'        await RecalculateRatingAsync(model.ToUserId);',t:"После сохранения пересчитываем средний рейтинг адресата отзыва."},
+  {n:108,c:'        return ServiceResult.Success();'},
+  {n:109,c:'    }'},
+  {n:110,c:''},
+  {head:"TransitionAsync — ядро смены статуса",desc:"Единая логика: загрузить, проверить статус и права, сменить статус, выполнить опциональный хук, сохранить."},
+  {n:111,c:'    async Task<ServiceResult> TransitionAsync(int id, string userId, ExchangeStatus from, ExchangeStatus to,'},
+  {n:112,c:'        bool receiverOnly = false, bool senderOnly = false, Func<ExchangeRequest, Task>? onTransition = null)',t:"<code>onTransition</code> — необязательный хук с побочными действиями (заморозка/передача книг)."},
+  {n:113,c:'    {'},
+  {n:114,c:'        var ex = await _uow.Exchanges.GetByIdAsync(id);'},
+  {n:115,c:'        if (ex == null || ex.Status != from) return ServiceResult.Fail(ServiceError.NotFound);',t:"Защита от гонок: переход разрешён, только если текущий статус ровно <code>from</code>.",cls:'warn'},
+  {n:116,c:'        if (receiverOnly && ex.ReceiverId != userId) return ServiceResult.Fail(ServiceError.Forbidden);'},
+  {n:117,c:'        if (senderOnly && ex.SenderId != userId) return ServiceResult.Fail(ServiceError.Forbidden);'},
+  {n:118,c:'        if (!receiverOnly && !senderOnly && ex.SenderId != userId && ex.ReceiverId != userId)'},
+  {n:119,c:'            return ServiceResult.Fail(ServiceError.Forbidden);',t:"Если действие не ограничено стороной — достаточно быть участником обмена."},
+  {n:120,c:''},
+  {n:121,c:'        ex.Status = to;'},
+  {n:122,c:'        _uow.Exchanges.Update(ex);'},
+  {n:123,c:''},
+  {n:124,c:'        if (onTransition != null)'},
+  {n:125,c:'            await onTransition(ex);',t:"Побочные действия конкретного перехода — до единого сохранения."},
+  {n:126,c:''},
+  {n:127,c:'        await _uow.SaveChangesAsync();',t:"Одно сохранение на всю операцию: статус и побочные изменения коммитятся вместе."},
+  {n:128,c:'        return ServiceResult.Success();'},
+  {n:129,c:'    }'},
+  {n:130,c:''},
+  {head:"TransferBook — передача владения",desc:"Снимает прежнего основного владельца, назначает нового, снова делает книгу доступной."},
+  {n:131,c:'    async Task TransferBook(int bookId, string newOwnerId)'},
+  {n:132,c:'    {'},
+  {n:133,c:'        var book = await _uow.Books.GetByIdAsync(bookId);'},
+  {n:134,c:'        if (book == null) return;'},
+  {n:135,c:'        var old = (await _uow.BookOwners.FindAsync(o => o.BookId == bookId && o.IsPrimary)).FirstOrDefault();',t:"Находим текущего основного владельца."},
+  {n:136,c:'        if (old != null) _uow.BookOwners.Remove(old);',t:"Удаляем старую связь владения."},
+  {n:137,c:'        await _uow.BookOwners.AddAsync(new BookOwner { BookId = bookId, UserId = newOwnerId, IsPrimary = true });',t:"Создаём новую запись владения для получателя."},
+  {n:138,c:'        book.IsAvailable = true;',t:"После обмена книга снова доступна — уже у нового владельца."},
+  {n:139,c:'        _uow.Books.Update(book);'},
+  {n:140,c:'    }'},
+  {n:141,c:''},
+  {head:"RecalculateRatingAsync — пересчёт рейтинга",desc:"Среднее по всем оценкам пользователя, округлённое до 2 знаков."},
+  {n:142,c:'    async Task RecalculateRatingAsync(string userId)'},
+  {n:143,c:'    {'},
+  {n:144,c:'        var ratings = await _uow.Reviews.Query()'},
+  {n:145,c:'            .Where(r => r.ToUserId == userId)'},
+  {n:146,c:'            .Select(r => r.Rating)',t:"Тянем из БД только числа-оценки, а не сущности Review — меньше данных по сети."},
+  {n:147,c:'            .ToListAsync();'},
+  {n:148,c:'        var user = await _um.FindByIdAsync(userId);'},
+  {n:149,c:'        if (user != null)'},
+  {n:150,c:'        {'},
+  {n:151,c:'            user.Rating = ratings.Count > 0 ? Math.Round(ratings.Average() ?? 0, 2) : 0;',t:"Среднее с округлением; если отзывов нет — рейтинг 0."},
+  {n:152,c:'            await _um.UpdateAsync(user);'},
+  {n:153,c:'        }'},
+  {n:154,c:'    }'},
+  {n:155,c:'}'},
+];
+
+const controller=[
+  {head:"Зависимости и базовая настройка"},
+  {n:1,c:'using AutoMapper;'},
+  {n:2,c:'using BookSwap.Db.Entities;'},
+  {n:3,c:'using BookSwap.Web.Helpers;'},
+  {n:4,c:'using BookSwap.Db.Interfaces;'},
+  {n:5,c:'using BookSwap.Web.Services;',t:"Подключён сервисный слой — контроллер делегирует логику <code>IExchangeService</code>."},
+  {n:6,c:'using BookSwap.Web.ViewModels;'},
+  {n:7,c:'using Microsoft.AspNetCore.Authorization;'},
+  {n:8,c:'using Microsoft.AspNetCore.Identity;'},
+  {n:9,c:'using Microsoft.AspNetCore.Mvc;'},
+  {n:10,c:'using Microsoft.EntityFrameworkCore;'},
+  {n:11,c:''},
+  {n:12,c:'namespace BookSwap.Web.Controllers;'},
+  {n:13,c:''},
+  {n:14,c:'[Authorize]',t:"Весь контроллер доступен только аутентифицированным пользователям."},
+  {n:15,c:'public class ExchangeController : Controller'},
+  {n:16,c:'{'},
+  {n:17,c:'    readonly IUnitOfWork _uow;',t:"Контроллер читает данные напрямую для построения ViewModel (GET-запросы)."},
+  {n:18,c:'    readonly IMapper _mapper;',t:"AutoMapper: сущности БД → ViewModel."},
+  {n:19,c:'    readonly UserManager<User> _um;'},
+  {n:20,c:'    readonly IExchangeService _exchange;',t:"Сервис, на который переложены все изменяющие операции."},
+  {n:21,c:''},
+  {n:22,c:'    public ExchangeController(IUnitOfWork uow, IMapper mapper, UserManager<User> um, IExchangeService exchange)'},
+  {n:23,c:'    {'},
+  {n:24,c:'        _uow = uow;'},
+  {n:25,c:'        _mapper = mapper;'},
+  {n:26,c:'        _um = um;'},
+  {n:27,c:'        _exchange = exchange;'},
+  {n:28,c:'    }'},
+  {n:29,c:''},
+  {n:30,c:'    string CurrentUserId => _um.GetUserId(User)!;',t:"Id текущего пользователя одной строкой — раньше дублировалось в каждом методе."},
+  {n:31,c:''},
+  {head:"Index — список моих обменов",desc:"Список заявок пользователя с опциональным фильтром по статусу."},
+  {n:32,c:'    [HttpGet]'},
+  {n:33,c:'    public async Task<IActionResult> Index(string? status)'},
+  {n:34,c:'    {'},
+  {n:35,c:'        var userId = CurrentUserId;'},
+  {n:36,c:'        var query = _uow.Exchanges.Query()'},
+  {n:37,c:'            .Include(e => e.Sender).Include(e => e.Receiver)',t:"Подгружаем связи заранее — иначе при обращении к ним в проекции возникнут N+1 запросы."},
+  {n:38,c:'            .Include(e => e.BookRequested).Include(e => e.BookOffered)'},
+  {n:39,c:'            .Where(e => e.SenderId == userId || e.ReceiverId == userId);',t:"Заявки, где пользователь — отправитель ИЛИ получатель."},
+  {n:40,c:''},
+  {n:41,c:'        if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<ExchangeStatus>(status, true, out var st))'},
+  {n:42,c:'            query = query.Where(e => e.Status == st);',t:"Фильтр применяется, только если строка валидно парсится в enum. Запрос пока не выполнен."},
+  {n:43,c:''},
+  {n:44,c:'        var exchanges = await query.OrderByDescending(e => e.CreatedAt).ToListAsync();',t:"Здесь запрос выполняется — один поход в БД для всего списка."},
+  {n:45,c:''},
+  {n:46,c:'        var vms = exchanges.Select(e => new ExchangeListItemViewModel'},
+  {n:47,c:'        {'},
+  {n:48,c:'            Id = e.Id,'},
+  {n:49,c:'            Status = e.Status,'},
+  {n:50,c:'            StatusLabel = MappingProfile.StatusToLabel(e.Status),',t:"Enum-статус → человекочитаемая подпись."},
+  {n:51,c:'            CreatedAt = e.CreatedAt,'},
+  {n:52,c:'            OtherUserId = (e.SenderId == userId ? e.ReceiverId : e.SenderId) ?? "",',t:"Отсюда удалена строка <code>IsSender = ...</code> — свойство нигде не читалось во вьюхах.",cls:'clean'},
+  {n:53,c:'            OtherUserName = (e.SenderId == userId ? e.Receiver?.UserName : e.Sender?.UserName) ?? "",',t:"«Другая сторона» обмена относительно текущего пользователя."},
+  {n:54,c:'            OtherUserAvatar = (e.SenderId == userId ? e.Receiver?.AvatarPath : e.Sender?.AvatarPath) ?? "",'},
+  {n:55,c:'            BookRequestedTitle = e.BookRequested?.Title ?? "",'},
+  {n:56,c:'            BookRequestedCover = e.BookRequested?.CoverImagePath,'},
+  {n:57,c:'            BookOfferedTitle = e.BookOffered?.Title,'},
+  {n:58,c:'            BookOfferedCover = e.BookOffered?.CoverImagePath'},
+  {n:59,c:'        }).ToList();'},
+  {n:60,c:''},
+  {n:61,c:'        ViewBag.CurrentStatus = status ?? "all";',t:"Текущий фильтр прокидывается во вьюху для подсветки активной вкладки."},
+  {n:62,c:'        return View(vms);'},
+  {n:63,c:'    }'},
+  {n:64,c:''},
+  {head:"Create (GET) — форма создания обмена",desc:"Показывает запрашиваемую книгу и список моих доступных книг. Здесь объединены запросы."},
+  {n:65,c:'    [HttpGet("Exchange/Create/{bookId:int}")]'},
+  {n:66,c:'    public async Task<IActionResult> Create(int bookId)'},
+  {n:67,c:'    {'},
+  {n:68,c:'        var book = await _uow.Books.Query()'},
+  {n:69,c:'            .Include(b => b.BookOwners).ThenInclude(bo => bo.User)',t:"Книга вместе с владельцами и их пользователями — пригодится для проверки и для карточки."},
+  {n:70,c:'            .FirstOrDefaultAsync(b => b.Id == bookId);'},
+  {n:71,c:''},
+  {n:72,c:'        if (book == null || !book.IsAvailable) return NotFound();'},
+  {n:73,c:''},
+  {n:74,c:'        var userId = CurrentUserId;'},
+  {n:75,c:'        if (book.BookOwners.Any(bo => bo.UserId == userId))',t:"Вместо отдельного <code>BookOwners.AnyAsync</code> проверяем по уже загруженной коллекции.",cls:'clean'},
+  {n:76,c:'            return BadRequest("Нельзя обменяться с самим собой.");'},
+  {n:77,c:''},
+  {n:78,c:'        var myBooks = await _uow.Books.Query()'},
+  {n:79,c:'            .Where(b => b.IsAvailable && !b.IsHidden && b.BookOwners.Any(bo => bo.UserId == userId))',t:"Раньше было два запроса: сначала myBookIds, потом книги по ним. Теперь один с подзапросом <code>BookOwners.Any(...)</code>.",cls:'clean'},
+  {n:80,c:'            .Include(b => b.BookOwners).ThenInclude(bo => bo.User)'},
+  {n:81,c:'            .ToListAsync();'},
+  {n:82,c:''},
+  {n:83,c:'        return View(new CreateExchangeViewModel'},
+  {n:84,c:'        {'},
+  {n:85,c:'            BookRequestedId = book.Id,'},
+  {n:86,c:'            BookRequested = _mapper.Map<BookCardViewModel>(book),'},
+  {n:87,c:'            MyAvailableBooks = myBooks.Select(_mapper.Map<BookCardViewModel>).ToList()'},
+  {n:88,c:'        });'},
+  {n:89,c:'    }'},
+  {n:90,c:''},
+  {head:"Create (POST) — отправка заявки",desc:"Тонкий метод: делегирует сервису и обрабатывает результат."},
+  {n:91,c:'    [HttpPost("Exchange/Create/{bookId:int}"), ValidateAntiForgeryToken]',t:"Защита от CSRF обязательна для изменяющих POST-методов."},
+  {n:92,c:'    public async Task<IActionResult> Create(int bookId, int? selectedOfferedBookId)'},
+  {n:93,c:'    {'},
+  {n:94,c:'        var result = await _exchange.CreateAsync(bookId, CurrentUserId, selectedOfferedBookId,'},
+  {n:95,c:'            id => Url.Action(nameof(Details), new { id }));',t:"Логика создания — в сервисе. Контроллер передаёт лишь способ построить URL."},
+  {n:96,c:''},
+  {n:97,c:'        if (!result.Ok) return result.ToActionResult();',t:"<code>ToActionResult()</code> мапит <code>ServiceError</code> на HTTP-результат (NotFound/Forbid/BadRequest)."},
+  {n:98,c:'        return RedirectToAction(nameof(Details), new { id = result.Value });',t:"При успехе — редирект на созданную заявку (паттерн PRG)."},
+  {n:99,c:'    }'},
+  {n:100,c:''},
+  {head:"Details — страница одной заявки",desc:"Самое заметное место оптимизации: вместо ~7 запросов теперь один."},
+  {n:101,c:'    [HttpGet]'},
+  {n:102,c:'    public async Task<IActionResult> Details(int id)'},
+  {n:103,c:'    {'},
+  {n:104,c:'        var userId = CurrentUserId;'},
+  {n:105,c:'        var ex = await _uow.Exchanges.Query()',t:"Раньше тут было ~7 обращений к БД (заявка, отправитель, получатель, две книги, сообщения). Теперь всё одним запросом.",cls:'clean'},
+  {n:106,c:'            .Include(e => e.Sender).Include(e => e.Receiver)'},
+  {n:107,c:'            .Include(e => e.BookRequested).Include(e => e.BookOffered)'},
+  {n:108,c:'            .Include(e => e.Messages)',t:"Сообщения чата подгружаются сразу вместе с заявкой."},
+  {n:109,c:'            .FirstOrDefaultAsync(e => e.Id == id);'},
+  {n:110,c:'        if (ex == null) return NotFound();'},
+  {n:111,c:'        if (ex.SenderId != userId && ex.ReceiverId != userId) return Forbid();',t:"Доступ к заявке — только её участникам."},
+  {n:112,c:''},
+  {n:113,c:'        var vm = new ExchangeDetailsViewModel'},
+  {n:114,c:'        {'},
+  {n:115,c:'            Id = ex.Id,'},
+  {n:116,c:'            Status = ex.Status,'},
+  {n:117,c:'            StatusLabel = MappingProfile.StatusToLabel(ex.Status),'},
+  {n:118,c:'            CreatedAt = ex.CreatedAt,'},
+  {n:119,c:'            Sender = _mapper.Map<OwnerSummaryViewModel>(ex.Sender),',t:"Используем уже загруженный <code>ex.Sender</code> вместо отдельного <code>FindByIdAsync</code>."},
+  {n:120,c:'            Receiver = _mapper.Map<OwnerSummaryViewModel>(ex.Receiver),'},
+  {n:121,c:'            BookRequested = _mapper.Map<BookCardViewModel>(ex.BookRequested),',t:"Книги тоже берутся из навигационных свойств — без доп. запросов."},
+  {n:122,c:'            BookOffered = ex.BookOffered != null ? _mapper.Map<BookCardViewModel>(ex.BookOffered) : null,'},
+  {n:123,c:'            Messages = ex.Messages.OrderBy(m => m.SentAt).Select(m => new ChatMessageViewModel'},
+  {n:124,c:'            {'},
+  {n:125,c:'                SenderId = m.SenderId,'},
+  {n:126,c:'                SenderName = m.SenderId == ex.SenderId ? ex.Sender?.UserName ?? "" : ex.Receiver?.UserName ?? "",',t:"Имя и аватар автора сообщения — по уже загруженным Sender/Receiver."},
+  {n:127,c:'                SenderAvatar = m.SenderId == ex.SenderId ? ex.Sender?.AvatarPath : ex.Receiver?.AvatarPath,'},
+  {n:128,c:'                Text = m.Text,'},
+  {n:129,c:'                SentAt = m.SentAt'},
+  {n:130,c:'            }).ToList(),'},
+  {n:131,c:'            CanAccept = ex.Status == ExchangeStatus.Pending && ex.ReceiverId == userId,',t:"Флаги <code>Can*</code> считаются на сервере — вьюха только показывает/прячет кнопки."},
+  {n:132,c:'            CanReject = ex.Status == ExchangeStatus.Pending && ex.ReceiverId == userId,'},
+  {n:133,c:'            CanCancel = ex.Status == ExchangeStatus.Pending && ex.SenderId == userId,'},
+  {n:134,c:'            CanComplete = ex.Status == ExchangeStatus.Accepted && (ex.SenderId == userId || ex.ReceiverId == userId),'},
+  {n:135,c:'            CanLeaveReview = ex.Status == ExchangeStatus.Completed && !await _uow.Reviews.AnyAsync(r => r.ExchangeRequestId == ex.Id && r.FromUserId == userId),',t:"Единственный доп. запрос — проверка, не оставлен ли уже отзыв. Логически необходим."},
+  {n:136,c:'            CurrentUserId = userId'},
+  {n:137,c:'        };'},
+  {n:138,c:''},
+  {n:139,c:'        return View(vm);'},
+  {n:140,c:'    }'},
+  {n:141,c:''},
+  {head:"Accept / Reject / Cancel / Complete (POST)",desc:"Четыре почти одинаковых тонких метода: вызвать сервис → редирект или ошибка."},
+  {n:142,c:'    [HttpPost, ValidateAntiForgeryToken]'},
+  {n:143,c:'    public async Task<IActionResult> Accept(int id)'},
+  {n:144,c:'    {'},
+  {n:145,c:'        var result = await _exchange.AcceptAsync(id, CurrentUserId);',t:"Вся бизнес-логика (права, заморозка книг) — в сервисе."},
+  {n:146,c:'        return result.Ok ? RedirectToAction(nameof(Details), new { id }) : result.ToActionResult();'},
+  {n:147,c:'    }'},
+  {n:148,c:''},
+  {n:149,c:'    [HttpPost, ValidateAntiForgeryToken]'},
+  {n:150,c:'    public async Task<IActionResult> Reject(int id)'},
+  {n:151,c:'    {'},
+  {n:152,c:'        var result = await _exchange.RejectAsync(id, CurrentUserId);'},
+  {n:153,c:'        return result.Ok ? RedirectToAction(nameof(Details), new { id }) : result.ToActionResult();'},
+  {n:154,c:'    }'},
+  {n:155,c:''},
+  {n:156,c:'    [HttpPost, ValidateAntiForgeryToken]'},
+  {n:157,c:'    public async Task<IActionResult> Cancel(int id)'},
+  {n:158,c:'    {'},
+  {n:159,c:'        var result = await _exchange.CancelAsync(id, CurrentUserId);'},
+  {n:160,c:'        return result.Ok ? RedirectToAction(nameof(Details), new { id }) : result.ToActionResult();'},
+  {n:161,c:'    }'},
+  {n:162,c:''},
+  {n:163,c:'    [HttpPost, ValidateAntiForgeryToken]'},
+  {n:164,c:'    public async Task<IActionResult> Complete(int id)'},
+  {n:165,c:'    {'},
+  {n:166,c:'        var result = await _exchange.CompleteAsync(id, CurrentUserId);'},
+  {n:167,c:'        return result.Ok ? RedirectToAction(nameof(Details), new { id }) : result.ToActionResult();'},
+  {n:168,c:'    }'},
+  {n:169,c:''},
+  {head:"LeaveReview (GET) — форма отзыва",desc:"Проверяет право и наличие предыдущего отзыва, подставляет получателя отзыва."},
+  {n:170,c:'    [HttpGet]'},
+  {n:171,c:'    public async Task<IActionResult> LeaveReview(int id)'},
+  {n:172,c:'    {'},
+  {n:173,c:'        var userId = CurrentUserId;'},
+  {n:174,c:'        var ex = await _uow.Exchanges.Query()'},
+  {n:175,c:'            .Include(e => e.Sender).Include(e => e.Receiver)',t:"Грузим участников, чтобы подставить имя «другой стороны» в форму."},
+  {n:176,c:'            .FirstOrDefaultAsync(e => e.Id == id);'},
+  {n:177,c:''},
+  {n:178,c:'        if (ex == null || ex.Status != ExchangeStatus.Completed) return NotFound();'},
+  {n:179,c:'        if (ex.SenderId != userId && ex.ReceiverId != userId) return Forbid();'},
+  {n:180,c:''},
+  {n:181,c:'        if (await _uow.Reviews.AnyAsync(r => r.ExchangeRequestId == id && r.FromUserId == userId))'},
+  {n:182,c:'        {'},
+  {n:183,c:'            TempData["Error"] = "Отзыв уже оставлен.";',t:"Та же проверка продублирована в сервисе как защита на уровне логики."},
+  {n:184,c:'            return RedirectToAction(nameof(Details), new { id });'},
+  {n:185,c:'        }'},
+  {n:186,c:''},
+  {n:187,c:'        var otherId = ex.SenderId == userId ? ex.ReceiverId : ex.SenderId;'},
+  {n:188,c:'        var otherName = (ex.SenderId == userId ? ex.Receiver?.UserName : ex.Sender?.UserName) ?? "";'},
+  {n:189,c:''},
+  {n:190,c:'        return View(new ReviewFormViewModel'},
+  {n:191,c:'        {'},
+  {n:192,c:'            ExchangeRequestId = id,'},
+  {n:193,c:'            ToUserId = otherId,'},
+  {n:194,c:'            ToUserName = otherName'},
+  {n:195,c:'        });'},
+  {n:196,c:'    }'},
+  {n:197,c:''},
+  {head:"LeaveReview (POST) — сохранение отзыва"},
+  {n:198,c:'    [HttpPost, ValidateAntiForgeryToken]'},
+  {n:199,c:'    public async Task<IActionResult> LeaveReview(ReviewFormViewModel model)'},
+  {n:200,c:'    {'},
+  {n:201,c:'        if (!ModelState.IsValid) return View(model);',t:"Серверная валидация модели (рейтинг 1–5 и т.п.) до обращения к сервису."},
+  {n:202,c:''},
+  {n:203,c:'        var result = await _exchange.LeaveReviewAsync(model, CurrentUserId);',t:"Сохранение отзыва и пересчёт рейтинга — в сервисе."},
+  {n:204,c:'        if (!result.Ok) return result.ToActionResult();'},
+  {n:205,c:''},
+  {n:206,c:'        TempData["Success"] = "Спасибо за отзыв!";'},
+  {n:207,c:'        return RedirectToAction(nameof(Details), new { id = model.ExchangeRequestId });'},
+  {n:208,c:'    }'},
+  {n:209,c:'}'},
+];
+
+render('service-body',service);
+render('controller-body',controller);
+</script>
+</body>
+</html>

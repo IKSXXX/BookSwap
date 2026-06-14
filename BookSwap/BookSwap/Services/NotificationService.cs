@@ -7,8 +7,8 @@ namespace BookSwap.Web.Services;
 
 public class NotificationService : INotificationService
 {
-    readonly IUnitOfWork _uow;
-    readonly IHubContext<ChatHub> _hub;
+    private readonly IUnitOfWork _uow;
+    private readonly IHubContext<ChatHub> _hub;
 
     public NotificationService(IUnitOfWork uow, IHubContext<ChatHub> hub)
     {
@@ -18,24 +18,24 @@ public class NotificationService : INotificationService
 
     public async Task NotifyAsync(string userId, string type, string text, string? relatedUrl = null)
     {
-        var notif = new Notification
+        var notification = new Notification
         {
             UserId = userId,
             Type = type,
             Text = text,
             RelatedUrl = relatedUrl
         };
-        await _uow.Notifications.AddAsync(notif);
+        await _uow.Notifications.AddAsync(notification);
         await _uow.SaveChangesAsync();
 
         try
         {
             await _hub.Clients.User(userId).SendAsync("ReceiveNotification", new
             {
-                id = notif.Id,
-                text = notif.Text,
-                type = notif.Type,
-                url = notif.RelatedUrl
+                id = notification.Id,
+                text = notification.Text,
+                type = notification.Type,
+                url = notification.RelatedUrl
             });
         }
         catch { }

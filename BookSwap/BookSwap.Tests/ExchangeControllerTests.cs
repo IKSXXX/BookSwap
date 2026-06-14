@@ -2,13 +2,12 @@ using System.Security.Claims;
 using AutoMapper;
 using BookSwap.Db.Entities;
 using BookSwap.Web.Controllers;
-using BookSwap.Web.Hubs;
 using BookSwap.Web.Mocks;
+using BookSwap.Web.Services;
 using BookSwap.Web.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using Moq;
 using Xunit;
 
@@ -101,11 +100,11 @@ public class ExchangeControllerTests
         MockDataStore.Reviews.Add(new Review { Id = 1, ToUserId = "receiver", FromUserId = "other", ExchangeRequestId = 99, Rating = 4 });
 
         var target = new User { Id = "receiver", UserName = "receiver" };
-        var um = MockUserManager("sender");
-        um.Setup(m => m.FindByIdAsync("receiver")).ReturnsAsync(target);
-        um.Setup(m => m.UpdateAsync(It.IsAny<User>())).ReturnsAsync(IdentityResult.Success);
+        var userManager = MockUserManager("sender");
+        userManager.Setup(m => m.FindByIdAsync("receiver")).ReturnsAsync(target);
+        userManager.Setup(m => m.UpdateAsync(It.IsAny<User>())).ReturnsAsync(IdentityResult.Success);
 
-        var controller = BuildController(um);
+        var controller = BuildController(userManager);
         var model = new ReviewFormViewModel { ExchangeRequestId = 10, ToUserId = "receiver", Rating = 2 };
 
         var result = await controller.LeaveReview(model);
@@ -151,7 +150,12 @@ public class ExchangeControllerTests
     }
 
     static void AddOwner(int bookId, string userId)
-        => MockDataStore.BookOwners.Add(new BookOwner { BookId = bookId, UserId = userId, IsPrimary = true });
+    {
+        var book = MockDataStore.Books.FirstOrDefault(b => b.Id == bookId);
+        var owner = new BookOwner { BookId = bookId, UserId = userId, IsPrimary = true, Book = book };
+        MockDataStore.BookOwners.Add(owner);
+        book?.BookOwners.Add(owner);
+    }
 
     static void AddExchange(int id, string senderId, string receiverId, ExchangeStatus status, int requestedId, int? offeredId = null)
         => MockDataStore.Exchanges.Add(new ExchangeRequest
@@ -169,21 +173,23 @@ public class ExchangeControllerTests
     static Mock<UserManager<User>> MockUserManager(string currentUserId)
     {
         var store = new Mock<IUserStore<User>>();
-        var um = new Mock<UserManager<User>>(store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
-        um.Setup(m => m.GetUserId(It.IsAny<ClaimsPrincipal>())).Returns(currentUserId);
-        return um;
+        var userManager = new Mock<UserManager<User>>(store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
+        userManager.Setup(m => m.GetUserId(It.IsAny<ClaimsPrincipal>())).Returns(currentUserId);
+        return userManager;
     }
 
     static ExchangeController BuildController(string currentUserId)
         => BuildController(MockUserManager(currentUserId));
 
-    static ExchangeController BuildController(Mock<UserManager<User>> um)
+    static ExchangeController BuildController(Mock<UserManager<User>> userManager)
     {
+        var uow = new MockUnitOfWork();
+        var exchange = new ExchangeService(uow, userManager.Object, Mock.Of<INotificationService>());
         var controller = new ExchangeController(
-            new MockUnitOfWork(),
+            uow,
             Mock.Of<IMapper>(),
-            um.Object,
-            Mock.Of<IHubContext<ChatHub>>())
+            userManager.Object,
+            exchange)
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
             TempData = new Microsoft.AspNetCore.Mvc.ViewFeatures.TempDataDictionary(

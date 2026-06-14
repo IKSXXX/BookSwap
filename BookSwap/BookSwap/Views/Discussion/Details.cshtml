@@ -28,16 +28,16 @@
                     }
                     else
                     {
-                        @foreach (var m in Model.Messages)
+                        @foreach (var message in Model.Messages)
                         {
                             <div class="disc-msg">
-                                <div class="disc-msg__avatar">@(string.IsNullOrEmpty(m.UserName) ? "?" : m.UserName.Substring(0, 1).ToUpper())</div>
+                                <div class="disc-msg__avatar">@(string.IsNullOrEmpty(message.UserName) ? "?" : message.UserName.Substring(0, 1).ToUpper())</div>
                                 <div class="disc-msg__body">
                                     <div class="disc-msg__head">
-                                        <strong>@m.UserName</strong>
-                                        <span class="text-muted" style="font-size:.75rem;">@m.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
+                                        <strong>@message.UserName</strong>
+                                        <span class="text-muted" style="font-size:.75rem;">@message.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
                                     </div>
-                                    <p class="disc-msg__text">@m.Text</p>
+                                    <p class="disc-msg__text">@message.Text</p>
                                 </div>
                             </div>
                         }

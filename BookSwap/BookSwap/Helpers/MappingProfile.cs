@@ -20,9 +20,7 @@ public class MappingProfile : Profile
 
         CreateMap<User, OwnerSummaryViewModel>()
             .ForMember(d => d.Name, o => o.MapFrom(s => s.UserName))
-            .ForMember(d => d.Avatar, o => o.MapFrom(s => s.AvatarPath))
-            .ForMember(d => d.BooksCount, o => o.Ignore())
-            .ForMember(d => d.ExchangesCount, o => o.Ignore());
+            .ForMember(d => d.Avatar, o => o.MapFrom(s => s.AvatarPath));
 
         CreateMap<BookFormViewModel, Book>()
             .ForMember(d => d.Id, o => o.Condition(src => src.Id.HasValue))

@@ -9,18 +9,18 @@ namespace BookSwap.Web.Hubs;
 [Authorize]
 public class ChatHub : Hub
 {
-    readonly IUnitOfWork _uow;
-    readonly UserManager<User> _um;
+    private readonly IUnitOfWork _uow;
+    private readonly UserManager<User> _userManager;
 
-    public ChatHub(IUnitOfWork uow, UserManager<User> um)
+    public ChatHub(IUnitOfWork uow, UserManager<User> userManager)
     {
         _uow = uow;
-        _um = um;
+        _userManager = userManager;
     }
 
     public async Task JoinGroup(int exchangeId)
     {
-        var userId = _um.GetUserId(Context.User!);
+        var userId = _userManager.GetUserId(Context.User!);
         var exchange = await _uow.Exchanges.GetByIdAsync(exchangeId);
         if (exchange == null) return;
         if (exchange.SenderId != userId && exchange.ReceiverId != userId) return;
@@ -32,29 +32,29 @@ public class ChatHub : Hub
     {
         if (string.IsNullOrWhiteSpace(text) || text.Length > 1000) return;
 
-        var userId = _um.GetUserId(Context.User!);
+        var userId = _userManager.GetUserId(Context.User!);
         var exchange = await _uow.Exchanges.GetByIdAsync(exchangeId);
         if (exchange == null) return;
         if (exchange.SenderId != userId && exchange.ReceiverId != userId) return;
 
-        var user = await _um.FindByIdAsync(userId!);
+        var user = await _userManager.FindByIdAsync(userId!);
 
-        var msg = new Message
+        var message = new Message
         {
             ExchangeRequestId = exchangeId,
             SenderId = userId!,
             Text = text.Trim(),
             SentAt = DateTime.UtcNow
         };
-        await _uow.Messages.AddAsync(msg);
+        await _uow.Messages.AddAsync(message);
         await _uow.SaveChangesAsync();
 
         await Clients.Group($"exchange-{exchangeId}").SendAsync("ReceiveMessage", new
         {
             senderId = userId,
             senderName = user?.UserName ?? "",
-            text = msg.Text,
-            sentAt = msg.SentAt
+            text = message.Text,
+            sentAt = message.SentAt
         });
     }
 }

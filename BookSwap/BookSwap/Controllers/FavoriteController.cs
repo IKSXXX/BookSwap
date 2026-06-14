@@ -9,19 +9,19 @@ namespace BookSwap.Web.Controllers;
 [Authorize]
 public class FavoriteController : Controller
 {
-    readonly IUnitOfWork _uow;
-    readonly UserManager<User> _um;
+    private readonly IUnitOfWork _uow;
+    private readonly UserManager<User> _userManager;
 
-    public FavoriteController(IUnitOfWork uow, UserManager<User> um)
+    public FavoriteController(IUnitOfWork uow, UserManager<User> userManager)
     {
         _uow = uow;
-        _um = um;
+        _userManager = userManager;
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Toggle(int bookId, bool isWishlist = false, string? returnUrl = null)
     {
-        var userId = _um.GetUserId(User)!;
+        var userId = _userManager.GetUserId(User)!;
         var existing = (await _uow.Favorites.FindAsync(f => f.UserId == userId && f.BookId == bookId && f.IsWishlist == isWishlist)).FirstOrDefault();
 
         if (existing != null)

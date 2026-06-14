@@ -82,21 +82,21 @@
                                     </div>
                                 </label>
 
-                                @foreach (var b in Model.MyAvailableBooks)
+                                @foreach (var book in Model.MyAvailableBooks)
                                 {
-                                    string conditionClass = b.ConditionLabel switch
+                                    string conditionClass = book.ConditionLabel switch
                                     {
                                         "Отличное" or "Новое" => "badge--green",
                                         "Хорошее" => "badge--blue",
                                         "Удовлетворительное" => "badge--yellow",
                                         _ => "badge--secondary"
                                     };
-                                    <label class="book-pick book-pick--my" data-my-pick data-title="@b.Title">
-                                        <input type="radio" name="selectedOfferedBookId" value="@b.Id" class="book-pick__check" />
+                                    <label class="book-pick book-pick--my" data-my-pick data-title="@book.Title">
+                                        <input type="radio" name="selectedOfferedBookId" value="@book.Id" class="book-pick__check" />
                                         <div class="book-pick__cover">
-                                            @if (!string.IsNullOrEmpty(b.CoverImagePath))
+                                            @if (!string.IsNullOrEmpty(book.CoverImagePath))
                                             {
-                                                <img src="@b.CoverImagePath" alt="@b.Title" />
+                                                <img src="@book.CoverImagePath" alt="@book.Title" />
                                             }
                                             else
                                             {
@@ -104,11 +104,11 @@
                                             }
                                         </div>
                                         <div class="book-pick__body">
-                                            <div class="book-pick__title">@b.Title</div>
-                                            <div class="book-pick__author">@b.Author</div>
+                                            <div class="book-pick__title">@book.Title</div>
+                                            <div class="book-pick__author">@book.Author</div>
                                             <div class="flex gap-1 mt-1" style="flex-wrap:wrap;">
-                                                <span class="badge @conditionClass">@b.ConditionLabel</span>
-                                                <span class="badge badge--secondary">@b.Genre</span>
+                                                <span class="badge @conditionClass">@book.ConditionLabel</span>
+                                                <span class="badge badge--secondary">@book.Genre</span>
                                             </div>
                                         </div>
                                     </label>

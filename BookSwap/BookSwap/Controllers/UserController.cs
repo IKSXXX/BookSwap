@@ -1,6 +1,5 @@
 using AutoMapper;
 using BookSwap.Db.Entities;
-using BookSwap.Web.Helpers;
 using BookSwap.Db.Interfaces;
 using BookSwap.Web.ViewModels;
 using Microsoft.AspNetCore.Identity;
@@ -15,9 +14,9 @@ public class UserController : Controller
     private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
 
-    public UserController(UserManager<User> um, IUnitOfWork uow, IMapper mapper)
+    public UserController(UserManager<User> userManager, IUnitOfWork uow, IMapper mapper)
     {
-        _userManager = um;
+        _userManager = userManager;
         _uow = uow;
         _mapper = mapper;
     }
@@ -31,13 +30,8 @@ public class UserController : Controller
         var currentId = _userManager.GetUserId(User);
         var isCurrent = currentId == user.Id;
 
-        var myBookIds = await _uow.BookOwners.Query()
-            .Where(bo => bo.UserId == user.Id)
-            .Select(bo => bo.BookId)
-            .ToListAsync();
-
         var myBooks = await _uow.Books.Query()
-            .Where(b => myBookIds.Contains(b.Id) && !b.IsHidden)
+            .Where(b => !b.IsHidden && b.BookOwners.Any(bo => bo.UserId == user.Id))
             .Include(b => b.BookOwners).ThenInclude(bo => bo.User)
             .OrderByDescending(b => b.CreatedAt)
             .ToListAsync();
@@ -73,6 +67,19 @@ public class UserController : Controller
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
 
+        ReviewDisplayViewModel MapReview(Review r) => new()
+        {
+            FromUserId = r.FromUserId,
+            FromUserName = r.FromUser?.UserName ?? "",
+            FromUserAvatar = r.FromUser?.AvatarPath,
+            ToUserId = r.ToUserId,
+            ToUserName = r.ToUser?.UserName ?? "",
+            ToUserAvatar = r.ToUser?.AvatarPath,
+            Rating = r.Rating ?? 0,
+            Comment = r.Comment,
+            CreatedAt = r.CreatedAt
+        };
+
         var vm = new UserProfileViewModel
         {
             Id = user.Id,
@@ -86,47 +93,11 @@ public class UserController : Controller
             CompletedExchanges = exchanges.Count(e => e.Status == ExchangeStatus.Completed),
             IsCurrent = isCurrent,
             MyBooks = myBooks.Select(_mapper.Map<BookCardViewModel>).ToList(),
-            Exchanges = exchanges.Select(e => new ExchangeListItemViewModel
-            {
-                Id = e.Id,
-                Status = e.Status,
-                StatusLabel = MappingProfile.StatusToLabel(e.Status),
-                CreatedAt = e.CreatedAt,
-                IsSender = e.SenderId == user.Id,
-                OtherUserId = (e.SenderId == user.Id ? e.ReceiverId : e.SenderId) ?? "",
-                OtherUserName = (e.SenderId == user.Id ? e.Receiver?.UserName : e.Sender?.UserName) ?? "",
-                OtherUserAvatar = (e.SenderId == user.Id ? e.Receiver?.AvatarPath : e.Sender?.AvatarPath) ?? "",
-                BookRequestedTitle = e.BookRequested?.Title ?? "",
-                BookRequestedCover = e.BookRequested?.CoverImagePath,
-                BookOfferedTitle = e.BookOffered?.Title,
-                BookOfferedCover = e.BookOffered?.CoverImagePath
-            }).ToList(),
+            Exchanges = exchanges.Select(e => ExchangeListItemViewModel.From(e, user.Id)).ToList(),
             Favorites = favorites.Select(_mapper.Map<BookCardViewModel>).ToList(),
             Wishlist = wishlist.Select(_mapper.Map<BookCardViewModel>).ToList(),
-            ReviewsReceived = reviewsReceived.Select(r => new ReviewDisplayViewModel
-            {
-                FromUserId = r.FromUserId,
-                FromUserName = r.FromUser?.UserName ?? "",
-                FromUserAvatar = r.FromUser?.AvatarPath,
-                ToUserId = r.ToUserId,
-                ToUserName = r.ToUser?.UserName ?? "",
-                ToUserAvatar = r.ToUser?.AvatarPath,
-                Rating = r.Rating ?? 0,
-                Comment = r.Comment,
-                CreatedAt = r.CreatedAt
-            }).ToList(),
-            ReviewsGiven = reviewsGiven.Select(r => new ReviewDisplayViewModel
-            {
-                FromUserId = r.FromUserId,
-                FromUserName = r.FromUser?.UserName ?? "",
-                FromUserAvatar = r.FromUser?.AvatarPath,
-                ToUserId = r.ToUserId,
-                ToUserName = r.ToUser?.UserName ?? "",
-                ToUserAvatar = r.ToUser?.AvatarPath,
-                Rating = r.Rating ?? 0,
-                Comment = r.Comment,
-                CreatedAt = r.CreatedAt
-            }).ToList(),
+            ReviewsReceived = reviewsReceived.Select(MapReview).ToList(),
+            ReviewsGiven = reviewsGiven.Select(MapReview).ToList(),
         };
 
         return View(vm);

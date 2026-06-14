@@ -128,17 +128,17 @@
                     }
                     else
                     {
-                        @foreach (var u in Model.RecentUsers)
+                        @foreach (var user in Model.RecentUsers)
                         {
-                            <a asp-controller="User" asp-action="Details" asp-route-id="@u.Id" class="admin-recent-row">
+                            <a asp-controller="User" asp-action="Details" asp-route-id="@user.Id" class="admin-recent-row">
                                 <span class="admin-recent-row__main">
-                                    <strong>@u.UserName</strong>
-                                    @if (u.IsBlocked)
+                                    <strong>@user.UserName</strong>
+                                    @if (user.IsBlocked)
                                     {
                                         <span class="badge badge--red">Заблокирован</span>
                                     }
                                 </span>
-                                <span class="text-muted text-sm">@u.RegistrationDate.ToLocalTime().ToString("dd.MM.yyyy")</span>
+                                <span class="text-muted text-sm">@user.RegistrationDate.ToLocalTime().ToString("dd.MM.yyyy")</span>
                             </a>
                         }
                     }
@@ -159,18 +159,18 @@
                     }
                     else
                     {
-                        @foreach (var b in Model.RecentBooks)
+                        @foreach (var book in Model.RecentBooks)
                         {
-                            <a asp-controller="Book" asp-action="Details" asp-route-id="@b.Id" class="admin-recent-row">
+                            <a asp-controller="Book" asp-action="Details" asp-route-id="@book.Id" class="admin-recent-row">
                                 <span class="admin-recent-row__main">
-                                    <strong>@b.Title</strong>
-                                    <span class="text-muted text-sm">@b.Author</span>
-                                    @if (b.IsHidden)
+                                    <strong>@book.Title</strong>
+                                    <span class="text-muted text-sm">@book.Author</span>
+                                    @if (book.IsHidden)
                                     {
                                         <span class="badge badge--secondary">Скрыта</span>
                                     }
                                 </span>
-                                <span class="text-muted text-sm">@b.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</span>
+                                <span class="text-muted text-sm">@book.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</span>
                             </a>
                         }
                     }

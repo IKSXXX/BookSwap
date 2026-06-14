@@ -11,19 +11,19 @@ namespace BookSwap.Web.Controllers;
 [Route("notifications")]
 public class NotificationsController : Controller
 {
-    readonly IUnitOfWork _uow;
-    readonly UserManager<User> _um;
+    private readonly IUnitOfWork _uow;
+    private readonly UserManager<User> _userManager;
 
-    public NotificationsController(IUnitOfWork uow, UserManager<User> um)
+    public NotificationsController(IUnitOfWork uow, UserManager<User> userManager)
     {
         _uow = uow;
-        _um = um;
+        _userManager = userManager;
     }
 
     [HttpGet("unread")]
     public async Task<IActionResult> GetUnread()
     {
-        var userId = _um.GetUserId(User)!;
+        var userId = _userManager.GetUserId(User)!;
         var list = await _uow.Notifications.Query()
             .Where(n => n.UserId == userId && !n.IsRead)
             .OrderByDescending(n => n.CreatedAt)
@@ -43,11 +43,11 @@ public class NotificationsController : Controller
     [HttpPost("{id}/read")]
     public async Task<IActionResult> MarkRead(int id)
     {
-        var userId = _um.GetUserId(User)!;
-        var n = await _uow.Notifications.GetByIdAsync(id);
-        if (n == null || n.UserId != userId) return NotFound();
-        n.IsRead = true;
-        _uow.Notifications.Update(n);
+        var userId = _userManager.GetUserId(User)!;
+        var notification = await _uow.Notifications.GetByIdAsync(id);
+        if (notification == null || notification.UserId != userId) return NotFound();
+        notification.IsRead = true;
+        _uow.Notifications.Update(notification);
         await _uow.SaveChangesAsync();
         return Ok();
     }
@@ -55,11 +55,11 @@ public class NotificationsController : Controller
     [HttpPost("read-all")]
     public async Task<IActionResult> MarkAllRead()
     {
-        var userId = _um.GetUserId(User)!;
+        var userId = _userManager.GetUserId(User)!;
         var unread = await _uow.Notifications.Query()
             .Where(n => n.UserId == userId && !n.IsRead)
             .ToListAsync();
-        foreach (var n in unread) n.IsRead = true;
+        foreach (var notification in unread) notification.IsRead = true;
         await _uow.SaveChangesAsync();
         return Ok();
     }

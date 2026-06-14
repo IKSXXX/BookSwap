@@ -81,9 +81,9 @@
         @if (Model.RecentBooks.Any())
         {
             <div class="book-grid book-grid--6">
-                @foreach (var b in Model.RecentBooks.Take(6))
+                @foreach (var book in Model.RecentBooks.Take(6))
                 {
-                    <partial name="_BookCard" model="b" />
+                    <partial name="_BookCard" model="book" />
                 }
             </div>
         }
@@ -154,9 +154,9 @@
                         <div class="feature-card__body feature-card__body--stack">
                             <blockquote class="quiz-quote">«@Model.QuizQuestion.Quote»</blockquote>
                             <div class="quiz-options" id="quizOptions" data-qid="@Model.QuizQuestion.Id">
-                                @foreach (var opt in Model.QuizQuestion.Options)
+                                @foreach (var option in Model.QuizQuestion.Options)
                                 {
-                                    <button type="button" class="quiz-option" data-answer="@opt">@opt</button>
+                                    <button type="button" class="quiz-option" data-answer="@option">@option</button>
                                 }
                             </div>
                             <div id="quizFeedback" class="quiz-feedback" hidden></div>

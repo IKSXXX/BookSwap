@@ -22,12 +22,12 @@
                         <div class="filter-group">
                             <label>Жанры</label>
                             <div class="stack-sm" style="max-height: 180px; overflow-y:auto;">
-                                @foreach (var g in Model.AllGenres)
+                                @foreach (var genre in Model.AllGenres)
                                 {
-                                    var checkedAttr = Model.SelectedGenres.Contains(g) ? "checked" : null;
+                                    var checkedAttr = Model.SelectedGenres.Contains(genre) ? "checked" : null;
                                     <label class="flex items-center gap-2" style="font-weight:400;font-size:.875rem;color:var(--gray-700);cursor:pointer;">
-                                        <input type="checkbox" name="genresArr" value="@g" @checkedAttr />
-                                        <span>@g</span>
+                                        <input type="checkbox" name="genresArr" value="@genre" @checkedAttr />
+                                        <span>@genre</span>
                                     </label>
                                 }
                             </div>
@@ -36,12 +36,12 @@
                         <div class="filter-group">
                             <label>Состояние</label>
                             <div class="stack-sm">
-                                @foreach (var c in Enum.GetValues<BookCondition>())
+                                @foreach (var condition in Enum.GetValues<BookCondition>())
                                 {
-                                    var checkedAttr = Model.SelectedConditions.Contains(c) ? "checked" : null;
+                                    var checkedAttr = Model.SelectedConditions.Contains(condition) ? "checked" : null;
                                     <label class="flex items-center gap-2" style="font-weight:400;font-size:.875rem;color:var(--gray-700);cursor:pointer;">
-                                        <input type="checkbox" name="conditionsArr" value="@c" @checkedAttr />
-                                        <span>@MappingProfile.ConditionToLabel(c)</span>
+                                        <input type="checkbox" name="conditionsArr" value="@condition" @checkedAttr />
+                                        <span>@MappingProfile.ConditionToLabel(condition)</span>
                                     </label>
                                 }
                             </div>
@@ -96,9 +96,9 @@
                     else
                     {
                         <div class="book-grid">
-                            @foreach (var b in Model.Books)
+                            @foreach (var book in Model.Books)
                             {
-                                <partial name="_BookCard" model="b" />
+                                <partial name="_BookCard" model="book" />
                             }
                         </div>
                     }
@@ -118,15 +118,15 @@
                     {
                         <span class="is-disabled"><svg class="icon"><use href="#i-arrow-left"/></svg></span>
                     }
-                    @for (int p = 1; p <= Model.Pagination.TotalPages; p++)
+                    @for (int pageNumber = 1; pageNumber <= Model.Pagination.TotalPages; pageNumber++)
                     {
-                        if (p == Model.Pagination.Page)
+                        if (pageNumber == Model.Pagination.Page)
                         {
-                            <span class="is-active">@p</span>
+                            <span class="is-active">@pageNumber</span>
                         }
                         else
                         {
-                            <a href="@Url.Action("Index", new { search = Model.SearchQuery, genres = string.Join(",", Model.SelectedGenres), conditions = string.Join(",", Model.SelectedConditions), onlyAvailable = Model.OnlyAvailable, page = p })">@p</a>
+                            <a href="@Url.Action("Index", new { search = Model.SearchQuery, genres = string.Join(",", Model.SelectedGenres), conditions = string.Join(",", Model.SelectedConditions), onlyAvailable = Model.OnlyAvailable, page = pageNumber })">@pageNumber</a>
                         }
                     }
                     @if (Model.Pagination.HasNext)

@@ -20,8 +20,6 @@ public class OwnerSummaryViewModel
     public string Id { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string? Avatar { get; set; }
-    public int BooksCount { get; set; }
-    public int ExchangesCount { get; set; }
     public double Rating { get; set; }
 }
 

@@ -13,8 +13,8 @@ public class MockUnitOfWork : IUnitOfWork
     private IRepository<Favorite>? _favorites;
     private IRepository<Discussion>? _discussions;
     private IRepository<DiscussionMessage>? _discussionMessages;
-    private IRepository<QuizQuestion>? _quiz;
-    private IRepository<BookOfTheDay>? _bookOfDay;
+    private IRepository<QuizQuestion>? _quizQuestions;
+    private IRepository<BookOfTheDay>? _booksOfTheDay;
     private IRepository<Notification>? _notifications;
 
     public IRepository<Book> Books => _books ??= new MockRepository<Book>(MockDataStore.Books);
@@ -25,8 +25,8 @@ public class MockUnitOfWork : IUnitOfWork
     public IRepository<Favorite> Favorites => _favorites ??= new MockRepository<Favorite>(MockDataStore.Favorites);
     public IRepository<Discussion> Discussions => _discussions ??= new MockRepository<Discussion>(MockDataStore.Discussions);
     public IRepository<DiscussionMessage> DiscussionMessages => _discussionMessages ??= new MockRepository<DiscussionMessage>(MockDataStore.DiscussionMessages);
-    public IRepository<QuizQuestion> QuizQuestions => _quiz ??= new MockRepository<QuizQuestion>(MockDataStore.QuizQuestions);
-    public IRepository<BookOfTheDay> BooksOfTheDay => _bookOfDay ??= new MockRepository<BookOfTheDay>(MockDataStore.BooksOfTheDay);
+    public IRepository<QuizQuestion> QuizQuestions => _quizQuestions ??= new MockRepository<QuizQuestion>(MockDataStore.QuizQuestions);
+    public IRepository<BookOfTheDay> BooksOfTheDay => _booksOfTheDay ??= new MockRepository<BookOfTheDay>(MockDataStore.BooksOfTheDay);
     public IRepository<Notification> Notifications => _notifications ??= new MockRepository<Notification>(MockDataStore.Notifications);
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => Task.FromResult(0);

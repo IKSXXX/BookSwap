@@ -14,31 +14,40 @@ namespace BookSwap.Web.Controllers;
 [Authorize(Roles = "Admin")]
 public class AdminController : Controller
 {
-    readonly IUnitOfWork _uow;
-    readonly IMapper _mapper;
-    readonly UserManager<User> _um;
+    private readonly IUnitOfWork _uow;
+    private readonly IMapper _mapper;
+    private readonly UserManager<User> _userManager;
 
-    public AdminController(IUnitOfWork uow, IMapper mapper, UserManager<User> um)
+    public AdminController(IUnitOfWork uow, IMapper mapper, UserManager<User> userManager)
     {
         _uow = uow;
         _mapper = mapper;
-        _um = um;
+        _userManager = userManager;
+    }
+
+    async Task<List<BookCardViewModel>> AvailableBookCardsAsync()
+    {
+        var books = await _uow.Books.Query()
+            .Include(b => b.BookOwners).ThenInclude(bo => bo.User)
+            .Where(b => !b.IsHidden)
+            .ToListAsync();
+        return books.Select(_mapper.Map<BookCardViewModel>).ToList();
     }
 
     public async Task<IActionResult> Index()
     {
         var vm = new AdminStatsViewModel
         {
-            UsersCount = _um.Users.Count(),
+            UsersCount = _userManager.Users.Count(),
             BooksCount = await _uow.Books.Query().CountAsync(),
             ExchangesCount = await _uow.Exchanges.Query().CountAsync(),
             ReviewsCount = await _uow.Reviews.Query().CountAsync(),
-            BlockedUsersCount = _um.Users.Count(u => u.IsBlocked),
+            BlockedUsersCount = _userManager.Users.Count(u => u.IsBlocked),
             HiddenBooksCount = await _uow.Books.Query().CountAsync(b => b.IsHidden),
             PendingExchangesCount = await _uow.Exchanges.Query().CountAsync(e => e.Status == ExchangeStatus.Pending),
             CompletedExchangesCount = await _uow.Exchanges.Query().CountAsync(e => e.Status == ExchangeStatus.Completed),
             QuizQuestionsCount = await _uow.QuizQuestions.Query().CountAsync(),
-            RecentUsers = _um.Users
+            RecentUsers = _userManager.Users
                 .OrderByDescending(u => u.RegistrationDate)
                 .Take(5)
                 .Select(u => new AdminRecentUserViewModel
@@ -67,21 +76,26 @@ public class AdminController : Controller
 
     public async Task<IActionResult> Users()
     {
-        var users = _um.Users.ToList();
+        var users = _userManager.Users.ToList();
+        var bookCounts = await _uow.BookOwners.Query()
+            .GroupBy(bo => bo.UserId)
+            .Select(g => new { UserId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.UserId, x => x.Count);
+
         var list = new List<AdminUserListItemViewModel>();
-        foreach (var u in users)
+        foreach (var user in users)
         {
-            var roles = await _um.GetRolesAsync(u);
+            var roles = await _userManager.GetRolesAsync(user);
             list.Add(new AdminUserListItemViewModel
             {
-                Id = u.Id,
-                UserName = u.UserName ?? "",
-                Email = u.Email ?? "",
-                IsBlocked = u.IsBlocked,
+                Id = user.Id,
+                UserName = user.UserName ?? "",
+                Email = user.Email ?? "",
+                IsBlocked = user.IsBlocked,
                 IsAdmin = roles.Contains(DbSeeder.AdminRole),
-                Rating = u.Rating ?? 0,
-                RegistrationDate = u.RegistrationDate,
-                BooksCount = await _uow.BookOwners.Query().CountAsync(bo => bo.UserId == u.Id)
+                Rating = user.Rating ?? 0,
+                RegistrationDate = user.RegistrationDate,
+                BooksCount = bookCounts.GetValueOrDefault(user.Id)
             });
         }
         return View(list);
@@ -90,22 +104,22 @@ public class AdminController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleBlock(string id)
     {
-        var user = await _um.FindByIdAsync(id);
+        var user = await _userManager.FindByIdAsync(id);
         if (user == null) return NotFound();
         user.IsBlocked = !user.IsBlocked;
-        await _um.UpdateAsync(user);
+        await _userManager.UpdateAsync(user);
         return RedirectToAction(nameof(Users));
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleAdmin(string id)
     {
-        var user = await _um.FindByIdAsync(id);
+        var user = await _userManager.FindByIdAsync(id);
         if (user == null) return NotFound();
-        if (await _um.IsInRoleAsync(user, DbSeeder.AdminRole))
-            await _um.RemoveFromRoleAsync(user, DbSeeder.AdminRole);
+        if (await _userManager.IsInRoleAsync(user, DbSeeder.AdminRole))
+            await _userManager.RemoveFromRoleAsync(user, DbSeeder.AdminRole);
         else
-            await _um.AddToRoleAsync(user, DbSeeder.AdminRole);
+            await _userManager.AddToRoleAsync(user, DbSeeder.AdminRole);
         return RedirectToAction(nameof(Users));
     }
 
@@ -142,22 +156,17 @@ public class AdminController : Controller
     [HttpGet]
     public async Task<IActionResult> BookOfTheDay()
     {
-        var books = await _uow.Books.Query()
-            .Include(b => b.BookOwners).ThenInclude(bo => bo.User)
-            .Where(b => !b.IsHidden)
-            .ToListAsync();
         var today = DateTime.UtcNow.Date;
         var current = (await _uow.BooksOfTheDay.FindAsync(b => b.Date == today)).FirstOrDefault();
-        var currentBook = current != null ? books.FirstOrDefault(b => b.Id == current.BookId) : null;
+        var currentBook = current != null ? await _uow.Books.GetByIdAsync(current.BookId) : null;
         return View(new SetBookOfDayViewModel
         {
             Date = today,
-            AvailableBooks = books.Select(_mapper.Map<BookCardViewModel>).ToList(),
+            AvailableBooks = await AvailableBookCardsAsync(),
             CurrentBookOfDayId = current?.BookId,
             CurrentBookTitle = currentBook?.Title,
             CurrentBookAuthor = currentBook?.Author,
-            CurrentBookCover = currentBook?.CoverImagePath,
-            CurrentBookGenre = currentBook?.Genre
+            CurrentBookCover = currentBook?.CoverImagePath
         });
     }
 
@@ -193,20 +202,16 @@ public class AdminController : Controller
 
     public async Task<IActionResult> Quiz()
     {
-        var qs = await _uow.QuizQuestions.Query().Include(q => q.Book).OrderBy(q => q.Id).ToListAsync();
-        return View(qs);
+        var questions = await _uow.QuizQuestions.Query().Include(q => q.Book).OrderBy(q => q.Id).ToListAsync();
+        return View(questions);
     }
 
     [HttpGet]
     public async Task<IActionResult> CreateQuiz()
     {
-        var books = await _uow.Books.Query()
-            .Include(b => b.BookOwners).ThenInclude(bo => bo.User)
-            .Where(b => !b.IsHidden)
-            .ToListAsync();
         return View("QuizForm", new QuizQuestionFormViewModel
         {
-            AvailableBooks = books.Select(_mapper.Map<BookCardViewModel>).ToList()
+            AvailableBooks = await AvailableBookCardsAsync()
         });
     }
 
@@ -215,11 +220,7 @@ public class AdminController : Controller
     {
         if (!ModelState.IsValid)
         {
-        var books = await _uow.Books.Query()
-                .Include(b => b.BookOwners).ThenInclude(bo => bo.User)
-            .Where(b => !b.IsHidden)
-            .ToListAsync();
-            model.AvailableBooks = books.Select(_mapper.Map<BookCardViewModel>).ToList();
+            model.AvailableBooks = await AvailableBookCardsAsync();
             return View("QuizForm", model);
         }
         await _uow.QuizQuestions.AddAsync(new QuizQuestion
@@ -238,22 +239,18 @@ public class AdminController : Controller
     [HttpGet]
     public async Task<IActionResult> EditQuiz(int id)
     {
-        var q = await _uow.QuizQuestions.GetByIdAsync(id);
-        if (q == null) return NotFound();
-        var books = await _uow.Books.Query()
-            .Include(b => b.BookOwners).ThenInclude(bo => bo.User)
-            .Where(b => !b.IsHidden)
-            .ToListAsync();
+        var question = await _uow.QuizQuestions.GetByIdAsync(id);
+        if (question == null) return NotFound();
         return View("QuizForm", new QuizQuestionFormViewModel
         {
-            Id = q.Id,
-            BookId = q.BookId,
-            Quote = q.Quote,
-            CorrectAnswer = q.CorrectAnswer,
-            Option2 = q.Option2,
-            Option3 = q.Option3,
-            Option4 = q.Option4,
-            AvailableBooks = books.Select(_mapper.Map<BookCardViewModel>).ToList()
+            Id = question.Id,
+            BookId = question.BookId,
+            Quote = question.Quote,
+            CorrectAnswer = question.CorrectAnswer,
+            Option2 = question.Option2,
+            Option3 = question.Option3,
+            Option4 = question.Option4,
+            AvailableBooks = await AvailableBookCardsAsync()
         });
     }
 
@@ -262,22 +259,18 @@ public class AdminController : Controller
     {
         if (!ModelState.IsValid)
         {
-        var books = await _uow.Books.Query()
-                .Include(b => b.BookOwners).ThenInclude(bo => bo.User)
-                .Where(b => !b.IsHidden)
-                .ToListAsync();
-            model.AvailableBooks = books.Select(_mapper.Map<BookCardViewModel>).ToList();
+            model.AvailableBooks = await AvailableBookCardsAsync();
             return View("QuizForm", model);
         }
-        var q = await _uow.QuizQuestions.GetByIdAsync(model.Id ?? 0);
-        if (q == null) return NotFound();
-        q.BookId = model.BookId;
-        q.Quote = model.Quote;
-        q.CorrectAnswer = model.CorrectAnswer;
-        q.Option2 = model.Option2;
-        q.Option3 = model.Option3;
-        q.Option4 = model.Option4;
-        _uow.QuizQuestions.Update(q);
+        var question = await _uow.QuizQuestions.GetByIdAsync(model.Id ?? 0);
+        if (question == null) return NotFound();
+        question.BookId = model.BookId;
+        question.Quote = model.Quote;
+        question.CorrectAnswer = model.CorrectAnswer;
+        question.Option2 = model.Option2;
+        question.Option3 = model.Option3;
+        question.Option4 = model.Option4;
+        _uow.QuizQuestions.Update(question);
         await _uow.SaveChangesAsync();
         TempData["Success"] = "Вопрос обновлён.";
         return RedirectToAction(nameof(Quiz));
@@ -286,9 +279,9 @@ public class AdminController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteQuiz(int id)
     {
-        var q = await _uow.QuizQuestions.GetByIdAsync(id);
-        if (q == null) return NotFound();
-        _uow.QuizQuestions.Remove(q);
+        var question = await _uow.QuizQuestions.GetByIdAsync(id);
+        if (question == null) return NotFound();
+        _uow.QuizQuestions.Remove(question);
         await _uow.SaveChangesAsync();
         return RedirectToAction(nameof(Quiz));
     }

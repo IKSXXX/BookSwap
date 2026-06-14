@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using BookSwap.Db.Entities;
+using BookSwap.Web.Helpers;
 
 namespace BookSwap.Web.ViewModels;
 
@@ -54,7 +55,25 @@ public class ExchangeListItemViewModel
     public string? BookRequestedCover { get; set; }
     public string? BookOfferedTitle { get; set; }
     public string? BookOfferedCover { get; set; }
-    public bool IsSender { get; set; }
+
+    public static ExchangeListItemViewModel From(ExchangeRequest e, string currentUserId)
+    {
+        var isSender = e.SenderId == currentUserId;
+        return new ExchangeListItemViewModel
+        {
+            Id = e.Id,
+            Status = e.Status,
+            StatusLabel = MappingProfile.StatusToLabel(e.Status),
+            CreatedAt = e.CreatedAt,
+            OtherUserId = (isSender ? e.ReceiverId : e.SenderId) ?? "",
+            OtherUserName = (isSender ? e.Receiver?.UserName : e.Sender?.UserName) ?? "",
+            OtherUserAvatar = (isSender ? e.Receiver?.AvatarPath : e.Sender?.AvatarPath) ?? "",
+            BookRequestedTitle = e.BookRequested?.Title ?? "",
+            BookRequestedCover = e.BookRequested?.CoverImagePath,
+            BookOfferedTitle = e.BookOffered?.Title,
+            BookOfferedCover = e.BookOffered?.CoverImagePath
+        };
+    }
 }
 
 public class ReviewFormViewModel

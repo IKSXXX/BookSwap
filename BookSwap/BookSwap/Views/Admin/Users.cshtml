@@ -25,20 +25,20 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var u in Model)
+                    @foreach (var user in Model)
                     {
-                        <tr class="@(u.IsBlocked ? "row-hidden" : "")">
-                            <td><a asp-controller="User" asp-action="Details" asp-route-id="@u.Id" style="font-weight:600;color:var(--gray-900);">@u.UserName</a></td>
-                            <td class="text-muted">@u.Email</td>
-                            <td>@u.Rating.ToString("0.0")</td>
-                            <td>@u.BooksCount</td>
-                            <td class="text-muted">@u.RegistrationDate.ToLocalTime().ToString("dd.MM.yyyy")</td>
+                        <tr class="@(user.IsBlocked ? "row-hidden" : "")">
+                            <td><a asp-controller="User" asp-action="Details" asp-route-id="@user.Id" style="font-weight:600;color:var(--gray-900);">@user.UserName</a></td>
+                            <td class="text-muted">@user.Email</td>
+                            <td>@user.Rating.ToString("0.0")</td>
+                            <td>@user.BooksCount</td>
+                            <td class="text-muted">@user.RegistrationDate.ToLocalTime().ToString("dd.MM.yyyy")</td>
                             <td>
-                                @if (u.IsBlocked)
+                                @if (user.IsBlocked)
                                 {
                                     <span class="badge badge--red">Заблокирован</span>
                                 }
-                                @if (u.IsAdmin)
+                                @if (user.IsAdmin)
                                 {
                                     <span class="badge badge--blue">Admin</span>
                                 }
@@ -47,13 +47,13 @@
                                 <div style="display:flex;gap:.5rem;">
                                     <form asp-action="ToggleBlock" method="post">
                                         @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@u.Id" />
-                                        <button class="btn btn-ghost btn-sm">@(u.IsBlocked ? "Разблокировать" : "Заблокировать")</button>
+                                        <input type="hidden" name="id" value="@user.Id" />
+                                        <button class="btn btn-ghost btn-sm">@(user.IsBlocked ? "Разблокировать" : "Заблокировать")</button>
                                     </form>
                                     <form asp-action="ToggleAdmin" method="post">
                                         @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@u.Id" />
-                                        <button class="btn btn-ghost btn-sm">@(u.IsAdmin ? "Убрать админа" : "Сделать админом")</button>
+                                        <input type="hidden" name="id" value="@user.Id" />
+                                        <button class="btn btn-ghost btn-sm">@(user.IsAdmin ? "Убрать админа" : "Сделать админом")</button>
                                     </form>
                                 </div>
                             </td>
