@@ -1,13 +1,13 @@
-using System.Security.Claims;
 using AutoMapper;
 using BookSwap.Db.Entities;
+using BookSwap.Tests.Testing;
 using BookSwap.Web.Controllers;
-using BookSwap.Web.Mocks;
 using BookSwap.Web.Services;
 using BookSwap.Web.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Moq;
 using Xunit;
 
@@ -15,186 +15,138 @@ namespace BookSwap.Tests;
 
 public class ExchangeControllerTests
 {
-    public ExchangeControllerTests() => ResetStore();
+    private readonly TestUnitOfWork _uow = new();
+    private readonly Mock<IExchangeService> _exchange = new();
+    private readonly Mock<UserManager<User>> _userManager;
 
-    [Fact]
-    public async Task Accept_AsReceiver_SetsAcceptedAndMarksBooksUnavailable()
+    public ExchangeControllerTests() => _userManager = TestDoubles.MockUserManager("user");
+
+    private ExchangeController BuildController()
     {
-        var requested = AddBook(id: 1, available: true);
-        var offered = AddBook(id: 2, available: true);
-        AddExchange(id: 10, "sender", "receiver", ExchangeStatus.Pending, requestedId: 1, offeredId: 2);
-
-        var controller = BuildController(currentUserId: "receiver");
-        var result = await controller.Accept(10);
-
-        Assert.IsType<RedirectToActionResult>(result);
-        Assert.Equal(ExchangeStatus.Accepted, GetExchange(10).Status);
-        Assert.False(requested.IsAvailable);
-        Assert.False(offered.IsAvailable);
+        var controller = new ExchangeController(_uow, Mock.Of<IMapper>(), _userManager.Object, _exchange.Object)
+        {
+            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
+            TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>()),
+            Url = Mock.Of<IUrlHelper>()
+        };
+        return controller;
     }
 
     [Fact]
-    public async Task Accept_AsSender_ReturnsForbid()
+    public async Task Accept_WhenServiceSucceeds_RedirectsToDetails()
     {
-        AddBook(id: 1, available: true);
-        AddExchange(id: 10, "sender", "receiver", ExchangeStatus.Pending, requestedId: 1);
+        _exchange.Setup(s => s.AcceptAsync(10, "user")).ReturnsAsync(ServiceResult.Success());
 
-        var controller = BuildController(currentUserId: "sender");
-        var result = await controller.Accept(10);
+        var result = await BuildController().Accept(10);
+
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal(nameof(ExchangeController.Details), redirect.ActionName);
+    }
+
+    [Fact]
+    public async Task Accept_WhenServiceForbids_ReturnsForbid()
+    {
+        _exchange.Setup(s => s.AcceptAsync(10, "user")).ReturnsAsync(ServiceResult.Fail(ServiceError.Forbidden));
+
+        var result = await BuildController().Accept(10);
 
         Assert.IsType<ForbidResult>(result);
-        Assert.Equal(ExchangeStatus.Pending, GetExchange(10).Status);
     }
 
-
     [Fact]
-    public async Task Cancel_AsReceiver_ReturnsForbid()
+    public async Task Cancel_WhenServiceForbids_ReturnsForbid()
     {
-        AddBook(id: 1, available: true);
-        AddExchange(id: 10, "sender", "receiver", ExchangeStatus.Pending, requestedId: 1);
+        _exchange.Setup(s => s.CancelAsync(10, "user")).ReturnsAsync(ServiceResult.Fail(ServiceError.Forbidden));
 
-        var controller = BuildController(currentUserId: "receiver");
-        var result = await controller.Cancel(10);
+        var result = await BuildController().Cancel(10);
 
         Assert.IsType<ForbidResult>(result);
-        Assert.Equal(ExchangeStatus.Pending, GetExchange(10).Status);
     }
 
     [Fact]
-    public async Task Complete_TransfersBookOwnershipToOtherParty()
+    public async Task Complete_WhenServiceSucceeds_RedirectsToDetails()
     {
-        AddBook(id: 1, available: false);
-        AddBook(id: 2, available: false);
-        AddOwner(bookId: 1, userId: "receiver");
-        AddOwner(bookId: 2, userId: "sender");
-        AddExchange(id: 10, "sender", "receiver", ExchangeStatus.Accepted, requestedId: 1, offeredId: 2);
+        _exchange.Setup(s => s.CompleteAsync(10, "user")).ReturnsAsync(ServiceResult.Success());
 
-        var controller = BuildController(currentUserId: "sender");
-        var result = await controller.Complete(10);
+        var result = await BuildController().Complete(10);
 
-        Assert.IsType<RedirectToActionResult>(result);
-        Assert.Equal(ExchangeStatus.Completed, GetExchange(10).Status);
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal(nameof(ExchangeController.Details), redirect.ActionName);
+    }
 
-        Assert.Contains(MockDataStore.BookOwners, o => o.BookId == 1 && o.UserId == "sender" && o.IsPrimary);
-        Assert.DoesNotContain(MockDataStore.BookOwners, o => o.BookId == 1 && o.UserId == "receiver");
-        Assert.Contains(MockDataStore.BookOwners, o => o.BookId == 2 && o.UserId == "receiver" && o.IsPrimary);
-        Assert.DoesNotContain(MockDataStore.BookOwners, o => o.BookId == 2 && o.UserId == "sender");
+    [Fact]
+    public async Task Create_Post_WhenServiceSucceeds_RedirectsToDetailsWithId()
+    {
+        _exchange.Setup(s => s.CreateAsync(5, "user", null, It.IsAny<Func<int, string?>>()))
+            .ReturnsAsync(ServiceResult<int>.Success(42));
+
+        var result = await BuildController().Create(5, null);
+
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal(nameof(ExchangeController.Details), redirect.ActionName);
+        Assert.Equal(42, redirect.RouteValues!["id"]);
+    }
+
+    [Fact]
+    public async Task Create_Post_WhenServiceFails_ReturnsBadRequest()
+    {
+        _exchange.Setup(s => s.CreateAsync(5, "user", null, It.IsAny<Func<int, string?>>()))
+            .ReturnsAsync(ServiceResult<int>.Fail(ServiceError.Invalid, "Нельзя обменяться с самим собой."));
+
+        var result = await BuildController().Create(5, null);
+
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task LeaveReview_Post_InvalidModelState_ReturnsViewWithModel()
+    {
+        var controller = BuildController();
+        controller.ModelState.AddModelError("Rating", "Required");
+        var model = new ReviewFormViewModel { ExchangeRequestId = 10, ToUserId = "receiver" };
+
+        var result = await controller.LeaveReview(model);
+
+        var view = Assert.IsType<ViewResult>(result);
+        Assert.Same(model, view.Model);
+        _exchange.Verify(s => s.LeaveReviewAsync(It.IsAny<ReviewFormViewModel>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task LeaveReview_Post_WhenServiceSucceeds_RedirectsAndSetsTempData()
+    {
+        _exchange.Setup(s => s.LeaveReviewAsync(It.IsAny<ReviewFormViewModel>(), "user"))
+            .ReturnsAsync(ServiceResult.Success());
+        var controller = BuildController();
+        var model = new ReviewFormViewModel { ExchangeRequestId = 10, ToUserId = "receiver", Rating = 5 };
+
+        var result = await controller.LeaveReview(model);
+
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal(nameof(ExchangeController.Details), redirect.ActionName);
+        Assert.Equal("Спасибо за отзыв!", controller.TempData["Success"]);
     }
 
     [Fact]
     public async Task Details_AsNonParticipant_ReturnsForbid()
     {
-        AddExchange(id: 10, "sender", "receiver", ExchangeStatus.Pending, requestedId: 1);
+        _userManager.Setup(m => m.GetUserId(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns("stranger");
+        _uow.AddExchange(id: 10, "sender", "receiver", ExchangeStatus.Pending, requestedId: 1);
 
-        var controller = BuildController(currentUserId: "stranger");
-        var result = await controller.Details(10);
+        var result = await BuildController().Details(10);
 
         Assert.IsType<ForbidResult>(result);
     }
 
-
     [Fact]
-    public async Task LeaveReview_RecalculatesTargetUserRating()
+    public async Task Create_Get_OwnBook_ReturnsBadRequest()
     {
-        AddExchange(id: 10, "sender", "receiver", ExchangeStatus.Completed, requestedId: 1);
-        MockDataStore.Reviews.Add(new Review { Id = 1, ToUserId = "receiver", FromUserId = "other", ExchangeRequestId = 99, Rating = 4 });
+        _userManager.Setup(m => m.GetUserId(It.IsAny<System.Security.Claims.ClaimsPrincipal>())).Returns("user-1");
+        _uow.AddBook(id: 1, available: true);
+        _uow.AddOwner(bookId: 1, userId: "user-1");
 
-        var target = new User { Id = "receiver", UserName = "receiver" };
-        var userManager = MockUserManager("sender");
-        userManager.Setup(m => m.FindByIdAsync("receiver")).ReturnsAsync(target);
-        userManager.Setup(m => m.UpdateAsync(It.IsAny<User>())).ReturnsAsync(IdentityResult.Success);
-
-        var controller = BuildController(userManager);
-        var model = new ReviewFormViewModel { ExchangeRequestId = 10, ToUserId = "receiver", Rating = 2 };
-
-        var result = await controller.LeaveReview(model);
-
-        Assert.IsType<RedirectToActionResult>(result);
-        Assert.Contains(MockDataStore.Reviews, r => r.FromUserId == "sender" && r.ToUserId == "receiver");
-        Assert.Equal(3.0, target.Rating);
-    }
-
-
-    [Fact]
-    public async Task Create_OwnBook_ReturnsBadRequest()
-    {
-        AddBook(id: 1, available: true);
-        AddOwner(bookId: 1, userId: "user-1");
-
-        var controller = BuildController(currentUserId: "user-1");
-        var result = await controller.Create(bookId: 1);
+        var result = await BuildController().Create(bookId: 1);
 
         Assert.IsType<BadRequestObjectResult>(result);
-    }
-
-    static void ResetStore()
-    {
-        MockDataStore.Books.Clear();
-        MockDataStore.BookOwners.Clear();
-        MockDataStore.Exchanges.Clear();
-        MockDataStore.Messages.Clear();
-        MockDataStore.Reviews.Clear();
-        MockDataStore.Favorites.Clear();
-        MockDataStore.Discussions.Clear();
-        MockDataStore.DiscussionMessages.Clear();
-        MockDataStore.QuizQuestions.Clear();
-        MockDataStore.BooksOfTheDay.Clear();
-        MockDataStore.Notifications.Clear();
-    }
-
-    static Book AddBook(int id, bool available)
-    {
-        var book = new Book { Id = id, Title = $"Книга {id}", Author = "Автор", IsAvailable = available };
-        MockDataStore.Books.Add(book);
-        return book;
-    }
-
-    static void AddOwner(int bookId, string userId)
-    {
-        var book = MockDataStore.Books.FirstOrDefault(b => b.Id == bookId);
-        var owner = new BookOwner { BookId = bookId, UserId = userId, IsPrimary = true, Book = book };
-        MockDataStore.BookOwners.Add(owner);
-        book?.BookOwners.Add(owner);
-    }
-
-    static void AddExchange(int id, string senderId, string receiverId, ExchangeStatus status, int requestedId, int? offeredId = null)
-        => MockDataStore.Exchanges.Add(new ExchangeRequest
-        {
-            Id = id,
-            SenderId = senderId,
-            ReceiverId = receiverId,
-            Status = status,
-            BookRequestedId = requestedId,
-            BookOfferedId = offeredId
-        });
-
-    static ExchangeRequest GetExchange(int id) => MockDataStore.Exchanges.First(e => e.Id == id);
-
-    static Mock<UserManager<User>> MockUserManager(string currentUserId)
-    {
-        var store = new Mock<IUserStore<User>>();
-        var userManager = new Mock<UserManager<User>>(store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
-        userManager.Setup(m => m.GetUserId(It.IsAny<ClaimsPrincipal>())).Returns(currentUserId);
-        return userManager;
-    }
-
-    static ExchangeController BuildController(string currentUserId)
-        => BuildController(MockUserManager(currentUserId));
-
-    static ExchangeController BuildController(Mock<UserManager<User>> userManager)
-    {
-        var uow = new MockUnitOfWork();
-        var exchange = new ExchangeService(uow, userManager.Object, Mock.Of<INotificationService>());
-        var controller = new ExchangeController(
-            uow,
-            Mock.Of<IMapper>(),
-            userManager.Object,
-            exchange)
-        {
-            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
-            TempData = new Microsoft.AspNetCore.Mvc.ViewFeatures.TempDataDictionary(
-                new DefaultHttpContext(), Mock.Of<Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataProvider>())
-        };
-        return controller;
     }
 }
