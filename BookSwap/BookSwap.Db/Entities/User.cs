@@ -1,8 +1,9 @@
+using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 
 namespace BookSwap.Db.Entities;
 
-public class User : Microsoft.AspNetCore.Identity.IdentityUser
+public class User : IdentityUser
 {
     public double? Rating { get; set; }
 
