@@ -66,6 +66,7 @@ try
     builder.Services.AddSingleton<BookSwap.Web.Services.GigaChatService>();
     builder.Services.AddScoped<BookSwap.Web.Services.INotificationService, BookSwap.Web.Services.NotificationService>();
     builder.Services.AddScoped<BookSwap.Web.Services.IExchangeService, BookSwap.Web.Services.ExchangeService>();
+    builder.Services.AddScoped<BookSwap.Web.Services.IBookService, BookSwap.Web.Services.BookService>();
     builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
     builder.Services.AddControllersWithViews();
     builder.Services.AddSignalR();

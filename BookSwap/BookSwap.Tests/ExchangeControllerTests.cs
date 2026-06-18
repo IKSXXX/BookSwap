@@ -60,7 +60,7 @@ public class ExchangeControllerTests
 
         var result = await BuildController().Cancel(10);
 
-        Assert.IsType<ForbidResult>(result);
+        Assert.IsType<ForbidResult>(result) ;
     }
 
     [Fact]

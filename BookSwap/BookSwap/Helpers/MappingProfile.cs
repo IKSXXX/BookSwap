@@ -29,6 +29,10 @@ public class MappingProfile : Profile
         CreateMap<Book, BookFormViewModel>()
             .ForMember(d => d.ExistingCoverPath, o => o.MapFrom(s => s.CoverImagePath))
             .ForMember(d => d.CoverImage, o => o.Ignore());
+
+        CreateMap<Discussion, DiscussionListItemViewModel>()
+            .ForMember(d => d.AuthorName, o => o.MapFrom(s => s.User != null ? s.User.UserName : ""))
+            .ForMember(d => d.MessagesCount, o => o.MapFrom(s => s.Messages.Count));
     }
 
     public static string ConditionToLabel(BookCondition c) => c switch

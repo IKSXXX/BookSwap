@@ -2,6 +2,7 @@ using AutoMapper;
 using BookSwap.Db.Entities;
 using BookSwap.Web.Helpers;
 using BookSwap.Db.Interfaces;
+using BookSwap.Web.Services;
 using BookSwap.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -18,19 +19,18 @@ public class BookController : Controller
     private readonly IMapper _mapper;
     private readonly UserManager<User> _userManager;
     private readonly IWebHostEnvironment _env;
+    private readonly IBookService _book;
 
-    public BookController(IUnitOfWork uow, IMapper mapper, UserManager<User> userManager, IWebHostEnvironment env)
+    public BookController(IUnitOfWork uow, IMapper mapper, UserManager<User> userManager, IWebHostEnvironment env, IBookService book)
     {
         _uow = uow;
         _mapper = mapper;
         _userManager = userManager;
         _env = env;
+        _book = book;
     }
 
     private string CurrentUserId => _userManager.GetUserId(User)!;
-
-    private Task<bool> IsOwnerAsync(int bookId, string userId)
-        => _uow.BookOwners.AnyAsync(bo => bo.BookId == bookId && bo.UserId == userId);
 
     [HttpGet]
     [Route("Book")]
@@ -127,14 +127,7 @@ public class BookController : Controller
 
         var vm = _mapper.Map<BookDetailsViewModel>(book);
         vm.Similar = similar.Select(_mapper.Map<BookCardViewModel>).ToList();
-        vm.Discussions = discussions.Select(d => new DiscussionListItemViewModel
-        {
-            Id = d.Id,
-            Title = d.Title,
-            AuthorName = d.User?.UserName ?? "",
-            MessagesCount = d.Messages.Count,
-            CreatedAt = d.CreatedAt
-        }).ToList();
+        vm.Discussions = discussions.Select(_mapper.Map<DiscussionListItemViewModel>).ToList();
         vm.IsFavorite = isFav;
         vm.IsInWishlist = isWish;
 
@@ -150,16 +143,10 @@ public class BookController : Controller
         if (!ModelState.IsValid) return View("Form", model);
 
         var userId = CurrentUserId;
-        var book = _mapper.Map<Book>(model);
+        var coverPath = await ImageHelper.SaveAsync(model.CoverImage, _env, "images/books");
 
-        var path = await ImageHelper.SaveAsync(model.CoverImage, _env, "images/books");
-        if (path != null) book.CoverImagePath = path;
-
-        await _uow.Books.AddAsync(book);
-        await _uow.SaveChangesAsync();
-
-        await _uow.BookOwners.AddAsync(new BookOwner { BookId = book.Id, UserId = userId, IsPrimary = true });
-        await _uow.SaveChangesAsync();
+        var result = await _book.CreateAsync(model, userId, coverPath);
+        if (!result.Ok) return result.ToActionResult();
 
         TempData["Success"] = "Книга добавлена.";
         return RedirectToAction("Details", "User", new { id = userId });
@@ -168,61 +155,34 @@ public class BookController : Controller
     [Authorize, HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
-        var userId = CurrentUserId;
-        var book = await _uow.Books.GetByIdAsync(id);
-        if (book == null) return Forbid();
-        if (!await IsOwnerAsync(id, userId)) return Forbid();
+        var result = await _book.GetForEditAsync(id, CurrentUserId);
+        if (!result.Ok) return result.ToActionResult();
 
-        return View("Form", new BookFormViewModel
-        {
-            Id = book.Id, Title = book.Title, Author = book.Author,
-            ISBN = book.ISBN, Description = book.Description,
-            Genre = book.Genre, Condition = book.Condition,
-            Year = book.Year, Language = book.Language,
-            ExistingCoverPath = book.CoverImagePath
-        });
+        return View("Form", result.Value);
     }
 
     [Authorize, HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(BookFormViewModel model)
     {
         if (!ModelState.IsValid) return View("Form", model);
-
-        var userId = CurrentUserId;
         if (model.Id == null) return BadRequest();
-        var book = await _uow.Books.GetByIdAsync(model.Id.Value);
-        if (book == null) return Forbid();
-        if (!await IsOwnerAsync(model.Id.Value, userId)) return Forbid();
 
-        book.Title = model.Title;
-        book.Author = model.Author;
-        book.ISBN = model.ISBN;
-        book.Description = model.Description;
-        book.Genre = model.Genre;
-        book.Condition = model.Condition;
-        book.Year = model.Year;
-        book.Language = model.Language;
+        var coverPath = await ImageHelper.SaveAsync(model.CoverImage, _env, "images/books");
 
-        var path = await ImageHelper.SaveAsync(model.CoverImage, _env, "images/books");
-        if (path != null) book.CoverImagePath = path;
-
-        _uow.Books.Update(book);
-        await _uow.SaveChangesAsync();
+        var result = await _book.EditAsync(model, CurrentUserId, coverPath);
+        if (!result.Ok) return result.ToActionResult();
 
         TempData["Success"] = "Книга обновлена.";
-        return RedirectToAction("Details", new { id = book.Id });
+        return RedirectToAction("Details", new { id = model.Id });
     }
 
     [Authorize, HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
         var userId = CurrentUserId;
-        var book = await _uow.Books.GetByIdAsync(id);
-        if (book == null) return Forbid();
-        if (!await IsOwnerAsync(id, userId)) return Forbid();
+        var result = await _book.DeleteAsync(id, userId);
+        if (!result.Ok) return result.ToActionResult();
 
-        _uow.Books.Remove(book);
-        await _uow.SaveChangesAsync();
         return RedirectToAction("Details", "User", new { id = userId });
     }
 
