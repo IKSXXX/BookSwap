@@ -67,6 +67,7 @@ try
     builder.Services.AddScoped<BookSwap.Web.Services.INotificationService, BookSwap.Web.Services.NotificationService>();
     builder.Services.AddScoped<BookSwap.Web.Services.IExchangeService, BookSwap.Web.Services.ExchangeService>();
     builder.Services.AddScoped<BookSwap.Web.Services.IBookService, BookSwap.Web.Services.BookService>();
+    builder.Services.AddScoped<BookSwap.Web.Services.IAdminService, BookSwap.Web.Services.AdminService>();
     builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
     builder.Services.AddControllersWithViews();
     builder.Services.AddSignalR();

@@ -3,6 +3,8 @@ using BookSwap.Db.Data;
 using BookSwap.Db.Entities;
 using BookSwap.Db.Interfaces;
 using BookSwap.Web.Data;
+using BookSwap.Web.Helpers;
+using BookSwap.Web.Services;
 using BookSwap.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -17,12 +19,14 @@ public class AdminController : Controller
     private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
     private readonly UserManager<User> _userManager;
+    private readonly IAdminService _admin;
 
-    public AdminController(IUnitOfWork uow, IMapper mapper, UserManager<User> userManager)
+    public AdminController(IUnitOfWork uow, IMapper mapper, UserManager<User> userManager, IAdminService admin)
     {
         _uow = uow;
         _mapper = mapper;
         _userManager = userManager;
+        _admin = admin;
     }
 
     async Task<List<BookCardViewModel>> AvailableBookCardsAsync()
@@ -104,22 +108,16 @@ public class AdminController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleBlock(string id)
     {
-        var user = await _userManager.FindByIdAsync(id);
-        if (user == null) return NotFound();
-        user.IsBlocked = !user.IsBlocked;
-        await _userManager.UpdateAsync(user);
+        var result = await _admin.ToggleUserBlockAsync(id);
+        if (!result.Ok) return result.ToActionResult();
         return RedirectToAction(nameof(Users));
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleAdmin(string id)
     {
-        var user = await _userManager.FindByIdAsync(id);
-        if (user == null) return NotFound();
-        if (await _userManager.IsInRoleAsync(user, DbSeeder.AdminRole))
-            await _userManager.RemoveFromRoleAsync(user, DbSeeder.AdminRole);
-        else
-            await _userManager.AddToRoleAsync(user, DbSeeder.AdminRole);
+        var result = await _admin.ToggleUserAdminAsync(id);
+        if (!result.Ok) return result.ToActionResult();
         return RedirectToAction(nameof(Users));
     }
 
@@ -135,21 +133,16 @@ public class AdminController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleHidden(int id)
     {
-        var book = await _uow.Books.GetByIdAsync(id);
-        if (book == null) return NotFound();
-        book.IsHidden = !book.IsHidden;
-        _uow.Books.Update(book);
-        await _uow.SaveChangesAsync();
+        var result = await _admin.ToggleBookHiddenAsync(id);
+        if (!result.Ok) return result.ToActionResult();
         return RedirectToAction(nameof(Books));
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteBook(int id)
     {
-        var book = await _uow.Books.GetByIdAsync(id);
-        if (book == null) return NotFound();
-        _uow.Books.Remove(book);
-        await _uow.SaveChangesAsync();
+        var result = await _admin.DeleteBookAsync(id);
+        if (!result.Ok) return result.ToActionResult();
         return RedirectToAction(nameof(Books));
     }
 
@@ -173,29 +166,12 @@ public class AdminController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> BookOfTheDay(DateTime date, int bookId)
     {
-        if (bookId <= 0)
+        var result = await _admin.SetBookOfTheDayAsync(date, bookId);
+        if (!result.Ok)
         {
-            TempData["Error"] = "Выберите книгу перед сохранением.";
+            TempData["Error"] = result.Message;
             return RedirectToAction(nameof(BookOfTheDay));
         }
-        var book = await _uow.Books.GetByIdAsync(bookId);
-        if (book == null || book.IsHidden)
-        {
-            TempData["Error"] = "Указанная книга не найдена или скрыта.";
-            return RedirectToAction(nameof(BookOfTheDay));
-        }
-        var day = DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
-        var existing = (await _uow.BooksOfTheDay.FindAsync(b => b.Date == day)).FirstOrDefault();
-        if (existing != null)
-        {
-            existing.BookId = bookId;
-            _uow.BooksOfTheDay.Update(existing);
-        }
-        else
-        {
-            await _uow.BooksOfTheDay.AddAsync(new BookOfTheDay { BookId = bookId, Date = day });
-        }
-        await _uow.SaveChangesAsync();
         TempData["Success"] = "Книга дня обновлена.";
         return RedirectToAction(nameof(BookOfTheDay));
     }
@@ -223,16 +199,7 @@ public class AdminController : Controller
             model.AvailableBooks = await AvailableBookCardsAsync();
             return View("QuizForm", model);
         }
-        await _uow.QuizQuestions.AddAsync(new QuizQuestion
-        {
-            BookId = model.BookId,
-            Quote = model.Quote,
-            CorrectAnswer = model.CorrectAnswer,
-            Option2 = model.Option2,
-            Option3 = model.Option3,
-            Option4 = model.Option4
-        });
-        await _uow.SaveChangesAsync();
+        await _admin.CreateQuizAsync(model);
         return RedirectToAction(nameof(Quiz));
     }
 
@@ -262,16 +229,8 @@ public class AdminController : Controller
             model.AvailableBooks = await AvailableBookCardsAsync();
             return View("QuizForm", model);
         }
-        var question = await _uow.QuizQuestions.GetByIdAsync(model.Id ?? 0);
-        if (question == null) return NotFound();
-        question.BookId = model.BookId;
-        question.Quote = model.Quote;
-        question.CorrectAnswer = model.CorrectAnswer;
-        question.Option2 = model.Option2;
-        question.Option3 = model.Option3;
-        question.Option4 = model.Option4;
-        _uow.QuizQuestions.Update(question);
-        await _uow.SaveChangesAsync();
+        var result = await _admin.EditQuizAsync(model);
+        if (!result.Ok) return result.ToActionResult();
         TempData["Success"] = "Вопрос обновлён.";
         return RedirectToAction(nameof(Quiz));
     }
@@ -279,10 +238,8 @@ public class AdminController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteQuiz(int id)
     {
-        var question = await _uow.QuizQuestions.GetByIdAsync(id);
-        if (question == null) return NotFound();
-        _uow.QuizQuestions.Remove(question);
-        await _uow.SaveChangesAsync();
+        var result = await _admin.DeleteQuizAsync(id);
+        if (!result.Ok) return result.ToActionResult();
         return RedirectToAction(nameof(Quiz));
     }
 }
