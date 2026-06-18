@@ -1,0 +1,16 @@
+{
+  "_comment": "Шаблон локальных настроек. Скопируйте этот файл в appsettings.Development.json (он в .gitignore и не попадёт в репозиторий) и впишите свои значения. В Development этот файл подгружается автоматически поверх appsettings.json.",
+
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+
+  "UseMockData": true,
+
+  "GigaChat": {
+    "AuthorizationKey": "КЛЮЧ_GIGACHAT_СЮДА"
+  }
+}
