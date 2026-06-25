@@ -35,7 +35,8 @@ public class ExchangeController : Controller
         var userId = CurrentUserId;
         var query = _uow.Exchanges.Query()
             .Include(e => e.Sender).Include(e => e.Receiver)
-            .Include(e => e.BookRequested).Include(e => e.BookOffered)
+            .Include(e => e.BookRequested).ThenInclude(b => b.BookOwners).ThenInclude(bo => bo.User)
+            .Include(e => e.BookOffered).ThenInclude(b => b.BookOwners).ThenInclude(bo => bo.User)
             .Where(e => e.SenderId == userId || e.ReceiverId == userId);
 
         if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<ExchangeStatus>(status, true, out var parsedStatus))
@@ -91,7 +92,8 @@ public class ExchangeController : Controller
         var userId = CurrentUserId;
         var exchange = await _uow.Exchanges.Query()
             .Include(e => e.Sender).Include(e => e.Receiver)
-            .Include(e => e.BookRequested).Include(e => e.BookOffered)
+            .Include(e => e.BookRequested).ThenInclude(b => b.BookOwners).ThenInclude(bo => bo.User)
+            .Include(e => e.BookOffered).ThenInclude(b => b.BookOwners).ThenInclude(bo => bo.User)
             .Include(e => e.Messages)
             .FirstOrDefaultAsync(e => e.Id == id);
         if (exchange == null) return NotFound();

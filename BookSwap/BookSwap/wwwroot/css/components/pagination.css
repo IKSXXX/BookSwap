@@ -1,0 +1,31 @@
+/* =====================================================
+   BookSwap — Пагинация
+   ===================================================== */
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .25rem;
+    margin-top: 2rem;
+}
+.pagination a,
+.pagination span {
+    display: inline-grid;
+    place-items: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 .5rem;
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    font-size: .875rem;
+    color: var(--gray-700);
+    transition: all var(--dur) var(--ease);
+}
+.pagination a:hover { background: var(--gray-100); }
+.pagination .is-active {
+    background: var(--blue-600);
+    color: #fff;
+    font-weight: 500;
+}
+.pagination .is-disabled { color: var(--gray-400); pointer-events: none; }

@@ -1,0 +1,44 @@
+/* =====================================================
+   BookSwap — Ключевые кадры и анимации
+   ===================================================== */
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+}
+.fade-in > * { animation: fadeUp .35s var(--ease) both; }
+.fade-in > *:nth-child(1) { animation-delay: .02s; }
+.fade-in > *:nth-child(2) { animation-delay: .08s; }
+.fade-in > *:nth-child(3) { animation-delay: .14s; }
+.fade-in > *:nth-child(4) { animation-delay: .20s; }
+.fade-in > *:nth-child(5) { animation-delay: .26s; }
+
+.reveal { animation: fadeUp .28s var(--ease) both; }
+
+@keyframes quizPulse {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.04); }
+    100% { transform: scale(1); }
+}
+.quiz-option.is-correct { animation: quizPulse .35s var(--ease); }
+
+/* === Фокус для клавиатуры === */
+.nav-link:focus-visible,
+.book-card:focus-visible,
+.pagination a:focus-visible,
+.btn:focus-visible {
+    outline: 2px solid var(--blue-500);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+/* === Микро-взаимодействия === */
+.step__icon { transition: transform .25s var(--ease), box-shadow .25s var(--ease); }
+.step:hover .step__icon { transform: translateY(-4px) scale(1.05); box-shadow: var(--shadow-md); }
+.brand-mark { transition: transform .25s var(--ease); }
+.brand:hover .brand-mark { transform: rotate(-6deg) scale(1.05); }
+.pagination a { transition: background var(--dur) var(--ease), transform var(--dur) var(--ease); }
+.pagination a:active { transform: scale(.92); }
+
+/* === Скрытые элементы (совместимость) === */
+.app-rail, .rail-toggle { display: none !important; }

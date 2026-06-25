@@ -1,0 +1,77 @@
+/* =====================================================
+   BookSwap — Формы
+   ===================================================== */
+
+/* === Группа формы === */
+.form-group { margin-bottom: 1rem; }
+.form-label,
+label {
+    display: block;
+    font-size: .875rem;
+    font-weight: 500;
+    color: var(--gray-700);
+    margin-bottom: .375rem;
+}
+
+/* === Поля ввода === */
+.form-input,
+.form-select,
+.form-textarea,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="url"],
+select,
+textarea {
+    display: block;
+    width: 100%;
+    padding: .5rem .75rem;
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    font-size: .875rem;
+    color: var(--gray-900);
+    transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus,
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--blue-500);
+    box-shadow: 0 0 0 3px rgb(37 99 235 / .15);
+}
+textarea { resize: vertical; min-height: 96px; }
+
+/* === Поиск === */
+.form-input--search {
+    padding-left: 2.25rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: .75rem center;
+}
+
+/* === Подсказки и ошибки === */
+.form-help { font-size: .75rem; color: var(--gray-500); margin-top: .25rem; }
+.field-validation-error { display: block; font-size: .75rem; color: var(--red-600); margin-top: .25rem; }
+.input-validation-error { border-color: var(--red-600) !important; }
+
+/* === Чекбоксы и радио === */
+input[type="checkbox"],
+input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--blue-600);
+    cursor: pointer;
+}
+.checkbox-row { display: flex; align-items: center; gap: .5rem; font-size: .875rem; color: var(--gray-700); cursor: pointer; margin: 0; }
+.checkbox-row input { width: 16px; height: 16px; accent-color: var(--blue-600); }
+
+/* === Прочие === */
+.form-wrap { max-width: 720px; margin: 0 auto; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } }
+.form-textarea { min-height: 120px; }
+.form-select { appearance: auto; }

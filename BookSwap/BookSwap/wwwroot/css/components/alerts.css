@@ -1,0 +1,30 @@
+/* =====================================================
+   BookSwap — Уведомления (alert)
+   ===================================================== */
+
+.alert {
+    display: flex;
+    align-items: flex-start;
+    gap: .625rem;
+    padding: .75rem 1rem;
+    border-radius: var(--radius);
+    border: 1px solid;
+    font-size: .875rem;
+    margin-bottom: 1rem;
+}
+.alert--success {
+    background: #F0FDF4;
+    border-color: #BBF7D0;
+    color: var(--green-800);
+}
+.alert--danger {
+    background: #FEF2F2;
+    border-color: #FECACA;
+    color: var(--red-800);
+}
+.alert--info {
+    background: var(--blue-50);
+    border-color: var(--blue-100);
+    color: var(--blue-800);
+}
+.alert .icon { width: 1.125rem; height: 1.125rem; margin-top: 1px; }

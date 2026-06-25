@@ -1,0 +1,28 @@
+/* =====================================================
+   BookSwap — Таблицы
+   ===================================================== */
+
+.table-wrap {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: #fff;
+}
+.table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+.table th,
+.table td {
+    padding: .75rem 1rem;
+    text-align: left;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--line);
+}
+.table th {
+    background: var(--gray-50);
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+.table tbody tr:hover { background: var(--gray-50); }
+.table tbody tr:last-child td { border-bottom: none; }

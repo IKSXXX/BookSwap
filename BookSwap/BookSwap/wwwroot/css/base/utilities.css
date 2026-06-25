@@ -1,0 +1,73 @@
+/* =====================================================
+   BookSwap — Утилиты: макет, отступы, типографика
+   ===================================================== */
+
+/* === Контейнер === */
+.container {
+    width: 100%;
+    max-width: var(--container);
+    margin-inline: auto;
+    padding-inline: var(--pad-x);
+}
+.page-wrap { min-height: calc(100vh - 64px); }
+main { display: block; }
+
+/* === Секции === */
+.section { padding-block: clamp(2.5rem, 5vw, 4rem); }
+.section--tight { padding-block: clamp(1.5rem, 3vw, 2rem); }
+.section--gray { background: var(--gray-50); }
+.section--blue-soft { background: var(--blue-50); }
+
+/* === Flexbox === */
+.grid { display: grid; gap: 1.5rem; }
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+
+/* === Отступы === */
+.gap-1 { gap: .25rem; } .gap-2 { gap: .5rem; } .gap-3 { gap: .75rem; }
+.gap-4 { gap: 1rem; } .gap-6 { gap: 1.5rem; } .gap-8 { gap: 2rem; }
+.mt-1 { margin-top: .25rem; } .mt-2 { margin-top: .5rem; } .mt-3 { margin-top: .75rem; }
+.mt-4 { margin-top: 1rem; } .mt-6 { margin-top: 1.5rem; } .mt-8 { margin-top: 2rem; }
+.mb-2 { margin-bottom: .5rem; } .mb-3 { margin-bottom: .75rem; }
+.mb-4 { margin-bottom: 1rem; } .mb-6 { margin-bottom: 1.5rem; } .mb-8 { margin-bottom: 2rem; }
+.w-full { width: 100%; }
+
+/* === Типографика === */
+.text-center { text-align: center; }
+.text-sm { font-size: .875rem; }
+.text-xs { font-size: .75rem; }
+.text-lg { font-size: 1.125rem; }
+.text-xl { font-size: 1.25rem; }
+.text-2xl { font-size: 1.5rem; }
+.text-3xl { font-size: 1.875rem; }
+.text-4xl { font-size: 2.25rem; }
+.text-muted { color: var(--muted); }
+.text-primary { color: var(--blue-600); }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* === Пустое состояние === */
+.empty-state { padding: 3rem 1rem; text-align: center; color: var(--gray-500); }
+.empty-state .icon { width: 3rem; height: 3rem; margin: 0 auto 1rem; color: var(--gray-400); }
+.empty-state p { color: var(--gray-600); margin-bottom: .5rem; }
+.empty-state__link { font-size: .875rem; font-weight: 500; color: var(--blue-600); text-decoration: none; }
+.empty-state__link:hover { text-decoration: underline; }
+
+/* === Стек (вертикальные отступы) === */
+.stack-sm > * + * { margin-top: .5rem; }
+.stack > * + * { margin-top: 1rem; }
+.stack-lg > * + * { margin-top: 1.5rem; }
+
+/* === Разделитель === */
+.divider { height: 1px; background: var(--line); border: none; margin: 1.5rem 0; }
+
+/* === Разное === */
+.row-hidden { opacity: .5; }
+.row-hidden td { background: var(--gray-50); }

@@ -1,0 +1,156 @@
+/* =====================================================
+   BookSwap — Чат обмена
+   ===================================================== */
+
+/* === Карточка чата === */
+.chat-card {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    height: 100%;
+    min-height: 480px;
+}
+.chat-card .card-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 1rem; border-bottom: 1px solid var(--line); }
+
+/* === Сообщения === */
+.chat-messages {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+.chat-messages::-webkit-scrollbar { width: 8px; }
+.chat-messages::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 999px; }
+.chat-messages::-webkit-scrollbar-thumb:hover { background: var(--gray-300); }
+
+/* === Пузыри === */
+.chat-bubble {
+    max-width: 75%;
+    padding: .75rem 1rem;
+    border-radius: var(--radius-lg);
+    font-size: .9rem;
+    line-height: 1.5;
+    word-wrap: break-word;
+    box-shadow: var(--shadow-xs);
+}
+.chat-bubble--theirs {
+    background: var(--gray-100);
+    color: var(--gray-900);
+    border-bottom-left-radius: 4px;
+    align-self: flex-start;
+}
+.chat-bubble--mine {
+    background: var(--blue-600);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+    align-self: flex-end;
+}
+.chat-bubble small {
+    display: block;
+    font-size: .7rem;
+    opacity: .7;
+    margin-top: .25rem;
+}
+.chat-bubble time {
+    display: block;
+    font-size: .7rem;
+    opacity: .65;
+    margin-top: .375rem;
+    text-align: right;
+}
+.chat-bubble--mine time { color: rgba(255,255,255,.75); }
+
+/* === Ряд сообщения === */
+.chat-row {
+    display: flex;
+    justify-content: flex-start;
+    animation: chat-msg-in .25s var(--ease) both;
+}
+.chat-row--mine { justify-content: flex-end; }
+.chat-text { white-space: pre-wrap; word-break: break-word; }
+
+@keyframes chat-msg-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* === Панель ввода === */
+.chat-compose {
+    display: flex;
+    gap: .75rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--line);
+    background: var(--gray-50);
+}
+.chat-compose input {
+    flex: 1;
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: .625rem .875rem;
+    font-size: .9rem;
+    transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.chat-compose input:focus {
+    outline: none;
+    border-color: var(--blue-500);
+    box-shadow: 0 0 0 3px rgb(37 99 235 / .15);
+}
+.chat-compose .btn-primary {
+    flex-shrink: 0;
+    width: 44px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform .15s var(--ease), box-shadow .15s var(--ease);
+}
+.chat-compose .btn-primary:hover { transform: translateY(-1px); }
+.chat-compose .btn-primary:active { transform: scale(.94); }
+.chat-compose .btn-primary .icon { width: 1.125rem; height: 1.125rem; }
+
+/* === Разделитель даты === */
+.chat-date-sep {
+    align-self: center;
+    margin: .25rem 0;
+    padding: .2rem .75rem;
+    font-size: .7rem;
+    font-weight: 500;
+    color: var(--gray-500);
+    background: var(--gray-100);
+    border-radius: 999px;
+}
+
+/* === Дополнительно === */
+.chat-card__head {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--line);
+    background: #fff;
+}
+.chat-card__head h3 {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--gray-900);
+}
+.chat-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    color: var(--gray-400);
+    padding: 4rem 1rem;
+    margin: auto;
+}
+.chat-empty .icon { width: 3rem; height: 3rem; color: var(--gray-300); }
+.chat-empty p { color: var(--gray-500); font-size: .9rem; margin: 0; }

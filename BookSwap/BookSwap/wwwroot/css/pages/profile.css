@@ -1,0 +1,279 @@
+/* =====================================================
+   BookSwap — Профиль пользователя
+   ===================================================== */
+
+/* === Шапка профиля === */
+.profile-banner {
+    height: 80px;
+    background: linear-gradient(135deg, var(--blue-500), var(--blue-700));
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    flex-shrink: 0;
+}
+.profile-head-card {
+    padding: 0;
+    overflow: hidden;
+    display: block;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+}
+.profile-head-inner {
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-end;
+    padding: 0 1.5rem 1.5rem;
+    margin-top: -40px;
+}
+.profile-head-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+.profile-head-avatar-wrap .profile-avatar {
+    width: 104px;
+    height: 104px;
+    border: 4px solid #fff;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--blue-50);
+    color: var(--blue-600);
+    display: grid;
+    place-items: center;
+    font-size: 2rem;
+    font-weight: 600;
+    box-shadow: var(--shadow-md);
+}
+.profile-avatar-badge {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--green-500);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    border: 3px solid #fff;
+    box-shadow: var(--shadow-sm);
+}
+.profile-avatar-badge .icon { width: .75rem; height: .75rem; }
+.profile-head-body {
+    flex: 1 1 280px;
+    min-width: 240px;
+    padding-bottom: .25rem;
+}
+.profile-head-body h1 {
+    color: var(--gray-900);
+    margin-bottom: .375rem;
+    font-size: 1.5rem;
+}
+.profile-head-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.profile-head-top .btn-outline {
+    border-color: var(--gray-200);
+    color: var(--gray-700);
+    background: #fff;
+}
+.profile-head-top .btn-outline:hover {
+    background: var(--gray-50);
+    border-color: var(--gray-300);
+}
+.profile-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem 1rem;
+    color: var(--gray-500);
+    font-size: .875rem;
+}
+.profile-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: .375rem;
+}
+.profile-meta .icon {
+    width: .875rem;
+    height: .875rem;
+    color: var(--gray-400);
+}
+.profile-meta .rating-star { color: #FACC15; }
+
+.profile-avatar { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; background: var(--blue-50); color: var(--blue-600); display: grid; place-items: center; font-size: 2rem; font-weight: 600; flex-shrink: 0; }
+
+/* === Статистика === */
+.profile-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+@media (max-width: 700px) { .profile-stats-grid { grid-template-columns: 1fr; } }
+
+/* === Сетка профиля === */
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+}
+@media (max-width: 600px) { .profile-grid { grid-template-columns: repeat(2, 1fr); } }
+.book-card-wishlist {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+.book-card-wishlist .btn { width: 100%; }
+
+/* === Вкладки === */
+.tabs-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem;
+    padding: .25rem;
+    background: var(--gray-50);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+}
+.tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .375rem;
+    padding: .5rem .875rem;
+    border-radius: var(--radius-sm);
+    font-size: .875rem;
+    font-weight: 500;
+    color: var(--gray-500);
+    transition: all var(--dur) var(--ease);
+}
+.tab-btn .icon { width: 1rem; height: 1rem; }
+.tab-btn:hover { color: var(--gray-700); background: #fff; }
+.tab-btn.active {
+    background: #fff;
+    color: var(--gray-900);
+    box-shadow: var(--shadow-xs);
+}
+.tab-btn.active .icon { color: var(--gray-700); }
+.tab-content {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    animation: tab-fade-in .25s var(--ease);
+}
+@keyframes tab-fade-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* === Отзывы === */
+.reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 1.5rem;
+}
+.reviews-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    flex-direction: column;
+}
+.reviews-card__head {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--line);
+    font-weight: 600;
+    color: var(--gray-800);
+    background: var(--gray-50);
+}
+.reviews-card__head .icon { width: 1.125rem; height: 1.125rem; color: var(--blue-600); }
+.reviews-card__head .count {
+    margin-left: auto;
+    padding: .125rem .5rem;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid var(--line);
+    font-size: .75rem;
+    color: var(--gray-600);
+    font-weight: 500;
+}
+.reviews-card__body {
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.reviews-card__empty {
+    padding: 2rem 1.25rem;
+    text-align: center;
+    color: var(--gray-500);
+    font-size: .9rem;
+}
+
+/* === Элемент отзыва === */
+.review-item {
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: #fff;
+    transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.review-item:hover { background: var(--gray-50); border-color: var(--gray-300); }
+.review-item__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-bottom: .5rem;
+}
+.review-item__author {
+    display: flex;
+    align-items: center;
+    gap: .625rem;
+    font-weight: 500;
+    color: var(--gray-800);
+    font-size: .95rem;
+}
+.review-item__name-link { color: var(--gray-800); text-decoration: none; font-weight: 500; }
+.review-item__name-link:hover { text-decoration: underline; }
+.review-item__avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--blue-50);
+    color: var(--blue-700);
+    display: grid;
+    place-items: center;
+    font-weight: 600;
+    font-size: .875rem;
+    flex-shrink: 0;
+}
+.review-item__stars {
+    display: inline-flex;
+    gap: 1px;
+    flex-shrink: 0;
+}
+.review-item__stars .icon {
+    width: .875rem;
+    height: .875rem;
+    color: var(--gray-300);
+}
+.review-item__stars .icon.icon--fill { color: #FACC15; }
+.review-item__comment {
+    font-size: .9rem;
+    line-height: 1.55;
+    color: var(--gray-700);
+    margin: 0;
+}
+.review-item__foot {
+    margin-top: .625rem;
+    font-size: .75rem;
+    color: var(--gray-500);
+}

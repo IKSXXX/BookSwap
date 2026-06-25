@@ -1,0 +1,35 @@
+/* =====================================================
+   BookSwap — Бейджи (статусы, теги)
+   ===================================================== */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    padding: .125rem .5rem;
+    border-radius: 9999px;
+    font-size: .75rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+.badge--secondary { background: var(--gray-100); color: var(--gray-700); }
+.badge--green { background: var(--green-100); color: var(--green-800); }
+.badge--blue { background: var(--blue-100); color: var(--blue-800); }
+.badge--yellow { background: var(--yellow-100); color: var(--yellow-800); }
+.badge--red { background: var(--red-100); color: var(--red-800); }
+.badge--admin { background: var(--blue-600); color: #fff; padding: .125rem .5rem; font-size: .7rem; }
+.badge--dot::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+/* === Статусы обмена === */
+.badge--status-pending { background: var(--yellow-100); color: var(--yellow-800); }
+.badge--status-accepted { background: var(--green-100); color: var(--green-800); }
+.badge--status-completed { background: var(--blue-100); color: var(--blue-800); }
+.badge--status-rejected,
+.badge--status-cancelled { background: var(--red-100); color: var(--red-800); }

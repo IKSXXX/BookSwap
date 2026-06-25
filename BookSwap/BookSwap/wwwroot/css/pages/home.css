@@ -1,0 +1,192 @@
+/* =====================================================
+   BookSwap — Главная страница
+   ===================================================== */
+
+/* === Hero === */
+.page-head {
+    padding-block: 2rem 1.5rem;
+}
+.page-head h1 { margin-bottom: .5rem; }
+.page-head__sub { color: var(--gray-600); font-size: 1rem; }
+
+.hero {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    background:
+        radial-gradient(120% 120% at 0% 0%, #1e3a8a 0%, transparent 55%),
+        radial-gradient(100% 140% at 100% 0%, #4f46e5 0%, transparent 50%),
+        linear-gradient(135deg, var(--blue-700), var(--blue-600) 60%, #1e3a8a);
+    color: #fff;
+    padding: clamp(3.5rem, 8vw, 6rem) 0;
+    text-align: center;
+}
+.hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: radial-gradient(rgb(255 255 255 / .07) 1px, transparent 1px);
+    background-size: 22px 22px;
+    mask-image: radial-gradient(120% 80% at 50% 0%, #000 40%, transparent 100%);
+}
+.hero::after {
+    content: "";
+    position: absolute;
+    width: 520px; height: 520px;
+    right: -120px; bottom: -220px;
+    z-index: -1;
+    background: radial-gradient(circle, rgb(96 165 250 / .35), transparent 70%);
+    filter: blur(8px);
+    animation: heroGlow 9s var(--ease) infinite alternate;
+}
+@keyframes heroGlow {
+    from { transform: translateY(0) scale(1); opacity: .8; }
+    to   { transform: translateY(-26px) scale(1.08); opacity: 1; }
+}
+.hero > .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.hero h1 {
+    color: #fff;
+    font-size: clamp(2rem, 4.6vw, 3.25rem);
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    letter-spacing: -.03em;
+    line-height: 1.1;
+    max-width: 48rem;
+}
+.hero__sub {
+    font-size: clamp(1rem, 1.5vw, 1.25rem);
+    color: rgb(219 234 254 / .95);
+    margin-bottom: 2rem;
+    max-width: 42rem;
+    line-height: 1.625;
+}
+.hero__ctas { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; }
+
+/* === Как это работает (3 шага) === */
+.steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 2rem;
+    max-width: 64rem;
+    margin-inline: auto;
+}
+.step { text-align: center; }
+.step__icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+}
+.step__icon .icon { width: 32px; height: 32px; }
+.step__icon--blue { background: var(--blue-100); color: var(--blue-600); }
+.step__icon--green { background: var(--green-100); color: var(--green-600); }
+.step__icon--purple { background: var(--purple-100); color: var(--purple-600); }
+.step h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: .75rem; color: var(--gray-900); }
+.step p { color: var(--gray-600); }
+.step__icon { transition: transform .25s var(--ease), box-shadow .25s var(--ease); }
+.step:hover .step__icon { transform: translateY(-4px) scale(1.05); box-shadow: var(--shadow-md); }
+
+/* === Заголовок секции === */
+.section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+/* === Пара: Книга дня + Викторина === */
+.feature-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: stretch;
+}
+@media (max-width: 860px) { .feature-pair { grid-template-columns: 1fr; } }
+
+.feature-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+}
+.feature-card__label {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--line);
+    font-size: .875rem;
+    font-weight: 600;
+    color: var(--gray-700);
+    background: var(--gray-50);
+}
+.feature-card__label .icon { width: 1rem; height: 1rem; color: var(--blue-600); }
+.feature-card__body { padding: 1.5rem; display: grid; grid-template-columns: 140px 1fr; gap: 1.25rem; align-items: start; flex: 1; }
+.feature-desc {
+    font-size: .9rem;
+    line-height: 1.55;
+    color: var(--gray-600);
+    margin-bottom: 1rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.feature-cta { align-self: flex-start; }
+.feature-card__body--stack { display: flex; flex-direction: column; gap: .75rem; }
+.feature-cover {
+    display: block;
+    width: 140px;
+    aspect-ratio: 3 / 4;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--gray-100);
+    box-shadow: var(--shadow-sm);
+}
+.feature-cover img { width: 100%; height: 100%; object-fit: cover; }
+.feature-info { min-width: 0; }
+.feature-info .badge { display: inline-flex; }
+
+/* === Викторина === */
+.quiz-quote {
+    margin: 0;
+    padding: 1rem 1.125rem;
+    border-left: 3px solid var(--blue-600);
+    background: var(--blue-50);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    font-style: italic;
+    color: var(--gray-800);
+    line-height: 1.55;
+}
+.quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+@media (max-width: 520px) { .quiz-options { grid-template-columns: 1fr; } }
+.quiz-option {
+    display: block;
+    padding: .625rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+    font-size: .9rem;
+    text-align: left;
+    color: var(--gray-800);
+    transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.quiz-option:hover:not(:disabled) { background: var(--blue-50); border-color: var(--blue-600); color: var(--blue-800); }
+.quiz-option:disabled { cursor: default; }
+.quiz-option.is-correct { background: #DCFCE7; border-color: #16A34A; color: #14532D; }
+.quiz-option.is-wrong { background: #FEE2E2; border-color: #DC2626; color: #7F1D1D; }
+.quiz-feedback { padding: .5rem .75rem; border-radius: var(--radius); font-size: .875rem; font-weight: 500; }
+.quiz-feedback.is-correct { background: #DCFCE7; color: #14532D; }
+.quiz-feedback.is-wrong { background: #FEE2E2; color: #7F1D1D; }

@@ -22,7 +22,6 @@ public static class DbSeeder
         if (ctx.Database.IsRelational())
         {
             await ctx.Database.MigrateAsync();
-            // Ensure Notifications table exists (may not be covered by existing migrations)
             await ctx.Database.ExecuteSqlRawAsync(@"
                 CREATE TABLE IF NOT EXISTS ""Notifications"" (
                     ""Id"" SERIAL PRIMARY KEY,

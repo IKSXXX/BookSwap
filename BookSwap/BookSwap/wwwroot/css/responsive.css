@@ -1,0 +1,65 @@
+/* =====================================================
+   BookSwap — Адаптивность (Media queries)
+   ===================================================== */
+
+/* === Планшеты и мобильные: меню === */
+@media (max-width: 900px) {
+    .nav-links {
+        position: absolute;
+        top: 64px;
+        left: 0; right: 0;
+        background: #fff;
+        border-bottom: 1px solid var(--line);
+        flex-direction: column;
+        padding: 0 1rem;
+        gap: .5rem;
+        align-items: stretch;
+        box-shadow: var(--shadow-md);
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        pointer-events: none;
+        transform: translateY(-6px);
+        transition: max-height .32s var(--ease), opacity .22s var(--ease), transform .28s var(--ease), padding .28s var(--ease);
+    }
+    .nav-links.is-open {
+        max-height: 80vh;
+        opacity: 1;
+        pointer-events: auto;
+        transform: none;
+        padding: 1rem;
+        overflow-y: auto;
+    }
+    .nav-links .nav-link { padding: .5rem .25rem; }
+    .nav-toggle { display: grid; place-items: center; }
+    .navbar > .container { position: relative; }
+    .nav-cta {
+        flex-wrap: wrap;
+        margin-top: .5rem;
+        padding-top: .75rem;
+        border-top: 1px solid var(--line);
+    }
+    .nav-cta .btn { flex: 1 1 auto; justify-content: center; }
+    .notif-dropdown { right: 0; left: auto; }
+}
+
+/* === Мобильные телефоны === */
+@media (max-width: 640px) {
+    .feature-card__body { grid-template-columns: 1fr; }
+    .feature-cover, .feature-card__body > .feature-cover { width: 100%; max-width: 180px; margin-inline: auto; }
+    .section { padding-block: clamp(2rem, 6vw, 2.75rem); }
+    .hero { padding: clamp(2.5rem, 10vw, 3.5rem) 0; }
+    .hero__ctas { width: 100%; }
+    .hero__ctas .btn { flex: 1 1 100%; justify-content: center; }
+}
+
+/* === Уважение к системным настройкам анимации === */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+        scroll-behavior: auto !important;
+    }
+    .hero::after { animation: none; }
+}

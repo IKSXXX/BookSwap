@@ -1,0 +1,237 @@
+/* =====================================================
+   BookSwap — Детальная страница книги
+   ===================================================== */
+
+/* === Hero книги === */
+.bd-hero {
+    position: relative;
+    background: var(--gray-900);
+    overflow: hidden;
+    padding: 3rem 0 2.5rem;
+}
+.bd-hero__bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: blur(32px) brightness(.7) saturate(1.2);
+    transform: scale(1.1);
+}
+.bd-hero__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,.05) 0%, rgba(0,0,0,.22) 100%);
+}
+.bd-hero__fade {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 60px;
+    background: linear-gradient(to bottom, rgba(243,244,246,0) 0%, #F3F4F6 100%);
+    z-index: 1;
+    pointer-events: none;
+}
+.bd-hero__inner { position: relative; z-index: 1; }
+.bd-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    color: rgba(255,255,255,.7);
+    text-decoration: none;
+    font-size: .875rem;
+    margin-bottom: 1.75rem;
+    transition: color .15s;
+}
+.bd-back-link:hover { color: #fff; }
+.bd-back-link .icon { width: 1.125rem; height: 1.125rem; }
+
+/* === Сетка: обложка | инфо | владельцы === */
+.bd-hero__layout {
+    display: grid;
+    grid-template-columns: 220px 1fr 200px;
+    gap: 2.5rem;
+    align-items: start;
+}
+@media (max-width: 960px) {
+    .bd-hero__layout { grid-template-columns: 180px 1fr; }
+    .bd-owners { display: none; }
+}
+@media (max-width: 640px) {
+    .bd-hero__layout { grid-template-columns: 1fr; }
+    .bd-cover-wrap { max-width: 160px; }
+}
+
+/* === Обложка === */
+.bd-cover-wrap {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,.55);
+    aspect-ratio: 2/3;
+    background: var(--gray-800);
+    flex-shrink: 0;
+}
+.bd-cover {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.bd-cover--placeholder {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+/* === Информация === */
+.bd-hero__info { padding-top: .25rem; min-width: 0; }
+.bd-badges { display: flex; flex-wrap: wrap; gap: .5rem; }
+.bd-title {
+    font-size: clamp(1.6rem, 3.5vw, 2.5rem);
+    font-weight: 800;
+    line-height: 1.2;
+    color: #fff;
+    margin: .75rem 0 .4rem;
+    letter-spacing: -.02em;
+}
+.bd-author {
+    font-size: 1.125rem;
+    color: rgba(255,255,255,.7);
+    margin-bottom: 1rem;
+}
+.bd-attrs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    color: rgba(255,255,255,.6);
+    font-size: .875rem;
+    margin-bottom: 1rem;
+}
+.bd-attrs span { display: inline-flex; align-items: center; gap: .375rem; }
+.bd-attrs .icon { width: .9rem; height: .9rem; }
+.bd-desc {
+    font-size: .9375rem;
+    line-height: 1.7;
+    color: rgba(255,255,255,.75);
+    margin-bottom: 1.5rem;
+    white-space: pre-line;
+    max-width: 60ch;
+}
+
+/* === Кнопки действий === */
+.bd-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .625rem;
+}
+.bd-actions form { margin: 0; }
+.bd-btn-light {
+    border-color: rgba(255,255,255,.3) !important;
+    color: rgba(255,255,255,.85) !important;
+    background: rgba(255,255,255,.08) !important;
+}
+.bd-btn-light:hover {
+    background: rgba(255,255,255,.15) !important;
+    border-color: rgba(255,255,255,.5) !important;
+    color: #fff !important;
+}
+.bd-fav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .5rem .875rem;
+    border: 1.5px solid rgba(255,255,255,.3);
+    border-radius: var(--radius);
+    background: rgba(255,255,255,.08);
+    color: rgba(255,255,255,.8);
+    font-size: .875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .15s var(--ease);
+    white-space: nowrap;
+}
+.bd-fav-btn:hover { background: rgba(255,255,255,.15); border-color: rgba(255,255,255,.5); color: #fff; }
+.bd-fav-btn.is-active {
+    background: rgba(59,130,246,.35);
+    border-color: rgba(147,197,253,.6);
+    color: #fff;
+}
+.bd-fav-btn .icon { width: .875rem; height: .875rem; }
+.bd-unavailable {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .5rem .875rem;
+    border-radius: var(--radius);
+    background: rgba(255,255,255,.08);
+    color: rgba(255,255,255,.5);
+    font-size: .875rem;
+}
+.bd-unavailable .icon { width: .875rem; height: .875rem; }
+
+/* === Владельцы === */
+.bd-owners { padding-top: .5rem; }
+.bd-owners__label {
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: rgba(255,255,255,.45);
+    font-weight: 600;
+    margin-bottom: .875rem;
+}
+.bd-owner-row {
+    display: flex;
+    align-items: center;
+    gap: .625rem;
+    text-decoration: none;
+    color: rgba(255,255,255,.85);
+    padding: .4rem .375rem;
+    border-radius: var(--radius);
+    transition: background .15s;
+    margin-bottom: .125rem;
+}
+.bd-owner-row:hover { background: rgba(255,255,255,.08); }
+.bd-owner-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,.2);
+}
+.bd-owner-name { font-size: .875rem; font-weight: 600; }
+.bd-owner-rating {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    font-size: .75rem;
+    color: rgba(255,255,255,.5);
+    margin-top: .1rem;
+}
+
+/* === Владелец (на других страницах) === */
+.owner-avatar {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    color: var(--gray-600);
+    display: grid;
+    place-items: center;
+    font-weight: 600;
+    font-size: 1.25rem;
+    object-fit: cover;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.owner-avatar--lg { width: 96px; height: 96px; font-size: 2rem; }
+.owner-meta { font-weight: 600; font-size: 1.125rem; }
+.owner-meta__row { display: flex; align-items: center; gap: .5rem; color: var(--gray-600); font-size: .875rem; margin-top: .25rem; font-weight: 400; }
+.owner-meta__row .icon { width: 1rem; height: 1rem; }
+.owner-card-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.owner-card-row__user { display: flex; align-items: center; gap: 1rem; }
+.rating-star { color: var(--yellow-400); fill: var(--yellow-400); stroke: var(--yellow-400); }
+
+/* === Обсуждения === */
+.disc-create-form { display: flex; gap: .75rem; }
+.disc-create-form .form-input { flex: 1; }
